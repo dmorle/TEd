@@ -27,3 +27,11 @@ add_executable(
 
 	"include/ted/ted.h"
 )
+
+# freetype (fonts library)
+find_package(freetype CONFIG REQUIRED)
+target_link_libraries(ted PRIVATE freetype)
+
+# Copying fonts
+file(MAKE_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/fonts")
+merge_dir("${CMAKE_CURRENT_BINARY_DIR}/fonts" "${PROJECT_SOURCE_DIR}/fonts")
