@@ -1,7 +1,7 @@
-#ifndef TI_INT_H
-#define TI_INT_H
+#ifndef TE_INT_H
+#define TE_INT_H
 
-#include <tish/core/obj.h>
+#include <tesh/core/obj.h>
 
 typedef struct
 {

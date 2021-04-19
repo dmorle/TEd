@@ -108,9 +108,6 @@ int read_token(char* ptoken, size_t bufsz, te_tarr_st* ptarr)
 	case ']':
 		ntoken.t_id = TK_C_SQUARE;
 		break;
-	case '$':
-		ntoken.t_id = TK_INPUT;
-		break;
 	case ':':
 		ntoken.t_id = TK_ITER;
 		break;
@@ -249,20 +246,6 @@ int read_token(char* ptoken, size_t bufsz, te_tarr_st* ptarr)
 			_te_tarr_append(ptarr, &ntoken);
 			return ret;
 		}
-		if (bufsz > 4 && !strncmp("true", ptoken, 4) && isspace(ptoken[4]))
-		{
-			ntoken.t_id = TK_BOOL_LIT;
-			ntoken._data = true;
-			_te_tarr_append(ptarr, &ntoken);
-			return 5;  // 4 + 1 for whitespace
-		}
-		if (bufsz > 5 && !strncmp("false", ptoken, 5) && isspace(ptoken[5]))
-		{
-			ntoken.t_id = TK_BOOL_LIT;
-			ntoken._data = false;
-			_te_tarr_append(ptarr, &ntoken);
-			return 6;  // 5 + 1 for whitespace
-		}
 		if (c0 == '_' || ('a' <= c0 && c0 <= 'z') || ('A' <= c0 && c0 <= 'Z'))
 		{
 			while (
@@ -273,11 +256,70 @@ int read_token(char* ptoken, size_t bufsz, te_tarr_st* ptarr)
 				if (++ret == bufsz)
 					break;
 
+			switch (ret)
+			{
+			case 2:
+				if (!memcmp(ptoken - 2, "if", 2))
+				{
+					ntoken.t_id = TK_IF;
+					goto RD_TK_END;
+				}
+				if (!memcmp(ptoken - 2, "fn", 2))
+				{
+					ntoken.t_id = TK_FN;
+					goto RD_TK_END;
+				}
+				break;
+			case 3:
+				if (!memcmp(ptoken - 3, "for", 3))
+				{
+					ntoken.t_id = TK_FOR;
+					goto RD_TK_END;
+				}
+				break;
+			case 4:
+				if (!memcmp(ptoken - 4, "null", 4))
+				{
+					ntoken.t_id = TK_NULL;
+					goto RD_TK_END;
+				}
+				if (!memcmp(ptoken - 4, "true", 4))
+				{
+					ntoken.t_id = TK_TRUE;
+					goto RD_TK_END;
+				}
+				if (!memcmp(ptoken - 4, "else", 4))
+				{
+					ntoken.t_id = TK_ELSE;
+					goto RD_TK_END;
+				}
+				break;
+			case 5:
+				if (!memcmp(ptoken - 5, "false", 5))
+				{
+					ntoken.t_id = TK_FALSE;
+					goto RD_TK_END;
+				}
+				if (!memcmp(ptoken - 5, "while", 5))
+				{
+					ntoken.t_id = TK_WHILE;
+					goto RD_TK_END;
+				}
+				break;
+			case 6:
+				if (!memcmp(ptoken - 6, "return", 6))
+				{
+					ntoken.t_id = TK_RETURN;
+					goto RD_TK_END;
+				}
+				break;
+			}
+
 			ntoken.t_id = TK_IDN;
 			ntoken._data = malloc(sizeof(char) * ((size_t)ret + 1));
 			if (!ntoken._data)
 				return -1;
-			memcpy(ntoken._data, (void*)(ptoken + 1), (size_t)ret);
+			memcpy(ntoken._data, (void*)(ptoken - ret), (size_t)ret);
 			((char*)ntoken._data)[ret] = '\0';
 			_te_tarr_append(ptarr, &ntoken);
 			return ret;
@@ -286,6 +328,7 @@ int read_token(char* ptoken, size_t bufsz, te_tarr_st* ptarr)
 		return -2;
 	}
 
+RD_TK_END:
 	ntoken._data = NULL;
 	_te_tarr_append(ptarr, &ntoken);
 	return ret;
@@ -318,13 +361,6 @@ int te_lex_buf(char* pbuf, size_t bufsz, te_tarr_st* ptarr)
 	size_t lcount = 1;
 	int ret;
 	
-	te_token_st token = { TK_O_BRACE, 0, NULL };
-	ret = _te_tarr_append(ptarr, &token);
-	if (ret < 0)
-	{
-		fprintf(stderr, "Out of memory\n");
-		return ret;
-	}
 	while (offset < bufsz)
 	{
 		ret = read_token(pbuf + offset, bufsz - offset, ptarr);
@@ -344,9 +380,5 @@ int te_lex_buf(char* pbuf, size_t bufsz, te_tarr_st* ptarr)
 			ret--;
 		}
 	}
-	token.t_id = TK_C_BRACE;
-	ret = _te_tarr_append(ptarr, &token);
-	if (ret < 0)
-		fprintf(stderr, "Out of memory\n");
 	return ret;
 }

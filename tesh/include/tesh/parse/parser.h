@@ -1,5 +1,5 @@
-#ifndef TI_PARSER_H
-#define TI_PARSER_H
+#ifndef TE_PARSER_H
+#define TE_PARSER_H
 
 #include <tesh/core/obj.h>
 #include <tesh/parse/lexer.h>
@@ -11,12 +11,16 @@ typedef enum
 	AST_CONST,
 
 	// internal nodes
+	AST_IMP,
+	AST_FN,
+	AST_FILE,
 	AST_SEQ,
 	AST_FOR,
 	AST_WHILE,
 	AST_BRANCH,
-	AST_COMMAND,
+	AST_CALL,
 	AST_RETURN,
+	AST_MODULE,
 
 	// operators
 	AST_BIN,
@@ -57,6 +61,26 @@ te_ast_const_st;
 
 // internal nodes
 
+// returns NULL on eval
+typedef struct
+{
+	te_ast_st super;
+	char* imp_name;  // NULL terminated string
+}
+te_ast_imp_st;
+
+// calls a tesh function
+// returns either te_obj_st* or NULL on eval depending on the function
+typedef struct
+{
+	te_ast_st super;
+	size_t argc;
+	size_t _mem_sz;
+	te_ast_st** ppargv;
+	char* name;  // NULL terminated string
+}
+te_ast_fn_st;
+
 // contains an array of te_ast_st*
 // returns NULL on eval
 typedef struct
@@ -69,11 +93,31 @@ typedef struct
 te_ast_seq_st;
 
 // returns -1 on failure
-int _te_ast_seq_new(te_ast_seq_st* pself, size_t sz);
-void _te_ast_seq_del(te_ast_seq_st* pself);
+TE_API int _te_ast_seq_new(te_ast_seq_st* pself, size_t sz);
+TE_API void _te_ast_seq_del(te_ast_seq_st* pself);
 
 // returns -1 on failure
-int _te_ast_seq_append(te_ast_seq_st* pself, te_ast_st* pexpr);
+TE_API int _te_ast_seq_append(te_ast_seq_st* pself, te_ast_st* pexpr);
+
+// represents the contents of any tesh file
+// returns NULL on eval
+typedef struct
+{
+	te_ast_st super;
+
+	size_t imp_num;
+	size_t imp_mem_sz;
+	te_ast_imp_st* pimps;
+
+	size_t fn_num;
+	size_t fn_mem_sz;
+	te_ast_fn_st* pfns;
+
+	size_t expr_num;
+	size_t expr_mem_sz;
+	te_ast_st** ppexprs;
+}
+te_ast_module_st;
 
 // iterates through an iterable type iter (string, array), passing each element to idx
 // returns NULL on eval
@@ -81,10 +125,13 @@ typedef struct
 {
 	te_ast_st super;
 	te_ast_st* body;
-	te_ast_st* iter;  // Must return either te_str_st* or te_arr_st* on eval
-	te_ast_var_st* idx;
+	te_ast_st* iter;  // Must return an iterable on eval
+	char* it;         // name of the varible used during iteration
 }
 te_ast_for_st;
+
+TE_API void _te_ast_for_new(te_ast_for_st* pself);
+TE_API void _te_ast_for_del(te_ast_for_st* pself);
 
 // evals body until cond returns false
 // returns NULL on eval
@@ -107,20 +154,24 @@ typedef struct
 }
 te_ast_branch_st;
 
-// calls a tish command or tish script
-// returns either te_obj_st* or NULL on eval depending on the command
+TE_API void _te_ast_branch_new(te_ast_branch_st* pself);
+TE_API void _te_ast_branch_del(te_ast_branch_st* pself);
+
+// function definition
+// stores local variables, runs pbody, restores local variables
 typedef struct
 {
 	te_ast_st super;
+	te_ast_st* pbody;
 	size_t argc;
 	size_t _mem_sz;
-	te_ast_st** ppargv;
-	char* name;  // NULL terminated string
+	char** ppargv;  // NULL terminated strings
+	char* name;     // NULL terminated string
 }
-te_ast_command_st;
+te_ast_call_st;
 
-// exit point of the tish script
-// exits the program on eval
+// exit point of a function
+// returns te_obj_st* or NULL on eval depending on ret
 typedef struct
 {
 	te_ast_st super;
@@ -128,8 +179,8 @@ typedef struct
 }
 te_ast_return_st;
 
-// cannot fail, and doesn't need deallocation
-void _te_ast_return_new(te_ast_return_st* pself, te_ast_st* pretval);
+TE_API void _te_ast_return_new(te_ast_return_st* pself);
+TE_API void _te_ast_return_del(te_ast_return_st* pself);
 
 // types of binary operations: te_ast_bin_st.bin_ty
 typedef enum
@@ -189,7 +240,8 @@ typedef struct
 }
 te_ast_uni_st;
 
-TI_API int te_parse(const te_tarr_st* ptarr, te_ast_st** ppast);
-TI_API int te_eval(const te_ast_st* past, te_obj_st** ppobj);
+TE_API int te_parse_expr   (const te_tarr_st* ptarr, te_ast_st** ppast);
+TE_API int te_parse_block  (const te_tarr_st* ptarr, te_ast_st** ppast);
+TE_API int te_parse_module (const te_tarr_st* ptarr, te_ast_st** ppast);
 
 #endif

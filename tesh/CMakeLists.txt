@@ -1,32 +1,38 @@
-include_directories("inc")
+include_directories("include")
 
 add_library(
-	libtish SHARED
+	libtesh SHARED
 
 	"src/core/obj.c"
 	"src/core/int.c"
 	"src/core/arr.c"
 	"src/core/str.c"
+
 	"src/parse/lexer.c"
 	"src/parse/parser.c"
 
-	"inc/tesh/tishapi.h"
-	"inc/tesh/core/obj.h"
-	"inc/tesh/core/int.h"
-	"inc/tesh/core/arr.h"
-	"inc/tesh/core/str.h"
-	"inc/tesh/parse/lexer.h"
-	"inc/tesh/parse/parser.h"
+	"src/interpreter/eval.c"
+
+	"include/tesh/teshapi.h"
+	"include/tesh/core/obj.h"
+	"include/tesh/core/int.h"
+	"include/tesh/core/arr.h"
+	"include/tesh/core/str.h"
+
+	"include/tesh/parse/lexer.h"
+	"include/tesh/parse/parser.h"
+
+	"include/tesh/interpreter/eval.h"
 )
 
 add_executable(
-	tish
+	tesh
 
 	"src/main.c"
 
-	"inc/tesh/tishapi.h"
+	"include/tesh/teshapi.h"
 )
-target_link_libraries(tish libtish)
+target_link_libraries(tesh libtesh)
 
-set_property(TARGET tish PROPERTY C_STANDARD 11)
-set_property(TARGET libtish PROPERTY C_STANDARD 11)
+set_property(TARGET tesh PROPERTY C_STANDARD 11)
+set_property(TARGET libtesh PROPERTY C_STANDARD 11)

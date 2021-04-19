@@ -1,5 +1,5 @@
-#ifndef TI_LEXER_H
-#define TI_LEXER_H
+#ifndef TE_LEXER_H
+#define TE_LEXER_H
 
 #include <stdio.h>
 #include <stdint.h>
@@ -9,43 +9,52 @@
 typedef enum
 {
 	// brackets
-	TK_O_BRACE,   // {
-	TK_C_BRACE,   // }
-	TK_O_ROUND,   // (
-	TK_C_ROUND,   // )
-	TK_O_SQUARE,  // [
-	TK_C_SQUARE,  // ]
-	TK_INPUT,     // $
-	TK_ITER,      // :
-	TK_ENDL,      // ;
+	TK_O_BRACE = 0, // {
+	TK_C_BRACE,     // }
+	TK_O_ROUND,     // (
+	TK_C_ROUND,     // )
+	TK_O_SQUARE,    // [
+	TK_C_SQUARE,    // ]
+	TK_ITER,        // :
+	TK_ENDL,        // ;
 
 	// operators
-	TK_OP_ASSIGN, // =
-	TK_OP_IADD,   // +=
-	TK_OP_ISUB,   // -=
-	TK_OP_IMUL,   // *=
-	TK_OP_IDIV,   // /=
-	TK_OP_IEXP,   // ^=
-	TK_OP_EQ,     // ==
-	TK_OP_NE,     // !=
-	TK_OP_LT,     // <
-	TK_OP_GT,     // >
-	TK_OP_LE,     // <=
-	TK_OP_GE,     // >=
-	TK_OP_ADD,    // +
-	TK_OP_SUB,    // -
-	TK_OP_MUL,    // *
-	TK_OP_DIV,    // /
-	TK_OP_EXP,    // ^
-	TK_OP_AND,    // &&
-	TK_OP_OR,     // ||
-	TK_OP_NOT,    // !
+	TK_OP_ASSIGN,   // =
+	TK_OP_IADD,     // +=
+	TK_OP_ISUB,     // -=
+	TK_OP_IMUL,     // *=
+	TK_OP_IDIV,     // /=
+	TK_OP_IEXP,     // ^=
+	TK_OP_EQ,       // ==
+	TK_OP_NE,       // !=
+	TK_OP_LT,       // <
+	TK_OP_GT,       // >
+	TK_OP_LE,       // <=
+	TK_OP_GE,       // >=
+	TK_OP_ADD,      // +
+	TK_OP_SUB,      // -
+	TK_OP_MUL,      // *
+	TK_OP_DIV,      // /
+	TK_OP_EXP,      // ^
+	TK_OP_AND,      // &&
+	TK_OP_OR,       // ||
+	TK_OP_NOT,      // !
 
 	// variable things
-	TK_BOOL_LIT,  // true | false
-	TK_INT_LIT,   // 1234
-	TK_STR_LIT,   // "hello world"
-	TK_IDN        // identifier
+	TK_NULL,        // null
+	TK_TRUE,        // true
+	TK_FALSE,       // false
+	TK_INT_LIT,     // 1234
+	TK_STR_LIT,     // "hello world"
+	TK_IDN,         // identifier
+
+	// keywords
+	TK_IF,          // if
+	TK_ELSE,        // else
+	TK_FOR,         // for
+	TK_WHILE,       // while
+	TK_FN,          // fn
+	TK_RETURN       // return
 }
 te_token_et;
 

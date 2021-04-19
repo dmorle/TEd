@@ -1,14 +1,14 @@
-#ifndef TI_STR_H
-#define TI_STR_H
+#ifndef TE_STR_H
+#define TE_STR_H
 
-#include <tish/core/obj.h>
+#include <tesh/core/obj.h>
 
 typedef struct
 {
 	te_obj_st super;
 }
-str_st;
+te_str_st;
 
-void _te_str_dealloc(str_st* pstr);
+void _te_str_dealloc(te_str_st* pstr);
 
 #endif

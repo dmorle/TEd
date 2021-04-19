@@ -1,5 +1,5 @@
-#ifndef TI_OBJ_H
-#define TI_OBJ_H
+#ifndef TE_OBJ_H
+#define TE_OBJ_H
 
 #include <stdint.h>
 
