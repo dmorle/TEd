@@ -126,6 +126,11 @@ int te_find_block_end(const te_tarr_st* ptarr, size_t start)
 	return -2;
 }
 
+int te_parse_arr(const te_tarr_st* ptarr, te_ast_arr_st** ppexpr)
+{
+	// Parses comma seperated array elements
+}
+
 int te_parse_branch(const te_tarr_st* ptarr, te_ast_branch_st* pbranch)
 {
 	assert(ptarr->length);
@@ -155,7 +160,7 @@ int te_parse_branch(const te_tarr_st* ptarr, te_ast_branch_st* pbranch)
 	ret = te_find_brac_end(ptarr, start, TK_O_ROUND, TK_C_ROUND);
 	if (ret < 0)
 	{
-		fprintf(stderr, "Missing closing ')' after if statement on line %zu\n", ptarr->_data[end].linenum);
+		fprintf(stderr, "Missing closing ')' after 'if' on line %zu\n", ptarr->_data[end].linenum);
 		return ret;
 	}
 	end = ret;
@@ -197,12 +202,78 @@ int te_parse_branch(const te_tarr_st* ptarr, te_ast_branch_st* pbranch)
 
 int te_parse_for(const te_tarr_st* ptarr, te_ast_for_st* pfor)
 {
-	assert(ptarr->length >= 4); // if ();
+	assert(ptarr->length);
+	assert(ptarr->_data[0].t_id == TK_FOR);
+
+	if (ptarr->length < 7)  // for (_ : _);   <- minimal for loop
+	{
+		fprintf(stderr, "Invalid for loop on line %zu\n", ptarr->_data[0].linenum);
+		return -2;
+	}
+
+	te_ast_st* past;
+	te_tarr_st tk_slice;
+
+	size_t idx;
+	int ret;
+
+	if (ptarr->_data[1].t_id != TK_O_ROUND)
+	{
+		fprintf(stderr, "Unexpected token after 'for' on line %zu\n", ptarr->_data[1].linenum);
+		return -2;
+	}
+	if (ptarr->_data[2].t_id != TK_IDN)
+	{
+		fprintf(stderr, "Unexpected token after 'for' on line %zu\n", ptarr->_data[2].linenum);
+		return -2;
+	}
+	// Transferring ownership of the identifier memory to pfor
+	pfor->it = ptarr->_data[2]._data;
+	ptarr->_data[2]._data = NULL;
+	if (ptarr->_data[3].t_id != TK_ITER)
+	{
+		fprintf(stderr, "Unexpected token after 'for' on line %zu\n", ptarr->_data[3].linenum);
+		return -2;
+	}
+
+	ret = te_find_brac_end(ptarr, 4, TK_O_ROUND, TK_C_ROUND);
+	if (ret < 0)
+	{
+		fprintf(stderr, "Missing closing ')' after 'for' on line %zu\n", ptarr->_data[0].linenum);
+		return ret;
+	}
+	idx = ret;
+	_te_tarr_slice(ptarr, 4, idx, &tk_slice);
+	ret = te_parse_expr(&tk_slice, &past);
+	if (ret < 0)
+		return ret;
+	idx += ret + 1;
+	pfor->iter = past;
+	_te_tarr_slice(ptarr, (size_t)ret + 1, ptarr->length, &tk_slice);
+	ret = te_parse_block(&tk_slice, &past);
+	if (ret < 0)
+		return ret;
+	ret += idx + 1;
+	pfor->body = past;
+	return ret;
 }
 
 int te_parse_while(const te_tarr_st* ptarr, te_ast_while_st* pwhile)
 {
+	assert(ptarr->length);
+	assert(ptarr->_data[0].t_id == TK_WHILE);
 
+	if (ptarr->length < 4)  // while ();   <- minimal while loop
+	{
+		fprintf(stderr, "Invalid while loop on line %zu\n", ptarr->_data[0].linenum);
+		return -2;
+	}
+
+	if (ptarr->_data[1].t_id != TK_O_ROUND)
+	{
+		fprintf(stderr, "Unexpected token after 'while' on line %zu\n", ptarr->_data[1].linenum);
+		return -2;
+	}
 }
 
 int te_parse_seq(const te_tarr_st* ptarr, te_ast_seq_st* pseq)
@@ -228,88 +299,112 @@ int te_parse_seq(const te_tarr_st* ptarr, te_ast_seq_st* pseq)
 		}
 	}
 	return idx;
-
-	for (size_t i = 0; i < ptarr->length; i++)
-	{
-		switch (ptarr->_data[i].t_id)
-		{
-		case TK_ENDL:
-			_te_tarr_slice(ptarr, idx, i, &tk_slice);
-			ret = te_parse_expr(&tk_slice, &past);
-			if (ret < 0)
-				goto PARSE_SEQ_ERROR;
-			break;
-
-		case TK_IF:
-
-
-			break;
-
-		case TK_FOR:
-			goto PARSE_SEQ_ERROR;
-
-		case TK_WHILE:
-			goto PARSE_SEQ_ERROR;
-
-		case TK_RETURN:
-			idx = i + 1;
-			ret = te_find_tk(ptarr, idx, TK_ENDL);
-			if (ret < 0)
-			{
-				fprintf(stderr, "Expected ';' after return statement on line %zu\n", ptarr->_data[i].linenum);
-				goto PARSE_SEQ_ERROR;
-			}
-			i = ret;
-
-			_te_tarr_slice(ptarr, idx, i, &tk_slice);
-			ret = te_parse_expr(&tk_slice, &past);
-			if (ret < 0)
-				goto PARSE_SEQ_ERROR;
-
-			{
-				te_ast_return_st* preturn = malloc(sizeof(te_ast_return_st));
-				if (!preturn)
-				{
-					fprintf(stderr, "Out of memory\n");
-					goto PARSE_SEQ_ERROR;
-				}
-				_te_ast_return_new(preturn);
-				preturn->ret = past;
-				past = preturn;
-			}
-
-			break;
-
-		default:
-			continue;
-		}
-
-		ret = _te_ast_seq_append(&tk_slice, past);
-		if (ret < 0)
-		{
-			fprintf(stderr, "Out of memory\n");
-			_te_ast_del(past);
-			goto PARSE_SEQ_ERROR;
-		}
-	}
-
-	*ppseq = pseq;
-	return ptarr->length;
-
-PARSE_SEQ_ERROR:
-	_te_ast_seq_del(pseq);
-	free(pseq);
-	return ret;
 }
 
 int te_parse_expr(const te_tarr_st* ptarr, te_ast_st** ppexpr)
 {
-
+	// 
 }
 
-int te_parse_block(const te_tarr_st* ptarr, te_ast_st** ppexpr)
+int te_parse_block(const te_tarr_st* ptarr, te_ast_st** ppblock)
 {
+	if (!ptarr->length)
+	{
+		fprintf(stderr, "Received invalid code block\n");
+		return -2;
+	}
 
+	int ret;
+	switch (ptarr->_data[0].t_id)
+	{
+	case TK_IF:
+	{
+		te_ast_branch_st* pbranch = (te_ast_branch_st*)malloc(sizeof(te_ast_branch_st));
+		if (!pbranch)
+			goto OUT_OF_MEMORY;
+		_te_ast_branch_new(pbranch);
+		ret = te_parse_branch(ptarr, pbranch);
+		if (ret < 0)
+		{
+			_te_ast_branch_del(pbranch);
+			free(pbranch);
+			return ret;
+		}
+		*ppblock = pbranch;
+		return ret;
+	}
+	case TK_FOR:
+	{
+		te_ast_for_st* pfor = (te_ast_for_st*)malloc(sizeof(te_ast_for_st));
+		if (!pfor)
+			goto OUT_OF_MEMORY;
+		_te_ast_for_new(pfor);
+		ret = te_parse_for(ptarr, pfor);
+		if (ret < 0)
+		{
+			_te_ast_for_del(pfor);
+			free(pfor);
+			return ret;
+		}
+		*ppblock = pfor;
+		return ret;
+	}
+	case TK_WHILE:
+	{
+		te_ast_while_st* pwhile = (te_ast_while_st*)malloc(sizeof(te_ast_while_st));
+		if (!pwhile)
+			goto OUT_OF_MEMORY;
+		_te_ast_while_new(pwhile);
+		ret = te_parse_while(ptarr, pwhile);
+		if (ret < 0)
+		{
+			_te_ast_while_del(pwhile);
+			free(pwhile);
+			return ret;
+		}
+		*ppblock = pwhile;
+		return ret;
+	}
+	case TK_RETURN:
+	{
+		te_ast_return_st* preturn = (te_ast_return_st*)malloc(sizeof(te_ast_return_st));
+		if (!preturn)
+			goto OUT_OF_MEMORY;
+		_te_ast_return_new(preturn);
+		ret = te_parse_return(ptarr, preturn);
+		if (ret < 0)
+		{
+			_te_ast_return_del(preturn);
+			free(preturn);
+			return ret;
+		}
+		*ppblock = preturn;
+		return ret;
+	}
+	case TK_O_BRACE:
+	{
+		te_ast_seq_st* pseq = (te_ast_seq_st*)malloc(sizeof(te_ast_seq_st));
+		if (!pseq)
+			goto OUT_OF_MEMORY;
+		_te_ast_seq_new(pseq, 5);
+		ret = te_parse_seq(ptarr, pseq);
+		if (ret < 0)
+		{
+			_te_ast_seq_del(pseq);
+			free(pseq);
+			return ret;
+		}
+		*ppblock = pseq;
+		return ret;
+	}
+	default:
+		te_parse_expr(ptarr, ppblock);
+		break;
+	}
+
+OUT_OF_MEMORY:
+	fprintf(stderr, "Out of memory\n");
+	return -1;
 }
 
 // returns the number of tokens read on success, -1 on error

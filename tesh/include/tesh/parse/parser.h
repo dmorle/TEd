@@ -1,26 +1,32 @@
 #ifndef TE_PARSER_H
 #define TE_PARSER_H
 
+#include <stdbool.h>
+
 #include <tesh/core/obj.h>
 #include <tesh/parse/lexer.h>
 
 typedef enum
 {
-	// leaf nodes
+	// data nodes
 	AST_VAR,
-	AST_CONST,
+	AST_NULL,
+	AST_BOOL,
+	AST_INT,
+	AST_STR,
+	AST_ARR,
 
 	// internal nodes
+	AST_MODULE,
 	AST_IMP,
 	AST_FN,
-	AST_FILE,
+	AST_CALL,
+	AST_RETURN,
 	AST_SEQ,
+	AST_IDX,
 	AST_FOR,
 	AST_WHILE,
 	AST_BRANCH,
-	AST_CALL,
-	AST_RETURN,
-	AST_MODULE,
 
 	// operators
 	AST_BIN,
@@ -39,25 +45,80 @@ te_ast_st;
 // deallocates a generic ast node
 void _te_ast_del(te_ast_st* pself);
 
-// leaf nodes
+// data nodes
 
 // refers to a te_obj_st* in a hash table containing global variables
 // returns the retrieved te_obj_st* on eval
 typedef struct
 {
 	te_ast_st super;
-	char* name;  // NULL terminated string
+	char* name;  // dynamically allocated NULL terminated string
 }
 te_ast_var_st;
 
-// contains a dynamically memory allocated te_obj_st*
-// returns te_obj_st* on eval
+TE_API void _te_ast_var_new(te_ast_var_st* pself);
+TE_API void _te_ast_var_del(te_ast_var_st* pself);
+
+// represents a null value in tedlang
+// returns te_null_st* on eval
 typedef struct
 {
 	te_ast_st super;
-	te_obj_st* pobj;
 }
-te_ast_const_st;
+te_ast_null_st;
+
+TE_API void _te_ast_null_new(te_ast_null_st* pself);
+TE_API void _te_ast_null_del(te_ast_null_st* pself);
+
+// contains a boolean value
+// returns te_bool_st* on eval
+typedef struct
+{
+	te_ast_st super;
+	bool val;
+}
+te_ast_bool_st;
+
+TE_API void _te_ast_bool_new(te_ast_bool_st* pself);
+TE_API void _te_ast_bool_del(te_ast_bool_st* pself);
+
+// contains an integer
+// returns te_int_st* on eval
+typedef struct
+{
+	te_ast_st super;
+	int64_t val;
+}
+te_ast_int_st;
+
+TE_API void _te_ast_int_new(te_ast_int_st* pself);
+TE_API void _te_ast_int_del(te_ast_int_st* pself);
+
+// contains a NULL terminated string
+// returns te_str_st* on eval
+typedef struct
+{
+	te_ast_st super;
+	char* val;
+}
+te_ast_str_st;
+
+TE_API void _te_ast_str_new(te_ast_str_st* pself);
+TE_API void _te_ast_str_del(te_ast_str_st* pself);
+
+// contains an array of te_ast_st* which contain the elements of the array
+// returns te_arr_st* on eval
+typedef struct
+{
+	te_ast_st super;
+	size_t length;
+	size_t _mem_sz;
+	te_ast_st** pelems;
+}
+te_ast_arr_st;
+
+TE_API void _te_ast_arr_new(te_ast_arr_st* pself, size_t sz);
+TE_API void _te_ast_arr_del(te_ast_arr_st* pself);
 
 // internal nodes
 
@@ -142,6 +203,9 @@ typedef struct
 	te_ast_st* cond;  // Must return te_bool_st* on eval
 }
 te_ast_while_st;
+
+TE_API void _te_ast_while_new(te_ast_while_st* pself);
+TE_API void _te_ast_while_del(te_ast_while_st* pself);
 
 // evals cond, true => eval(if_body), false => eval(else_body)
 // returns NULL on eval
