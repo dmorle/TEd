@@ -108,6 +108,9 @@ int read_token(char* ptoken, size_t bufsz, te_tarr_st* ptarr)
 	case ']':
 		ntoken.t_id = TK_C_SQUARE;
 		break;
+	case ',':
+		ntoken.t_id = TK_COMMA;
+		break;
 	case ':':
 		ntoken.t_id = TK_ITER;
 		break;

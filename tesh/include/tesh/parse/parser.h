@@ -120,6 +120,8 @@ te_ast_arr_st;
 TE_API void _te_ast_arr_new(te_ast_arr_st* pself, size_t sz);
 TE_API void _te_ast_arr_del(te_ast_arr_st* pself);
 
+TE_API int _te_ast_arr_append(te_ast_arr_st* pself, te_ast_st* pelem);
+
 // internal nodes
 
 // returns NULL on eval

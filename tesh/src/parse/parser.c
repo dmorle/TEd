@@ -126,9 +126,58 @@ int te_find_block_end(const te_tarr_st* ptarr, size_t start)
 	return -2;
 }
 
-int te_parse_arr(const te_tarr_st* ptarr, te_ast_arr_st** ppexpr)
+// Looks through the token array until a top level ',' or closing bracket is found
+int te_find_elem_end(const te_tarr_st* ptarr, size_t idx, te_token_et tk_open, te_token_et tk_close)
 {
-	// Parses comma seperated array elements
+	// token values could be passed at compile time, but idk if its worth it
+	int brac = 0;
+	int brac = 0;
+	int brac = 0;
+	for (; idx < ptarr->length; idx++)
+	{
+		brac += ptarr->_data[idx].t_id == tk_open;
+		brac -= ptarr->_data[idx].t_id == tk_close;
+		if (!brac && ptarr->_data[idx].t_id == TK_COMMA)
+			return idx;
+		else if (brac == -1)
+			return idx;
+	}
+	return -2;
+}
+
+// Parses comma seperated array elements
+int te_parse_arr(const te_tarr_st* ptarr, te_ast_arr_st* parr)
+{
+	te_ast_st* pelem;
+	te_tarr_st tk_slice;
+	size_t idx = 0;
+	int ret;
+
+	while (idx < ptarr->length)
+	{
+		ret = te_find_elem_end(ptarr, idx, TK_O_SQUARE, TK_C_SQUARE);
+		if (ret < 0)
+		{
+			fprintf(stderr, "Invalid array element on line %zu", ptarr->_data[idx].linenum);
+			return ret;
+		}
+		_te_tarr_slice(ptarr, idx, ret, &tk_slice);
+		ret = te_parse_expr(&tk_slice, &pelem);
+		if (ret < 0)
+			return ret;
+		ret = _te_ast_arr_append(parr, pelem);
+		if (ret < 0)
+		{
+			_te_ast_del(pelem);
+			return ret;
+		}
+		if (ptarr->_data[ret].t_id == TK_C_SQUARE)
+			return ret;
+		idx += (size_t)ret + 1;
+	}
+
+	fprintf(stderr, "Invalid array definition on line %zu", ptarr->_data[0].linenum);
+	return -2;
 }
 
 int te_parse_branch(const te_tarr_st* ptarr, te_ast_branch_st* pbranch)
@@ -274,6 +323,8 @@ int te_parse_while(const te_tarr_st* ptarr, te_ast_while_st* pwhile)
 		fprintf(stderr, "Unexpected token after 'while' on line %zu\n", ptarr->_data[1].linenum);
 		return -2;
 	}
+
+	// TODO: Finish while loop parsing
 }
 
 int te_parse_seq(const te_tarr_st* ptarr, te_ast_seq_st* pseq)
@@ -572,9 +623,4 @@ int te_parse_module(const te_tarr_st* ptarr, te_ast_st** ppast)
 		fprintf(stderr, "Unexpected token found on line %zu\n", ptoken->linenum);
 		return -1;
 	}
-}
-
-int te_eval(const te_ast_st* past, te_obj_st** ppobj)
-{
-
 }

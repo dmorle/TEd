@@ -8,13 +8,14 @@
 
 typedef enum
 {
-	// brackets
+	// brackets and punctuation
 	TK_O_BRACE = 0, // {
 	TK_C_BRACE,     // }
 	TK_O_ROUND,     // (
 	TK_C_ROUND,     // )
 	TK_O_SQUARE,    // [
 	TK_C_SQUARE,    // ]
+	TK_COMMA,       // ,
 	TK_ITER,        // :
 	TK_ENDL,        // ;
 
