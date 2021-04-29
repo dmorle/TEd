@@ -132,15 +132,16 @@ typedef struct
 }
 te_ast_imp_st;
 
-// calls a tesh function
-// returns either te_obj_st* or NULL on eval depending on the function
+// function definition
+// stores local variables, runs pbody, restores local variables
 typedef struct
 {
 	te_ast_st super;
+	te_ast_st* pbody;
 	size_t argc;
 	size_t _mem_sz;
-	te_ast_st** ppargv;
-	char* name;  // NULL terminated string
+	char** ppargv;  // NULL terminated strings
+	char* name;     // NULL terminated string
 }
 te_ast_fn_st;
 
@@ -223,18 +224,22 @@ te_ast_branch_st;
 TE_API void _te_ast_branch_new(te_ast_branch_st* pself);
 TE_API void _te_ast_branch_del(te_ast_branch_st* pself);
 
-// function definition
-// stores local variables, runs pbody, restores local variables
+// calls a tesh function
+// returns either te_obj_st* or NULL on eval depending on the function
 typedef struct
 {
 	te_ast_st super;
-	te_ast_st* pbody;
 	size_t argc;
 	size_t _mem_sz;
-	char** ppargv;  // NULL terminated strings
-	char* name;     // NULL terminated string
+	te_ast_st** ppargv;
+	char* name;  // NULL terminated string
 }
 te_ast_call_st;
+
+TE_API void _te_ast_call_new(te_ast_call_st* pself, size_t sz);
+TE_API void _te_ast_call_del(te_ast_call_st* pself);
+
+TE_API int _te_ast_call_append(te_ast_call_st* pself, te_ast_st* parg);
 
 // exit point of a function
 // returns te_obj_st* or NULL on eval depending on ret

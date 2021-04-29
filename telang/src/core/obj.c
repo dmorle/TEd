@@ -1,9 +1,9 @@
 #define TE_SRC
 
-#include <tesh/core/obj.h>
-#include <tesh/core/int.h>
-#include <tesh/core/arr.h>
-#include <tesh/core/str.h>
+#include <telang/core/obj.h>
+#include <telang/core/int.h>
+#include <telang/core/arr.h>
+#include <telang/core/str.h>
 
 
 void te_incref(te_obj_st* pobj)

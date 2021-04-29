@@ -1,6 +1,6 @@
 #define TE_SRC
 
-#include <tesh/core/arr.h>
+#include <telang/core/arr.h>
 
 void _te_arr_dealloc(te_arr_st* parr)
 {

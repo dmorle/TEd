@@ -1,6 +1,6 @@
 #define TE_SRC
 
-#include <tesh/parse/parser.h>
+#include <telang/parse/parser.h>
 
 #include <stdlib.h>
 #include <stdbool.h>
@@ -172,6 +172,41 @@ int te_parse_arr(const te_tarr_st* ptarr, te_ast_arr_st* parr)
 			return ret;
 		}
 		if (ptarr->_data[ret].t_id == TK_C_SQUARE)
+			return ret;
+		idx += (size_t)ret + 1;
+	}
+
+	fprintf(stderr, "Invalid array definition on line %zu", ptarr->_data[0].linenum);
+	return -2;
+}
+
+// Parses comma seperated function arguments
+int te_parse_args(const te_tarr_st* ptarr, te_ast_call_st* parr)
+{
+	te_ast_st* pelem;
+	te_tarr_st tk_slice;
+	size_t idx = 0;
+	int ret;
+
+	while (idx < ptarr->length)
+	{
+		ret = te_find_elem_end(ptarr, idx, TK_O_ROUND, TK_C_ROUND);
+		if (ret < 0)
+		{
+			fprintf(stderr, "Invalid array element on line %zu", ptarr->_data[idx].linenum);
+			return ret;
+		}
+		_te_tarr_slice(ptarr, idx, ret, &tk_slice);
+		ret = te_parse_expr(&tk_slice, &pelem);
+		if (ret < 0)
+			return ret;
+		ret = _te_ast_call_append(parr, pelem);
+		if (ret < 0)
+		{
+			_te_ast_del(pelem);
+			return ret;
+		}
+		if (ptarr->_data[ret].t_id == TK_C_ROUND)
 			return ret;
 		idx += (size_t)ret + 1;
 	}

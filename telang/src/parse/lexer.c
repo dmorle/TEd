@@ -1,6 +1,6 @@
 #define TE_SRC
 
-#include <tesh/parse/lexer.h>
+#include <telang/parse/lexer.h>
 
 #include <stdbool.h>
 #include <stdlib.h>
