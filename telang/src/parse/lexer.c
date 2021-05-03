@@ -8,6 +8,46 @@
 #include <string.h>
 #include <assert.h>
 
+bool _te_is_op(te_token_et t)
+{
+	return TK_OP_ASSIGN <= t && t <= TK_OP_EXP;
+}
+
+int _te_op_prec(te_token_et t)
+{
+	switch (t)
+	{
+	case TK_OP_ASSIGN:
+	case TK_OP_IADD:
+	case TK_OP_ISUB:
+	case TK_OP_IMUL:
+	case TK_OP_IDIV:
+	case TK_OP_IEXP:
+		return 0;  // backward parsing
+	case TK_OP_EQ:
+	case TK_OP_NE:
+	case TK_OP_LT:
+	case TK_OP_GT:
+	case TK_OP_LE:
+	case TK_OP_GE:
+		return 1;  // forward parsing
+	case TK_OP_AND:
+	case TK_OP_OR:
+		return 2;  // forward parsing
+	case TK_OP_ADD:
+	case TK_OP_SUB:
+	case TK_OP_MUL:
+	case TK_OP_DIV:
+	case TK_OP_MOD:
+	case TK_OP_EXP:
+		return 3;  // forward parsing
+	case TK_OP_NOT:
+		return 4;
+	default:
+		return -1;
+	}
+}
+
 void _te_token_del(te_token_st* pself)
 {
 	switch (pself->t_id)
@@ -126,78 +166,36 @@ int read_token(char* ptoken, size_t bufsz, te_tarr_st* ptarr)
 		else
 			ntoken.t_id = TK_OP_ASSIGN;
 		break;
+#define LEX_BIN_OP(eop, op)                \
+		if (bufsz > 1 && ptoken[1] == '=') \
+		{                                  \
+			ntoken.t_id = TK_OP_##eop;     \
+			ret = 2;                       \
+		}                                  \
+		else                               \
+			ntoken.t_id = TK_OP_##op;      \
+		break
+#define LEX_BIN_IOP(op) LEX_BIN_OP(I##op, op)
 	case '+':
-		if (bufsz > 1 && ptoken[1] == '=')
-		{
-			ntoken.t_id = TK_OP_IADD;
-			ret = 2;
-		}
-		else
-			ntoken.t_id = TK_OP_ADD;
-		break;
+		LEX_BIN_IOP(ADD);
 	case '-':
-		if (bufsz > 1 && ptoken[1] == '=')
-		{
-			ntoken.t_id = TK_OP_ISUB;
-			ret = 2;
-		}
-		else
-			ntoken.t_id = TK_OP_SUB;
-		break;
+		LEX_BIN_IOP(SUB);
 	case '*':
-		if (bufsz > 1 && ptoken[1] == '=')
-		{
-			ntoken.t_id = TK_OP_IMUL;
-			ret = 2;
-		}
-		else
-			ntoken.t_id = TK_OP_MUL;
-		break;
+		LEX_BIN_IOP(MUL);
 	case '/':
-		if (bufsz > 1 && ptoken[1] == '=')
-		{
-			ntoken.t_id = TK_OP_IDIV;
-			ret = 2;
-		}
-		else
-			ntoken.t_id = TK_OP_DIV;
-		break;
+		LEX_BIN_IOP(DIV);
+	case '%':
+		LEX_BIN_IOP(MOD);
 	case '^':
-		if (bufsz > 1 && ptoken[1] == '=')
-		{
-			ntoken.t_id = TK_OP_IEXP;
-			ret = 2;
-		}
-		else
-			ntoken.t_id = TK_OP_EXP;
-		break;
+		LEX_BIN_IOP(EXP);
+#undef LEX_BIN_IOP
 	case '!':
-		if (bufsz > 1 && ptoken[1] == '=')
-		{
-			ntoken.t_id = TK_OP_NE;
-			ret = 2;
-		}
-		else
-			ntoken.t_id = TK_OP_NOT;
-		break;
+		LEX_BIN_OP(NE, NOT);
 	case '<':
-		if (bufsz > 1 && ptoken[1] == '=')
-		{
-			ntoken.t_id = TK_OP_LE;
-			ret = 2;
-		}
-		else
-			ntoken.t_id = TK_OP_LT;
-		break;
+		LEX_BIN_OP(LE, LT);
 	case '>':
-		if (bufsz > 1 && ptoken[1] == '=')
-		{
-			ntoken.t_id = TK_OP_GE;
-			ret = 2;
-		}
-		else
-			ntoken.t_id = TK_OP_GT;
-		break;
+		LEX_BIN_OP(GE, GT);
+#undef LEX_BIN_OP
 	case '&':
 		if (bufsz > 1 && ptoken[1] != '&')
 			return -2;
@@ -259,64 +257,41 @@ int read_token(char* ptoken, size_t bufsz, te_tarr_st* ptarr)
 				if (++ret == bufsz)
 					break;
 
+#define CHECK_KEYWORD(kw, tk)                                         \
+			if (!memcmp(ptoken - sizeof(kw) + 1, kw, sizeof(kw) - 1)) \
+			{                                                         \
+				ntoken.t_id = tk;                                     \
+				goto RD_TK_END;                                       \
+			}
+
 			switch (ret)
 			{
 			case 2:
-				if (!memcmp(ptoken - 2, "if", 2))
-				{
-					ntoken.t_id = TK_IF;
-					goto RD_TK_END;
-				}
-				if (!memcmp(ptoken - 2, "fn", 2))
-				{
-					ntoken.t_id = TK_FN;
-					goto RD_TK_END;
-				}
+				CHECK_KEYWORD("if", TK_IF);
+				CHECK_KEYWORD("fn", TK_FN);
 				break;
 			case 3:
-				if (!memcmp(ptoken - 3, "for", 3))
-				{
-					ntoken.t_id = TK_FOR;
-					goto RD_TK_END;
-				}
+				CHECK_KEYWORD("for", TK_FOR);
 				break;
 			case 4:
-				if (!memcmp(ptoken - 4, "null", 4))
-				{
-					ntoken.t_id = TK_NULL;
-					goto RD_TK_END;
-				}
-				if (!memcmp(ptoken - 4, "true", 4))
-				{
-					ntoken.t_id = TK_TRUE;
-					goto RD_TK_END;
-				}
-				if (!memcmp(ptoken - 4, "else", 4))
-				{
-					ntoken.t_id = TK_ELSE;
-					goto RD_TK_END;
-				}
+				CHECK_KEYWORD("null", TK_NULL);
+				CHECK_KEYWORD("true", TK_TRUE);
+				CHECK_KEYWORD("else", TK_ELSE);
 				break;
 			case 5:
-				if (!memcmp(ptoken - 5, "false", 5))
-				{
-					ntoken.t_id = TK_FALSE;
-					goto RD_TK_END;
-				}
-				if (!memcmp(ptoken - 5, "while", 5))
-				{
-					ntoken.t_id = TK_WHILE;
-					goto RD_TK_END;
-				}
+				CHECK_KEYWORD("false", TK_FALSE);
+				CHECK_KEYWORD("while", TK_WHILE);
+				CHECK_KEYWORD("break", TK_BREAK);
 				break;
 			case 6:
-				if (!memcmp(ptoken - 6, "return", 6))
-				{
-					ntoken.t_id = TK_RETURN;
-					goto RD_TK_END;
-				}
+				CHECK_KEYWORD("return", TK_RETURN);
+				break;
+			case 8:
+				CHECK_KEYWORD("continue", TK_CONTINUE);
 				break;
 			}
+
+#undef CHECK_KEYWORD
 
 			ntoken.t_id = TK_IDN;
 			ntoken._data = malloc(sizeof(char) * ((size_t)ret + 1));

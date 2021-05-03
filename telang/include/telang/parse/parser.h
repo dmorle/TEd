@@ -3,8 +3,10 @@
 
 #include <stdbool.h>
 
-#include <tesh/core/obj.h>
-#include <tesh/parse/lexer.h>
+#include <telang/telapi.h>
+
+#include <telang/core/obj.h>
+#include <telang/parse/lexer.h>
 
 typedef enum
 {
@@ -28,8 +30,29 @@ typedef enum
 	AST_WHILE,
 	AST_BRANCH,
 
-	// operators
-	AST_BIN,
+	// binary operators
+	AST_ASSIGN,
+	AST_IADD,
+	AST_ISUB,
+	AST_IMUL,
+	AST_IDIV,
+	AST_IEXP,
+	AST_ADD,
+	AST_SUB,
+	AST_MUL,
+	AST_DIV,
+	AST_EXP,
+	AST_EQ,
+	AST_NE,
+	AST_LT,
+	AST_GT,
+	AST_LE,
+	AST_GE,
+	AST_AND,
+	AST_OR,
+	AST_IDX, // ex. a[0]
+
+	// unary operators
 	AST_UNI
 }
 te_ast_et;
@@ -46,6 +69,17 @@ te_ast_st;
 void _te_ast_del(te_ast_st* pself);
 
 // data nodes
+
+// empty expression
+// returns NULL on eval
+typedef struct
+{
+	te_ast_st super;
+}
+te_ast_noexpr_st;
+
+TE_API void _te_ast_noexpr_new(te_ast_noexpr_st* pself);
+TE_API void _te_ast_noexpr_del(te_ast_noexpr_st* pself);
 
 // refers to a te_obj_st* in a hash table containing global variables
 // returns the retrieved te_obj_st* on eval
@@ -121,6 +155,28 @@ TE_API void _te_ast_arr_new(te_ast_arr_st* pself, size_t sz);
 TE_API void _te_ast_arr_del(te_ast_arr_st* pself);
 
 TE_API int _te_ast_arr_append(te_ast_arr_st* pself, te_ast_st* pelem);
+
+// special cases for expressions
+
+// returns NULL on eval
+typedef struct
+{
+	te_ast_st super;
+}
+te_ast_break_st;
+
+TE_API void _te_ast_break_new(te_ast_break_st* pself);
+TE_API void _te_ast_break_del(te_ast_break_st* pself);
+
+// returns NULL on eval
+typedef struct
+{
+	te_ast_st super;
+}
+te_ast_continue_st;
+
+TE_API void _te_ast_continue_new(te_ast_continue_st* pself);
+TE_API void _te_ast_continue_del(te_ast_continue_st* pself);
 
 // internal nodes
 
@@ -232,7 +288,7 @@ typedef struct
 	size_t argc;
 	size_t _mem_sz;
 	te_ast_st** ppargv;
-	char* name;  // NULL terminated string
+	char* name;  // NULL terminated string, name of the function
 }
 te_ast_call_st;
 
@@ -253,63 +309,29 @@ te_ast_return_st;
 TE_API void _te_ast_return_new(te_ast_return_st* pself);
 TE_API void _te_ast_return_del(te_ast_return_st* pself);
 
-// types of binary operations: te_ast_bin_st.bin_ty
-typedef enum
-{
-	// effects global state
-	AST_BIN_ASSIGN,
-	AST_BIN_IADD,
-	AST_BIN_ISUB,
-	AST_BIN_IMUL,
-	AST_BIN_IDIV,
-	AST_BIN_IEXP,
+// Binary operators
 
-	// const global state
-	AST_BIN_ADD,
-	AST_BIN_SUB,
-	AST_BIN_MUL,
-	AST_BIN_DIV,
-	AST_BIN_EXP,
-	AST_BIN_EQ,
-	AST_BIN_NE,
-	AST_BIN_LT,
-	AST_BIN_GT,
-	AST_BIN_LE,
-	AST_BIN_GE,
-	AST_BIN_AND,
-	AST_BIN_OR,
-	AST_BIN_IDX  // ex. a[0]
-}
-te_ast_bin_et;
+#define MAKE_P0_OP(op)                                   \
+typedef struct                                           \
+{                                                        \
+	te_ast_st super;                                     \
+	te_ast_st* rval;                                     \
+	char* name;                                          \
+}                                                        \
+te_ast_##op##_st;                                        \
+                                                         \
+TE_API void _te_ast_##op##_new(te_ast_##op##_st* pself); \
+TE_API void _te_ast_##op##_del(te_ast_##op##_st* pself)
 
-// class for all ast nodes representing binary operations
-// returns te_obj_st* on eval
-typedef struct
-{
-	te_ast_st super;
-	te_ast_bin_et bin_ty;
-	te_ast_st* lval;  // Must return te_obj_st* on eval
-	te_ast_st* rval;  // Must return te_obj_st* on eval
-}
-te_ast_bin_st;
+MAKE_P0_OP(assign);
+MAKE_P0_OP(iadd);
+MAKE_P0_OP(isub);
+MAKE_P0_OP(imul);
+MAKE_P0_OP(idiv);
+MAKE_P0_OP(imod);
+MAKE_P0_OP(iexp);
 
-// types of unary operations: te_ast_uni_st.bin_ty
-typedef enum
-{
-	// I think I only have logical not for this...
-	AST_UNI_NOT
-}
-te_ast_uni_et;
-
-// class for all ast nodes representing unary operations
-// returns te_obj_st* on eval
-typedef struct
-{
-	te_ast_st super;
-	te_ast_uni_et uni_ty;
-	te_ast_st* val;  // Must return te_obj_st* on eval
-}
-te_ast_uni_st;
+#undef MAKE_P0_OP
 
 TE_API int te_parse_expr   (const te_tarr_st* ptarr, te_ast_st** ppast);
 TE_API int te_parse_block  (const te_tarr_st* ptarr, te_ast_st** ppast);

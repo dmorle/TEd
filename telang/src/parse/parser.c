@@ -131,8 +131,6 @@ int te_find_elem_end(const te_tarr_st* ptarr, size_t idx, te_token_et tk_open, t
 {
 	// token values could be passed at compile time, but idk if its worth it
 	int brac = 0;
-	int brac = 0;
-	int brac = 0;
 	for (; idx < ptarr->length; idx++)
 	{
 		brac += ptarr->_data[idx].t_id == tk_open;
@@ -193,7 +191,7 @@ int te_parse_args(const te_tarr_st* ptarr, te_ast_call_st* parr)
 		ret = te_find_elem_end(ptarr, idx, TK_O_ROUND, TK_C_ROUND);
 		if (ret < 0)
 		{
-			fprintf(stderr, "Invalid array element on line %zu", ptarr->_data[idx].linenum);
+			fprintf(stderr, "Invalid argument syntax on line %zu", ptarr->_data[idx].linenum);
 			return ret;
 		}
 		_te_tarr_slice(ptarr, idx, ret, &tk_slice);
@@ -387,9 +385,189 @@ int te_parse_seq(const te_tarr_st* ptarr, te_ast_seq_st* pseq)
 	return idx;
 }
 
+// parses expressions with precedence >= 1 operators
+int parse_expr_p1(const te_tarr_st* ptarr, te_ast_st** ppexpr)
+{
+
+}
+
+// parses expressions with precedence >= 0 operators (backwards parsing)
+int parse_expr_p0(const te_tarr_st* ptarr, te_ast_st** ppexpr)
+{
+	te_tarr_st tk_slice;
+	te_ast_st* pexpr = NULL;
+	int ret;
+
+	int bbrac = 0;
+	int rbrac = 0;
+	int sbrac = 0;
+
+	int i = ptarr->length - 1;
+	for (; i >= 0; i--)
+	{
+		switch (ptarr->_data[i].t_id)
+		{
+		case TK_C_BRACE:
+			bbrac++;
+			continue;
+		case TK_O_BRACE:
+			if (!bbrac--)
+				goto INVALID_TOKEN;
+			continue;
+		case TK_C_ROUND:
+			rbrac++;
+			continue;
+		case TK_O_ROUND:
+			if (!rbrac--)
+				goto INVALID_TOKEN;
+			continue;
+		case TK_C_SQUARE:
+			rbrac++;
+			continue;
+		case TK_O_SQUARE:
+			if (!rbrac--)
+				goto INVALID_TOKEN;
+			continue;
+		}
+
+		if (bbrac || rbrac || sbrac)
+			continue;
+		if (_te_op_prec(ptarr->_data[i].t_id) != 0)
+			continue;
+
+		if (i == ptarr->length - 1)
+			goto INVALID_TOKEN;
+		_te_tarr_slice(ptarr, (size_t)i + 1, ptarr->length, &tk_slice);
+		ret = parse_expr_p1(&tk_slice, &pexpr);
+		if (ret < 0)
+			return ret;
+		break;
+	}
+
+	// checking if the expression didn't contain any precedence 0 operators
+	if (!pexpr)
+	{
+		ret = parse_expr_p1(ptarr, &pexpr);
+		if (ret < 0)
+			return ret;
+		*ppexpr = pexpr;
+		return ptarr->length;
+	}
+
+	// found precedence 0 operator, rvalue is in pexpr
+	if (!i)
+		goto INVALID_TOKEN;
+
+	te_token_et t = ptarr->_data[i].t_id;
+	while (i > 0)
+	{
+		// only identifiers are allowed for lvalues
+		if (ptarr->_data[--i].t_id != TK_IDN)
+			goto INVALID_TOKEN;
+
+		switch (t)
+		{
+#define HANDLE_OP(op)                                                                      \
+			{                                                                              \
+				te_ast_##op##_st* p = (te_ast_##op##_st*)malloc(sizeof(te_ast_##op##_st)); \
+				if (!p)                                                                    \
+				{                                                                          \
+					_te_ast_del(pexpr);                                                    \
+					goto OUT_OF_MEMORY;                                                    \
+				}                                                                          \
+				p->name = ptarr->_data[i]._data;                                           \
+				ptarr->_data[i--]._data = NULL;                                            \
+				_te_ast_##op##_new(p);                                                     \
+				p->rval = pexpr;                                                           \
+				pexpr = p;                                                                 \
+			}                                                                              \
+			break
+
+		// macro magic
+		case TK_OP_ASSIGN:
+			HANDLE_OP(assign);
+		case TK_OP_IADD:
+			HANDLE_OP(iadd);
+		case TK_OP_ISUB:
+			HANDLE_OP(isub);
+		case TK_OP_IMUL:
+			HANDLE_OP(imul);
+		case TK_OP_IDIV:
+			HANDLE_OP(idiv);
+		case TK_OP_IMOD:
+			HANDLE_OP(imod);
+		case TK_OP_IEXP:
+			HANDLE_OP(iexp);
+#undef HANDLE_OP
+		default:
+			assert(false && "Found a non p0 op as p0 op, check the lexer\n");
+		}
+	}
+	return ptarr->length;
+
+INVALID_TOKEN:
+	fprintf(stderr, "Unexpected token on line %zu", ptarr->_data[i].linenum);
+	return -2;
+
+OUT_OF_MEMORY:
+	fprintf(stderr, "Out of memory\n");
+	return -1;
+}
+
 int te_parse_expr(const te_tarr_st* ptarr, te_ast_st** ppexpr)
 {
-	// 
+	if (!ptarr->length)
+	{
+		te_ast_noexpr_st* pexpr = (te_ast_noexpr_st*)malloc(sizeof(te_ast_noexpr_st));
+		if (!pexpr)
+			goto OUT_OF_MEMORY;
+		*ppexpr = pexpr;
+	}
+
+	// handling leaf nodes and special cases
+	int ret;
+	switch (ptarr->_data[0].t_id)
+	{
+	// special cases for expressions
+	case TK_BREAK:
+	{
+		if (ptarr->length != 1)
+		{
+			fprintf(stderr, "Invalid break expression on line %zu\n", ptarr->_data[0].linenum);
+			return -2;
+		}
+		te_ast_break_st* pbreak = (te_ast_break_st*)malloc(sizeof(te_ast_break_st));
+		if (!pbreak)
+			goto OUT_OF_MEMORY;
+		_te_ast_break_new(pbreak);
+		*ppexpr = ppexpr;
+		return ptarr->length;
+	}
+	case TK_CONTINUE:
+	{
+		if (ptarr->length != 1)
+		{
+			fprintf(stderr, "Invalid continue expression on line %zu\n", ptarr->_data[0].linenum);
+			return -2;
+		}
+		te_ast_continue_st* pcontinue = (te_ast_continue_st*)malloc(sizeof(te_ast_continue_st));
+		if (!pcontinue)
+			goto OUT_OF_MEMORY;
+		_te_ast_continue_new(pcontinue);
+		*ppexpr = ppexpr;
+		return ptarr->length;
+	}
+	case TK_O_SQUARE: // assuming an array definition
+		// TODO: Implementation of array definitions...
+		break;
+	default:
+		fprintf(stderr, "Invalid expression found on line %zu", ptarr->_data[0].linenum);
+		return -2;
+	}
+
+OUT_OF_MEMORY:
+	fprintf(stderr, "Out of memory\n");
+	return -1;
 }
 
 int te_parse_block(const te_tarr_st* ptarr, te_ast_st** ppblock)

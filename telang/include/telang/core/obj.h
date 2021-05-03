@@ -3,7 +3,7 @@
 
 #include <stdint.h>
 
-#include <tesh/teshapi.h>
+#include <telang/telapi.h>
 
 typedef enum
 {

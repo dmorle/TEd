@@ -3,8 +3,9 @@
 
 #include <stdio.h>
 #include <stdint.h>
+#include <stdbool.h>
 
-#include <tesh/teshapi.h>
+#include <telang/telapi.h>
 
 typedef enum
 {
@@ -25,6 +26,7 @@ typedef enum
 	TK_OP_ISUB,     // -=
 	TK_OP_IMUL,     // *=
 	TK_OP_IDIV,     // /=
+	TK_OP_IMOD,     // %=
 	TK_OP_IEXP,     // ^=
 	TK_OP_EQ,       // ==
 	TK_OP_NE,       // !=
@@ -32,14 +34,15 @@ typedef enum
 	TK_OP_GT,       // >
 	TK_OP_LE,       // <=
 	TK_OP_GE,       // >=
+	TK_OP_AND,      // &&
+	TK_OP_OR,       // ||
+	TK_OP_NOT,      // !
 	TK_OP_ADD,      // +
 	TK_OP_SUB,      // -
 	TK_OP_MUL,      // *
 	TK_OP_DIV,      // /
+	TK_OP_MOD,      // %
 	TK_OP_EXP,      // ^
-	TK_OP_AND,      // &&
-	TK_OP_OR,       // ||
-	TK_OP_NOT,      // !
 
 	// variable things
 	TK_NULL,        // null
@@ -54,10 +57,15 @@ typedef enum
 	TK_ELSE,        // else
 	TK_FOR,         // for
 	TK_WHILE,       // while
+	TK_BREAK,       // break
+	TK_CONTINUE,    // continue
 	TK_FN,          // fn
 	TK_RETURN       // return
 }
 te_token_et;
+
+TE_API bool _te_is_op(te_token_et t);
+TE_API int _te_op_prec(te_token_et t);
 
 typedef struct
 {
@@ -67,7 +75,7 @@ typedef struct
 }
 te_token_st;
 
-void _te_token_del(te_token_st* pself);
+TE_API void _te_token_del(te_token_st* pself);
 
 typedef struct
 {
@@ -77,15 +85,15 @@ typedef struct
 }
 te_tarr_st;
 
-int _te_tarr_new(te_tarr_st* pself, size_t size);
+TE_API int _te_tarr_new(te_tarr_st* pself, size_t size);
 // All token data is freed polymorphically using _te_token_del
-void _te_tarr_del(te_tarr_st* pself);
+TE_API void _te_tarr_del(te_tarr_st* pself);
 
 // A shallow copy of token_st is performed.  So...
 // ptoken->_data must be heap allocated, but the struct can be stack allocated
-int _te_tarr_append(te_tarr_st* pself, te_token_st* ptoken);
+TE_API int _te_tarr_append(te_tarr_st* pself, te_token_st* ptoken);
 
-void _te_tarr_slice(te_tarr_st* pself, size_t start, size_t end, te_tarr_st* pout);
+TE_API void _te_tarr_slice(te_tarr_st* pself, size_t start, size_t end, te_tarr_st* pout);
 
 TE_API int te_lex_f(FILE* pf, te_tarr_st* ptarr);
 TE_API int te_lex_buf(char* pbuf, size_t bufsz, te_tarr_st* ptarr);
