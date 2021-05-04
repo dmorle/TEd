@@ -7,40 +7,134 @@
 #include <string.h>
 #include <assert.h>
 
+void __te_ast_ty_new(te_ast_st* pself, te_ast_et ty)
+{
+	pself->ast_ty = ty;
+}
+
 void _te_ast_del(te_ast_st* pself)
 {
 	// TODO: Implementation
 }
 
+void _te_ast_var_new(te_ast_var_st* pself)
+{
+	pself->super.ast_ty = AST_VAR;
+	pself->name = NULL;
+}
+void _te_ast_var_del(te_ast_var_st* pself)
+{
+	assert(pself->super.ast_ty == AST_VAR);
+
+	if (pself->name)
+		free(pself->name);
+}
+
+void _te_ast_bool_new(te_ast_bool_st* pself)
+{
+	pself->super.ast_ty = AST_BOOL;
+	pself->val = false;
+}
+
+void _te_ast_int_new(te_ast_int_st* pself)
+{
+	pself->super.ast_ty = AST_INT;
+	pself->val = 0;
+}
+
+void _te_ast_str_new(te_ast_str_st* pself)
+{
+	pself->super.ast_ty = AST_STR;
+	pself->val = NULL;
+}
+void _te_ast_str_del(te_ast_str_st* pself)
+{
+	assert(pself->super.ast_ty == AST_STR);
+
+	if (pself->val)
+		free(pself->val);
+}
+
+int _te_ast_arr_new(te_ast_arr_st* pself, size_t sz)
+{
+	pself->super.ast_ty = AST_ARR;
+	pself->ppelems = (te_ast_st**)malloc(sizeof(te_ast_st*) * sz);
+	if (!pself->ppelems)
+	{
+#ifdef _DEBUG
+		pself->_mem_sz = 0;
+#endif
+		return -1;
+	}
+	pself->length = 0;
+	pself->_mem_sz = sz;
+	return 0;
+}
+void _te_ast_arr_del(te_ast_arr_st* pself)
+{
+	assert(pself->super.ast_ty == AST_ARR);
+	assert(pself->_mem_sz);
+
+	for (te_ast_st** pe = pself->ppelems; pe < pself->ppelems + pself->length; pe++)
+	{
+		_te_ast_del(*pe);
+		free(*pe);
+	}
+	free(pself->ppelems);
+}
+int _te_ast_arr_append(te_ast_arr_st* pself, te_ast_st* pelem)
+{
+	assert(pself->super.ast_ty == AST_ARR);
+	assert(pself->_mem_sz);
+
+	// resize pself->ppnds if needed
+	if (pself->length == pself->_mem_sz)
+	{
+		// doubling strategy
+		pself->_mem_sz *= 2;
+		void* n_data = realloc(pself->ppelems, sizeof(te_ast_st*) * pself->_mem_sz);
+		if (!n_data)
+		{
+			pself->_mem_sz /= 2;
+			return -1;
+		}
+		pself->ppelems = (te_ast_st**)n_data;
+	}
+
+	pself->ppelems[pself->length++] = pelem;
+	return 0;
+}
+
 int _te_ast_seq_new(te_ast_seq_st* pself, size_t sz)
 {
 	pself->super.ast_ty = AST_SEQ;
-	pself->expr_num = 0;
 	pself->ppnds = (te_ast_st**)malloc(sizeof(te_ast_st*) * sz);
 	if (!pself->ppnds)
 	{
 #ifdef _DEBUG
-		pself->_mem_sz = 0;  // This will be caught in case of accidental deallocation
+		pself->_mem_sz = 0;
 #endif
 		return -1;
 	}
+	pself->expr_num = 0;
 	pself->_mem_sz = sz;
+	return 0;
 }
-
 void _te_ast_seq_del(te_ast_seq_st* pself)
 {
+	assert(pself->super.ast_ty == AST_SEQ);
 	assert(pself->_mem_sz);
 
-	for (te_ast_st** ppnd = pself->ppnds; ppnd < pself->ppnds + pself->expr_num; ppnd++)
+	for (te_ast_st** pe = pself->ppnds; pe < pself->ppnds + pself->expr_num; pe++)
 	{
-		_te_ast_del(*ppnd);  // recursively release the internal node data
-		free(*ppnd);         // release the node itself
+		_te_ast_del(*pe);
+		free(*pe);
 	}
-	free(pself->ppnds);      // release the node array
+	free(pself->ppnds);
 }
-
 int _te_ast_seq_append(te_ast_seq_st* pself, te_ast_st* pexpr)
 {
+	assert(pself->super.ast_ty == AST_SEQ);
 	assert(pself->_mem_sz);
 
 	// resize pself->ppnds if needed
@@ -50,7 +144,10 @@ int _te_ast_seq_append(te_ast_seq_st* pself, te_ast_st* pexpr)
 		pself->_mem_sz *= 2;
 		void* n_data = realloc(pself->ppnds, sizeof(te_ast_st*) * pself->_mem_sz);
 		if (!n_data)
+		{
+			pself->_mem_sz /= 2;
 			return -1;
+		}
 		pself->ppnds = (te_ast_st**)n_data;
 	}
 
@@ -58,19 +155,336 @@ int _te_ast_seq_append(te_ast_seq_st* pself, te_ast_st* pexpr)
 	return 0;
 }
 
+void _te_ast_for_new(te_ast_for_st* pself)
+{
+	pself->super.ast_ty = AST_FOR;
+	pself->body = NULL;
+	pself->iter = NULL;
+	pself->it = NULL;
+}
+void _te_ast_for_del(te_ast_for_st* pself)
+{
+	assert(pself->super.ast_ty == AST_FOR);
+
+	if (pself->body)
+	{
+		_te_ast_del(pself->body);
+		free(pself->body);
+	}
+	if (pself->iter)
+	{
+		_te_ast_del(pself->iter);
+		free(pself->iter);
+	}
+	if (pself->it)
+		free(pself->it);
+}
+
+void _te_ast_while_new(te_ast_while_st* pself)
+{
+	pself->super.ast_ty = AST_WHILE;
+	pself->body = NULL;
+	pself->cond = NULL;
+}
+void _te_ast_while_del(te_ast_while_st* pself)
+{
+	assert(pself->super.ast_ty == AST_WHILE);
+
+	if (pself->body)
+	{
+		_te_ast_del(pself->body);
+		free(pself->body);
+	}
+	if (pself->cond)
+	{
+		_te_ast_del(pself->cond);
+		free(pself->cond);
+	}
+}
+
+void _te_ast_branch_new(te_ast_branch_st* pself)
+{
+	pself->super.ast_ty = AST_BRANCH;
+	pself->if_body = NULL;
+	pself->else_body = NULL;
+	pself->cond = NULL;
+}
+void _te_ast_branch_del(te_ast_branch_st* pself)
+{
+	assert(pself->super.ast_ty == AST_BRANCH);
+
+	if (pself->if_body)
+	{
+		_te_ast_del(pself->if_body);
+		free(pself->if_body);
+	}
+	if (pself->else_body)
+	{
+		_te_ast_del(pself->else_body);
+		free(pself->else_body);
+	}
+	if (pself->cond)
+	{
+		_te_ast_del(pself->cond);
+		free(pself->cond);
+	}
+}
+
 void _te_ast_return_new(te_ast_return_st* pself)
 {
 	pself->super.ast_ty = AST_RETURN;
 	pself->ret = NULL;
 }
-
 void _te_ast_return_del(te_ast_return_st* pself)
 {
 	assert(pself->super.ast_ty == AST_RETURN);
+
 	if (pself->ret)
 	{
 		_te_ast_del(pself->ret);
 		free(pself->ret);
+	}
+}
+
+int _te_ast_call_new(te_ast_call_st* pself, size_t sz)
+{
+	pself->super.ast_ty = AST_CALL;
+	pself->ppargv = (te_ast_st**)malloc(sizeof(te_ast_st*) * sz);
+	if (!pself->ppargv)
+	{
+#ifdef _DEBUG
+		pself->_mem_sz = 0;
+#endif
+		return -1;
+	}
+	pself->argc = 0;
+	pself->_mem_sz = sz;
+	pself->pfn = NULL;
+	return 0;
+}
+void _te_ast_call_del(te_ast_call_st* pself)
+{
+	assert(pself->super.ast_ty == AST_CALL);
+	assert(pself->_mem_sz);
+
+	for (te_ast_st** pe = pself->ppargv; pe < pself->ppargv + pself->argc; pe++)
+	{
+		_te_ast_del(*pe);
+		free(*pe);
+	}
+	free(pself->ppargv);
+	if (pself->pfn)
+	{
+		_te_ast_del(pself->pfn);
+		free(pself->pfn);
+	}
+}
+int _te_ast_call_append(te_ast_call_st* pself, te_ast_st* parg)
+{
+	assert(pself->super.ast_ty == AST_CALL);
+	assert(pself->_mem_sz);
+
+	// resize pself->ppnds if needed
+	if (pself->argc == pself->_mem_sz)
+	{
+		// doubling strategy
+		pself->_mem_sz *= 2;
+		void* n_data = realloc(pself->ppargv, sizeof(te_ast_st*) * pself->_mem_sz);
+		if (!n_data)
+		{
+			pself->_mem_sz /= 2;
+			return -1;
+		}
+		pself->ppargv = (te_ast_st**)n_data;
+	}
+
+	pself->ppargv[pself->argc++] = parg;
+	return 0;
+}
+
+int _te_ast_fn_new(te_ast_fn_st* pself, size_t sz)
+{
+	pself->super.ast_ty = AST_FN;
+	pself->ppargv = (char**)malloc(sizeof(char*) * sz);
+	if (!pself->ppargv)
+	{
+#ifdef _DEBUG
+		pself->_mem_sz = 0;
+#endif
+		return -1;
+	}
+
+	pself->pbody = NULL;
+	pself->argc = 0;
+	pself->_mem_sz = sz;
+	pself->name = NULL;
+}
+void _te_ast_fn_del(te_ast_fn_st* pself)
+{
+	assert(pself->super.ast_ty == AST_FN);
+	assert(pself->_mem_sz);
+
+	for (char** pe = pself->ppargv; pe < pself->ppargv + pself->argc; pe++)
+		free(*pe);
+	free(pself->ppargv);
+	if (pself->pbody)
+	{
+		_te_ast_del(pself->pbody);
+		free(pself->pbody);
+	}
+	if (pself->name)
+		free(pself->name);
+}
+int _te_ast_fn_add_arg(te_ast_fn_st* pself, char* arg)
+{
+	assert(pself->super.ast_ty == AST_FN);
+	assert(pself->_mem_sz);
+
+	if (pself->argc == pself->_mem_sz)
+	{
+		pself->_mem_sz *= 2;
+		void* n_data = realloc(pself->ppargv, sizeof(te_ast_st*) * pself->_mem_sz);
+		if (!n_data)
+		{
+			pself->_mem_sz /= 2;
+			return -1;
+		}
+		pself->ppargv = (te_ast_st**)n_data;
+	}
+
+	pself->ppargv[pself->argc++] = arg;
+	return 0;
+}
+
+int _te_ast_imp_new(te_ast_imp_st* pself, size_t sz)
+{
+	pself->super.ast_ty = AST_IMP;
+	pself->imp_pth = (char**)malloc(sizeof(char*) * sz);
+	if (!pself->imp_pth)
+	{
+#ifdef _DEBUG
+		pself->_mem_sz = 0;
+#endif
+		return -1;
+	}
+
+	pself->length = 0;
+	pself->_mem_sz = sz;
+	return 0;
+}
+void _te_ast_imp_del(te_ast_imp_st* pself)
+{
+	assert(pself->super.ast_ty == AST_IMP);
+	assert(pself->_mem_sz);
+	
+	for (char** pe = pself->imp_pth; pe < pself->imp_pth + pself->length; pe++)
+		free(*pe);
+	free(pself->imp_pth);
+}
+int _te_ast_imp_append(te_ast_imp_st* pself, char* imp_elem)
+{
+	assert(pself->super.ast_ty == AST_IMP);
+	assert(pself->_mem_sz);
+
+	if (pself->length == pself->_mem_sz)
+	{
+		pself->_mem_sz *= 2;
+		void* n_data = realloc(pself->imp_pth, sizeof(char*) * pself->_mem_sz);
+		if (!n_data)
+		{
+			pself->_mem_sz /= 2;
+			return -1;
+		}
+		pself->imp_pth = (char**)n_data;
+	}
+
+	pself->imp_pth[pself->length++] = imp_elem;
+	return 0;
+}
+
+int _te_ast_module_new(te_ast_module_st* pself, size_t sz)
+{
+	pself->super.ast_ty = AST_MODULE;
+	pself->ppelems = (te_ast_st**)malloc(sizeof(te_ast_st*) * sz);
+	if (!pself->ppelems)
+	{
+#ifdef _DEBUG
+		pself->_mem_sz = 0;
+#endif
+		return -1;
+	}
+
+	pself->elem_num = 0;
+	pself->_mem_sz = sz;
+	return 0;
+}
+void _te_ast_module_del(te_ast_module_st* pself)
+{
+	assert(pself->super.ast_ty == AST_MODULE);
+	assert(pself->_mem_sz);
+
+	for (te_ast_st** pe = pself->ppelems; pe < pself->ppelems + pself->elem_num; pe++)
+	{
+		_te_ast_del(*pe);
+		free(*pe);
+	}
+	free(pself->ppelems);
+}
+int _te_ast_module_append(te_ast_module_st* pself, te_ast_st* pelem)
+{
+	assert(pself->super.ast_ty == AST_MODULE);
+	assert(pself->_mem_sz);
+
+	if (pself->elem_num == pself->_mem_sz)
+	{
+		pself->_mem_sz *= 2;
+		void* n_data = realloc(pself->ppelems, sizeof(te_ast_st**) * pself->_mem_sz);
+		if (!n_data)
+		{
+			pself->_mem_sz /= 2;
+			return -1;
+		}
+		pself->ppelems = (te_ast_st**)n_data;
+	}
+
+	pself->ppelems[pself->elem_num++] = pelem;
+	return 0;
+}
+
+void _te_ast_p0_new(te_ast_p0_st* pself, te_ast_et ast_ty)
+{
+	pself->super.ast_ty = ast_ty;
+	pself->rval = NULL;
+	pself->name = NULL;
+}
+void _te_ast_p0_del(te_ast_p0_st* pself)
+{
+	if (pself->rval)
+	{
+		_te_ast_del(pself->rval);
+		free(pself->rval);
+	}
+	if (pself->name)
+		free(pself->name);
+}
+
+void _te_ast_bin_new(te_ast_bin_st* pself, te_ast_et ast_ty)
+{
+	pself->super.ast_ty = ast_ty;
+	pself->lval = NULL;
+	pself->rval = NULL;
+}
+void _te_ast_bin_del(te_ast_bin_st* pself)
+{
+	if (pself->lval)
+	{
+		_te_ast_del(pself->lval);
+		free(pself->lval);
+	}
+	if (pself->rval)
+	{
+		_te_ast_del(pself->rval);
+		free(pself->rval);
 	}
 }
 

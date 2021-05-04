@@ -24,6 +24,8 @@ typedef enum
 	AST_IDX,
 	AST_FOR,
 	AST_WHILE,
+	AST_BREAK,
+	AST_CONTINUE,
 	AST_BRANCH,
 	AST_RETURN,
 	AST_CALL,
@@ -68,6 +70,8 @@ typedef struct
 }
 te_ast_st;
 
+TE_API void __te_ast_ty_new(te_ast_st* pself, te_ast_et ty);
+
 // deallocates a generic ast node
 TE_API void _te_ast_del(te_ast_st* pself);
 
@@ -81,8 +85,8 @@ typedef struct
 }
 te_ast_noexpr_st;
 
-TE_API void _te_ast_noexpr_new(te_ast_noexpr_st* pself);
-TE_API void _te_ast_noexpr_del(te_ast_noexpr_st* pself);
+#define _te_ast_noexpr_new(pself) __te_ast_ty_new(pself, AST_EMPTY)
+#define _te_ast_noexpr_del(pself)
 
 // refers to a te_obj_st* in a hash table containing global variables
 // returns the retrieved te_obj_st* on eval
@@ -104,8 +108,8 @@ typedef struct
 }
 te_ast_null_st;
 
-TE_API void _te_ast_null_new(te_ast_null_st* pself);
-TE_API void _te_ast_null_del(te_ast_null_st* pself);
+#define _te_ast_null_new(pself) __te_ast_ty_new(pself, AST_EMPTY)
+#define _te_ast_null_del(pself)
 
 // contains a boolean value
 // returns te_bool_st* on eval
@@ -117,7 +121,7 @@ typedef struct
 te_ast_bool_st;
 
 TE_API void _te_ast_bool_new(te_ast_bool_st* pself);
-TE_API void _te_ast_bool_del(te_ast_bool_st* pself);
+#define _te_ast_bool_del(pself)
 
 // contains an integer
 // returns te_int_st* on eval
@@ -129,7 +133,7 @@ typedef struct
 te_ast_int_st;
 
 TE_API void _te_ast_int_new(te_ast_int_st* pself);
-TE_API void _te_ast_int_del(te_ast_int_st* pself);
+#define _te_ast_int_del(pself)
 
 // contains a NULL terminated string
 // returns te_str_st* on eval
@@ -150,7 +154,7 @@ typedef struct
 	te_ast_st super;
 	size_t length;
 	size_t _mem_sz;
-	te_ast_st** pelems;
+	te_ast_st** ppelems;
 }
 te_ast_arr_st;
 
@@ -168,8 +172,8 @@ typedef struct
 }
 te_ast_break_st;
 
-TE_API void _te_ast_break_new(te_ast_break_st* pself);
-TE_API void _te_ast_break_del(te_ast_break_st* pself);
+#define _te_ast_break_new(pself) __te_ast_ty_new(pself, AST_BREAK)
+#define _te_ast_break_del(pself)
 
 // returns NULL on eval
 typedef struct
@@ -178,8 +182,8 @@ typedef struct
 }
 te_ast_continue_st;
 
-TE_API void _te_ast_continue_new(te_ast_continue_st* pself);
-TE_API void _te_ast_continue_del(te_ast_continue_st* pself);
+#define _te_ast_continue_new(pself) __te_ast_ty_new(pself, AST_CONTINUE)
+#define _te_ast_continue_del(pself)
 
 // internal nodes
 
@@ -302,7 +306,7 @@ te_ast_imp_st;
 TE_API int _te_ast_imp_new(te_ast_imp_st* pself, size_t sz);
 TE_API void _te_ast_imp_del(te_ast_imp_st* pself);
 
-TE_API int _te_ast_imp_append(te_ast_imp_st* pself, char* imp_pth);
+TE_API int _te_ast_imp_append(te_ast_imp_st* pself, char* imp_elem);
 
 // represents the contents of any tesh file
 // returns NULL on eval
