@@ -292,6 +292,7 @@ int read_token(char* ptoken, size_t bufsz, te_tarr_st* ptarr)
 				break;
 			case 6:
 				CHECK_KEYWORD("return", TK_RETURN);
+				CHECK_KEYWORD("import", TK_IMPORT);
 				break;
 			case 8:
 				CHECK_KEYWORD("continue", TK_CONTINUE);

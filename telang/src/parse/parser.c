@@ -716,6 +716,49 @@ OUT_OF_MEMORY:
 	return -1;
 }
 
+// Parses an import expression
+int parse_expr_imp(const te_tarr_st* ptarr, te_ast_imp_st* pimp)
+{
+	assert(ptarr->length > 0);
+	assert(ptarr->_data[0].t_id == TK_IMPORT);
+
+	if (ptarr->length < 2)
+		goto INVALID_IMP;
+	if (ptarr->length % 2)  // import idn [dot idn] ;
+		goto INVALID_IMP;
+
+	if (ptarr->_data[1].t_id != TK_IDN)
+		goto INVALID_IMP;
+
+	int ret;
+	ret = _te_ast_imp_append(pimp, ptarr->_data[1]._data);
+	if (ret < 0)
+		goto OUT_OF_MEMORY;
+	ptarr->_data[1]._data = NULL;
+
+	size_t i = 2;
+	while (i < ptarr->length)
+	{
+		if (ptarr->_data[i++].t_id != TK_DOT)
+			goto INVALID_IMP;
+		if (ptarr->_data[i].t_id != TK_IDN)
+			goto INVALID_IMP;
+
+		ret = _te_ast_imp_append(pimp, ptarr->_data[i]._data);
+		if (ret < 0)
+			goto OUT_OF_MEMORY;
+		ptarr->_data[i++]._data = NULL;
+	}
+
+INVALID_IMP:
+	fprintf(stderr, "Invalid import expression on line %zu\n", ptarr->_data[0].linenum);
+	return -2;
+
+OUT_OF_MEMORY:
+	fprintf(stderr, "Out of memory\n");
+	return -1;
+}
+
 // Parses an arbitrary expression
 int te_parse_expr(const te_tarr_st* ptarr, te_ast_st** ppexpr)
 {
@@ -744,7 +787,7 @@ int te_parse_expr(const te_tarr_st* ptarr, te_ast_st** ppexpr)
 		if (!pbreak)
 			goto OUT_OF_MEMORY;
 		_te_ast_break_new(pbreak);
-		*ppexpr = ppexpr;
+		*ppexpr = pbreak;
 		return ptarr->length;
 	}
 	case TK_CONTINUE:
@@ -758,12 +801,33 @@ int te_parse_expr(const te_tarr_st* ptarr, te_ast_st** ppexpr)
 		if (!pcontinue)
 			goto OUT_OF_MEMORY;
 		_te_ast_continue_new(pcontinue);
-		*ppexpr = ppexpr;
+		*ppexpr = pcontinue;
 		return ptarr->length;
 	}
+	case TK_IMPORT:
+	{
+		te_ast_imp_st* pimp = (te_ast_imp_st*)malloc(sizeof(te_ast_imp_st));
+		if (!pimp)
+			goto OUT_OF_MEMORY;
+		ret = _te_ast_imp_new(pimp, 1);
+		if (ret < 0)
+		{
+			free(pimp);
+			goto OUT_OF_MEMORY;
+		}
+		ret = parse_expr_imp(ptarr, pimp);
+		if (ret < 0)
+		{
+			_te_ast_imp_del(pimp);
+			free(pimp);
+			return ret;
+		}
+		*ppexpr = pimp;
+		return ret;
 	}
-
-	return parse_expr_p0(ptarr, ppexpr);
+	default:
+		return parse_expr_p0(ptarr, ppexpr);
+	}
 
 OUT_OF_MEMORY:
 	fprintf(stderr, "Out of memory\n");
@@ -1052,169 +1116,149 @@ OUT_OF_MEMORY:
 
 // module parsing
 
+// Parses an fn definition, ie. fn f(...) ...;
+int parse_func(const te_tarr_st* ptarr, te_ast_fn_st* pfn)
+{
+	int ret;
+	size_t i = 0;
+
+	if (ptarr->length < 5) // fn f(); <- minimum function definition
+		goto INVALID_FNDEF;
+	if (ptarr->_data[++i].t_id != TK_IDN)
+		goto INVALID_FNDEF;
+	// moving the idn name into the fn node
+	pfn->name = ptarr->_data[i]._data;
+	ptarr->_data[i]._data = NULL;
+	if (ptarr->_data[++i].t_id != TK_O_ROUND)
+		goto INVALID_FNDEF;
+	if (ptarr->_data[++i].t_id != TK_C_ROUND)
+	{
+		// parse the argument names
+		if (ptarr->_data[i].t_id != TK_IDN)
+			goto INVALID_FNDEF;
+
+		// moving the first identifier into the ast node
+		ret = _te_ast_fn_add_arg(pfn, ptarr->_data[i]._data);
+		if (ret < 0)
+			goto OUT_OF_MEMORY;
+		ptarr->_data[i++]._data = NULL;
+		if (ptarr->length == i)
+			goto INVALID_FNDEF;
+
+		// parsing the remaining arguments
+		while (ptarr->_data[i].t_id != TK_C_ROUND)
+		{
+			if (ptarr->_data[i].t_id != TK_IDN)
+				goto INVALID_FNDEF;
+			ret = _te_ast_fn_add_arg(pfn, ptarr->_data[i]._data);
+			if (ret < 0)
+				goto OUT_OF_MEMORY;
+			ptarr->_data[i++]._data = NULL;
+			if (ptarr->length == i)
+				goto INVALID_FNDEF;
+			if (ptarr->_data[i++].t_id != TK_COMMA)
+				goto INVALID_FNDEF;
+			if (ptarr->length == i)
+				goto INVALID_FNDEF;
+		}
+	}
+	assert(ptarr->_data[i].t_id == TK_C_ROUND);
+
+	// parse the function body
+	te_tarr_st tk_slice;
+	_te_tarr_slice(ptarr, i + 1, ptarr->length, &tk_slice);
+	ret = te_parse_block(&tk_slice, &(pfn->pbody));
+	if (ret < 0)
+		return ret;
+	return i + ret;
+
+INVALID_FNDEF:
+	fprintf(stderr, "Invalid function declaration on line %zu\n", ptarr->_data[i].linenum);
+	return -2;
+
+OUT_OF_MEMORY:
+	fprintf(stderr, "Out of memory\n", ptarr->_data[i].linenum);
+	return -1;
+}
+
 // Returns the number of tokens read on success, -1 on error
 int te_parse_module(const te_tarr_st* ptarr, te_ast_st** ppast)
 {
-	te_token_st* ptoken = ptarr->_data;
-	switch (ptoken->t_id)
+	te_tarr_st tk_slice;
+	te_ast_st* pelem;
+	int ret;
+	
+	te_ast_module_st* pmodule = (te_ast_module_st*)malloc(sizeof(te_ast_module_st));
+	if (!pmodule)
 	{
-	case TK_O_BRACE   :
-	{
-		// Look ahead for a closing brace
-		size_t ntk = 1;
-		size_t bcount = 1;
-		while (true)
-		{
-			if ((ptoken + ntk)->t_id == TK_C_BRACE)
-				bcount--;
-			if ((ptoken + ntk)->t_id == TK_O_BRACE)
-				bcount++;
-			if (bcount == 0)
-				break;
-
-			if (++ntk == ptarr->length)
-			{
-				fprintf(stderr, "Unexpected EOF before '}' on line %zu\n", ptoken->linenum);
-				return -1;
-			}
-		}
-
-		te_tarr_st slice;
-		_te_tarr_slice(ptarr, 1, ntk, &slice);
-
-		te_ast_seq_st* pseq = (te_ast_seq_st*)malloc(sizeof(te_ast_seq_st));
-		if (!pseq)
-		{
-			fprintf(stderr, "Out of memory\n");
-			return -1;
-		}
-		int ret = _te_ast_seq_new(pseq, 5);
-		if (ret < 0)
-		{
-			free(pseq);
-			fprintf(stderr, "Out of memory\n");
-			return -1;
-		}
-
-		size_t offset = 0;
-		te_tarr_st subslice;
-		while (offset < slice.length)
-		{
-			te_ast_st* pexpr;
-			_te_tarr_slice(&slice, offset, slice.length, &subslice);
-			ret = te_parse(&slice, &pexpr);
-			if (ret < 0)
-			{
-				_te_ast_seq_del(pseq);
-				free(pseq);
-				return ret;
-			}
-			offset += ret;
-			ret = _te_ast_seq_append(pseq, pexpr);
-			if (ret < 0)
-			{
-				_te_ast_seq_del(pseq);
-				free(pseq);
-				fprintf(stderr, "Out of memory\n");
-				return ret;
-			}
-		}
-		*ppast = pseq;
-		return ntk + 1;
+		fprintf(stderr, "Out of memory\n");
+		return -1;
 	}
-	case TK_O_ROUND	  :
-		break;
-	case TK_O_SQUARE  :
-		break;
-	case TK_ITER	  :
-		break;
-	case TK_ENDL	  :
-		break;
-	case TK_OP_NOT	  :
-		break;
-	case TK_TRUE      :
-		break;
-	case TK_FALSE     :
-		break;
-	case TK_INT_LIT	  :
-		break;
-	case TK_STR_LIT	  :
-		break;
-	case TK_IDN		  :
-		if (!strcmp((char*)ptoken->_data, "if"))
-		{
+	ret = _te_ast_module_new(pmodule, 10);
+	if (ret < 0)
+	{
+		free(pmodule);
+		fprintf(stderr, "Out of memory\n");
+		return -1;
+	}
 
-		}
-		else if (!strcmp((char*)ptoken->_data, "for"))
+	size_t i = 0;
+	while (i < ptarr->length)
+	{
+		if (ptarr->_data[i].t_id == TK_FN)
 		{
-
-		}
-		else if (!strcmp((char*)ptoken->_data, "while"))
-		{
-
-		}
-		else if (!strcmp((char*)ptoken->_data, "return"))
-		{
-			if (!ptarr->length)
+			pelem = (te_ast_st*)malloc(sizeof(te_ast_fn_st));
+			if (!pelem)
+				goto OUT_OF_MEMORY;
+			ret = _te_ast_fn_new((te_ast_fn_st*)pelem, 2);
+			if (ret < 0)
 			{
-				fprintf(stderr, "Unexpected EOF on line %zu\n", ptoken->linenum);
-				return -1;
+				free(pelem);
+				goto OUT_OF_MEMORY;
 			}
 
-			int ret;
-			te_ast_st* pretval;
-			if ((ptoken + 1)->t_id == TK_ENDL)
+			_te_tarr_slice(ptarr, i, ptarr->length, &tk_slice);
+			ret = parse_func(&tk_slice, (te_ast_fn_st*)pelem);
+			if (ret < 0)
 			{
-				pretval = NULL;
-				ret = 2;
+				_te_ast_fn_del((te_ast_fn_st*)pelem);
+				free(pelem);
+				goto CLEANUP;
 			}
-			else
-			{
-				size_t ntk = 1;
-				while ((ptoken + ntk)->t_id != TK_ENDL)
-					if (++ntk == ptarr->length)
-					{
-						fprintf(stderr, "Unexpected EOF before ';' on line %zu\n", ptoken->linenum);
-						return -1;
-					}
-
-				te_tarr_st slice;
-				_te_tarr_slice(ptarr, 1, ntk + 1, &slice);  // Include the ; as a stopping point
-
-				ret = te_parse(&slice, &pretval);
-				if (ret < 0)
-					return ret;
-				ret++;
-			}
-
-			te_ast_return_st* pret = (te_ast_return_st*)malloc(sizeof(te_ast_return_st));
-			if (!pret)
-			{
-				fprintf(stderr, "Out of memory\n");
-				return -1;
-			}
-			_te_ast_return_new(pret, pretval);
-			*ppast = pret;
-			return ret;
-		}
-		else if (!strcmp((char*)ptoken->_data, "fn"))
-		{
-
-		}
-		else if (!strcmp((char*)ptoken->_data, "import"))
-		{
-
 		}
 		else
 		{
-			// Not a keyword
+			// Assuming its a ; terminated expression
+			// blocks are not allowed at the module level
+			ret = find_tk(ptarr, i, TK_ENDL);
+			if (ret < 0)
+			{
+				fprintf(stderr, "Invalid expression on line %zu", ptarr->_data[i].linenum);
+				goto CLEANUP;
+			}
 
-			size_t idx = 0;
-
+			_te_tarr_slice(ptarr, i, ret, &tk_slice);
+			ret = te_parse_expr(&tk_slice, &pelem);
+			if (ret < 0)
+				goto CLEANUP;
 		}
-		break;
-	default:
-		fprintf(stderr, "Unexpected token found on line %zu\n", ptoken->linenum);
-		return -1;
+
+		// Updating the index and appending the new element
+		i += ret;
+		ret = _te_ast_module_append(pmodule, pelem);
+		if (ret < 0)
+		{
+			_te_ast_del(pelem);
+			free(pelem);
+			goto OUT_OF_MEMORY;
+		}
 	}
+
+OUT_OF_MEMORY:
+	fprintf(stderr, "Out of memory\n");
+	ret = -1;
+CLEANUP:
+	_te_ast_module_del(pmodule);
+	free(pmodule);
+	return ret;
 }

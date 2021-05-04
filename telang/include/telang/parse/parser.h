@@ -20,16 +20,16 @@ typedef enum
 	AST_ARR,
 
 	// internal nodes
-	AST_MODULE,
-	AST_IMP,
-	AST_FN,
-	AST_CALL,
-	AST_RETURN,
 	AST_SEQ,
 	AST_IDX,
 	AST_FOR,
 	AST_WHILE,
 	AST_BRANCH,
+	AST_RETURN,
+	AST_CALL,
+	AST_FN,
+	AST_IMP,
+	AST_MODULE,
 
 	// binary operators
 	AST_ASSIGN,
@@ -183,27 +183,6 @@ TE_API void _te_ast_continue_del(te_ast_continue_st* pself);
 
 // internal nodes
 
-// returns NULL on eval
-typedef struct
-{
-	te_ast_st super;
-	char* imp_name;  // NULL terminated string
-}
-te_ast_imp_st;
-
-// function definition
-// stores local variables, runs pbody, restores local variables
-typedef struct
-{
-	te_ast_st super;
-	te_ast_st* pbody;
-	size_t argc;
-	size_t _mem_sz;
-	char** ppargv;  // NULL terminated strings
-	char* name;     // NULL terminated string
-}
-te_ast_fn_st;
-
 // contains an array of te_ast_st*
 // returns NULL on eval
 typedef struct
@@ -221,26 +200,6 @@ TE_API void _te_ast_seq_del(te_ast_seq_st* pself);
 
 // returns -1 on failure
 TE_API int _te_ast_seq_append(te_ast_seq_st* pself, te_ast_st* pexpr);
-
-// represents the contents of any tesh file
-// returns NULL on eval
-typedef struct
-{
-	te_ast_st super;
-
-	size_t imp_num;
-	size_t imp_mem_sz;
-	te_ast_imp_st* pimps;
-
-	size_t fn_num;
-	size_t fn_mem_sz;
-	te_ast_fn_st* pfns;
-
-	size_t expr_num;
-	size_t expr_mem_sz;
-	te_ast_st** ppexprs;
-}
-te_ast_module_st;
 
 // iterates through an iterable type iter (string, array), passing each element to idx
 // returns NULL on eval
@@ -283,6 +242,18 @@ te_ast_branch_st;
 TE_API void _te_ast_branch_new(te_ast_branch_st* pself);
 TE_API void _te_ast_branch_del(te_ast_branch_st* pself);
 
+// exit point of a function
+// returns te_obj_st* or NULL on eval depending on ret
+typedef struct
+{
+	te_ast_st super;
+	te_ast_st* ret;  // Optional parameter; if set may return either NULL or te_obj_st*
+}
+te_ast_return_st;
+
+TE_API void _te_ast_return_new(te_ast_return_st* pself);
+TE_API void _te_ast_return_del(te_ast_return_st* pself);
+
 // calls a tesh function
 // returns either te_obj_st* or NULL on eval depending on the function
 typedef struct
@@ -300,17 +271,54 @@ TE_API void _te_ast_call_del(te_ast_call_st* pself);
 
 TE_API int _te_ast_call_append(te_ast_call_st* pself, te_ast_st* parg);
 
-// exit point of a function
-// returns te_obj_st* or NULL on eval depending on ret
+// function definition
+// stores local variables, runs pbody, restores local variables
 typedef struct
 {
 	te_ast_st super;
-	te_ast_st* ret;  // Optional parameter; if set may return either NULL or te_obj_st*
+	te_ast_st* pbody;
+	size_t argc;
+	size_t _mem_sz;
+	char** ppargv;  // array of NULL terminated strings with length `argc`
+	char* name;     // NULL terminated string
 }
-te_ast_return_st;
+te_ast_fn_st;
 
-TE_API void _te_ast_return_new(te_ast_return_st* pself);
-TE_API void _te_ast_return_del(te_ast_return_st* pself);
+TE_API int _te_ast_fn_new(te_ast_fn_st* pself, size_t sz);
+TE_API void _te_ast_fn_del(te_ast_fn_st* pself);
+
+TE_API int _te_ast_fn_add_arg(te_ast_fn_st* pself, char* arg);
+
+// returns NULL on eval
+typedef struct
+{
+	te_ast_st super;
+	size_t length;
+	size_t _mem_sz;
+	char** imp_pth;  // array of NULL terminated strings with length `length`
+}
+te_ast_imp_st;
+
+TE_API int _te_ast_imp_new(te_ast_imp_st* pself, size_t sz);
+TE_API void _te_ast_imp_del(te_ast_imp_st* pself);
+
+TE_API int _te_ast_imp_append(te_ast_imp_st* pself, char* imp_pth);
+
+// represents the contents of any tesh file
+// returns NULL on eval
+typedef struct
+{
+	te_ast_st super;
+	size_t elem_num;
+	size_t _mem_sz;
+	te_ast_st** ppelems;
+}
+te_ast_module_st;
+
+TE_API int _te_ast_module_new(te_ast_module_st* pself, size_t sz);
+TE_API void _te_ast_module_del(te_ast_module_st* pself);
+
+TE_API int _te_ast_module_append(te_ast_module_st* pself, te_ast_st* pelem);
 
 // Binary operators
 

@@ -61,7 +61,8 @@ typedef enum
 	TK_BREAK,       // break
 	TK_CONTINUE,    // continue
 	TK_FN,          // fn
-	TK_RETURN       // return
+	TK_RETURN,      // return
+	TK_IMPORT       // import
 }
 te_token_et;
 
