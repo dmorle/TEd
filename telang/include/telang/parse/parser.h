@@ -11,6 +11,7 @@
 typedef enum
 {
 	// data nodes
+	AST_EMPTY,
 	AST_VAR,
 	AST_NULL,
 	AST_BOOL,
@@ -36,12 +37,8 @@ typedef enum
 	AST_ISUB,
 	AST_IMUL,
 	AST_IDIV,
+	AST_IMOD,
 	AST_IEXP,
-	AST_ADD,
-	AST_SUB,
-	AST_MUL,
-	AST_DIV,
-	AST_EXP,
 	AST_EQ,
 	AST_NE,
 	AST_LT,
@@ -50,10 +47,16 @@ typedef enum
 	AST_GE,
 	AST_AND,
 	AST_OR,
+	AST_ADD,
+	AST_SUB,
+	AST_MUL,
+	AST_DIV,
+	AST_MOD,
+	AST_EXP,
 	AST_IDX, // ex. a[0]
 
 	// unary operators
-	AST_UNI
+	AST_NOT
 }
 te_ast_et;
 
@@ -66,7 +69,7 @@ typedef struct
 te_ast_st;
 
 // deallocates a generic ast node
-void _te_ast_del(te_ast_st* pself);
+TE_API void _te_ast_del(te_ast_st* pself);
 
 // data nodes
 
@@ -311,27 +314,81 @@ TE_API void _te_ast_return_del(te_ast_return_st* pself);
 
 // Binary operators
 
-#define MAKE_P0_OP(op)                                   \
-typedef struct                                           \
-{                                                        \
-	te_ast_st super;                                     \
-	te_ast_st* rval;                                     \
-	char* name;                                          \
-}                                                        \
-te_ast_##op##_st;                                        \
-                                                         \
-TE_API void _te_ast_##op##_new(te_ast_##op##_st* pself); \
-TE_API void _te_ast_##op##_del(te_ast_##op##_st* pself)
+// generic struct for assignment based operators
+// returns `name` on eval
+typedef struct
+{
+	te_ast_st super;
+	te_ast_st* rval;
+	char* name;
+}
+te_ast_p0_st;
 
-MAKE_P0_OP(assign);
-MAKE_P0_OP(iadd);
-MAKE_P0_OP(isub);
-MAKE_P0_OP(imul);
-MAKE_P0_OP(idiv);
-MAKE_P0_OP(imod);
-MAKE_P0_OP(iexp);
+TE_API void _te_ast_p0_new(te_ast_p0_st* pself, te_ast_et ast_ty);
+TE_API void _te_ast_p0_del(te_ast_p0_st* pself);
 
-#undef MAKE_P0_OP
+typedef te_ast_p0_st
+        te_ast_assign_st,
+        te_ast_iadd_st,
+        te_ast_isub_st,
+        te_ast_imul_st,
+        te_ast_idiv_st,
+        te_ast_imod_st,
+        te_ast_iexp_st;
+#define _te_ast_assign_new( pself ) _te_ast_p0_new( pself, AST_ASSIGN )
+#define   _te_ast_iadd_new( pself ) _te_ast_p0_new( pself, AST_IADD   )
+#define   _te_ast_isub_new( pself ) _te_ast_p0_new( pself, AST_ISUB   )
+#define   _te_ast_imul_new( pself ) _te_ast_p0_new( pself, AST_IMUL   )
+#define   _te_ast_idiv_new( pself ) _te_ast_p0_new( pself, AST_IDIV   )
+#define   _te_ast_imod_new( pself ) _te_ast_p0_new( pself, AST_IMOD   )
+#define   _te_ast_iexp_new( pself ) _te_ast_p0_new( pself, AST_IEXP   )
+
+// generic struct for non-assignment based binary operators
+// returns te_obj_st* on eval
+typedef struct
+{
+	te_ast_st super;
+	te_ast_st* lval;
+	te_ast_st* rval;
+}
+te_ast_bin_st;
+
+TE_API void _te_ast_bin_new(te_ast_bin_st* pself, te_ast_et ast_ty);
+TE_API void _te_ast_bin_del(te_ast_bin_st* pself);
+
+typedef te_ast_bin_st
+        te_ast_eq_st,
+        te_ast_ne_st,
+        te_ast_lt_st,
+        te_ast_gt_st,
+        te_ast_le_st,
+        te_ast_ge_st,
+#define  _te_ast_eq_new( pself ) _te_ast_bin_new( pself, AST_EQ  )
+#define  _te_ast_ne_new( pself ) _te_ast_bin_new( pself, AST_NE  )
+#define  _te_ast_lt_new( pself ) _te_ast_bin_new( pself, AST_LT  )
+#define  _te_ast_gt_new( pself ) _te_ast_bin_new( pself, AST_GT  )
+#define  _te_ast_le_new( pself ) _te_ast_bin_new( pself, AST_LE  )
+#define  _te_ast_ge_new( pself ) _te_ast_bin_new( pself, AST_GE  )
+
+        te_ast_and_st,
+        te_ast_or_st,
+#define _te_ast_and_new( pself ) _te_ast_bin_new( pself, AST_AND )
+#define  _te_ast_or_new( pself ) _te_ast_bin_new( pself, AST_OR  )
+
+        te_ast_add_st,
+        te_ast_sub_st,
+        te_ast_mul_st,
+        te_ast_div_st,
+        te_ast_mod_st,
+        te_ast_exp_st,
+        te_ast_idx_st;
+#define _te_ast_add_new( pself ) _te_ast_bin_new( pself, AST_ADD )
+#define _te_ast_sub_new( pself ) _te_ast_bin_new( pself, AST_SUB )
+#define _te_ast_mul_new( pself ) _te_ast_bin_new( pself, AST_MUL )
+#define _te_ast_div_new( pself ) _te_ast_bin_new( pself, AST_DIV )
+#define _te_ast_mod_new( pself ) _te_ast_bin_new( pself, AST_MOD )
+#define _te_ast_exp_new( pself ) _te_ast_bin_new( pself, AST_EXP )
+#define _te_ast_idx_new( pself ) _te_ast_bin_new( pself, AST_IDX )
 
 TE_API int te_parse_expr   (const te_tarr_st* ptarr, te_ast_st** ppast);
 TE_API int te_parse_block  (const te_tarr_st* ptarr, te_ast_st** ppast);

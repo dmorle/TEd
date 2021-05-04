@@ -67,6 +67,8 @@ te_token_et;
 TE_API bool _te_is_op(te_token_et t);
 TE_API int _te_op_prec(te_token_et t);
 
+extern const int MAX_PREC;
+
 typedef struct
 {
 	te_token_et t_id;

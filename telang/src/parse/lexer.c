@@ -30,23 +30,27 @@ int _te_op_prec(te_token_et t)
 	case TK_OP_GT:
 	case TK_OP_LE:
 	case TK_OP_GE:
-		return 1;  // forward parsing
+		return 1;
 	case TK_OP_AND:
 	case TK_OP_OR:
-		return 2;  // forward parsing
+		return 2;
 	case TK_OP_ADD:
 	case TK_OP_SUB:
+		return 3;
 	case TK_OP_MUL:
 	case TK_OP_DIV:
 	case TK_OP_MOD:
-	case TK_OP_EXP:
-		return 3;  // forward parsing
-	case TK_OP_NOT:
 		return 4;
+	case TK_OP_EXP:
+		return 5;
+	case TK_OP_NOT:
+		return 6;
 	default:
 		return -1;
 	}
 }
+
+const int MAX_PREC = 6;
 
 void _te_token_del(te_token_st* pself)
 {

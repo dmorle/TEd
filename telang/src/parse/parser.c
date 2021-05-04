@@ -143,76 +143,6 @@ int te_find_elem_end(const te_tarr_st* ptarr, size_t idx, te_token_et tk_open, t
 	return -2;
 }
 
-// Parses comma seperated array elements
-int te_parse_arr(const te_tarr_st* ptarr, te_ast_arr_st* parr)
-{
-	te_ast_st* pelem;
-	te_tarr_st tk_slice;
-	size_t idx = 0;
-	int ret;
-
-	while (idx < ptarr->length)
-	{
-		ret = te_find_elem_end(ptarr, idx, TK_O_SQUARE, TK_C_SQUARE);
-		if (ret < 0)
-		{
-			fprintf(stderr, "Invalid array element on line %zu", ptarr->_data[idx].linenum);
-			return ret;
-		}
-		_te_tarr_slice(ptarr, idx, ret, &tk_slice);
-		ret = te_parse_expr(&tk_slice, &pelem);
-		if (ret < 0)
-			return ret;
-		ret = _te_ast_arr_append(parr, pelem);
-		if (ret < 0)
-		{
-			_te_ast_del(pelem);
-			return ret;
-		}
-		if (ptarr->_data[ret].t_id == TK_C_SQUARE)
-			return ret;
-		idx += (size_t)ret + 1;
-	}
-
-	fprintf(stderr, "Invalid array definition on line %zu", ptarr->_data[0].linenum);
-	return -2;
-}
-
-// Parses comma seperated function arguments
-int te_parse_args(const te_tarr_st* ptarr, te_ast_call_st* parr)
-{
-	te_ast_st* pelem;
-	te_tarr_st tk_slice;
-	size_t idx = 0;
-	int ret;
-
-	while (idx < ptarr->length)
-	{
-		ret = te_find_elem_end(ptarr, idx, TK_O_ROUND, TK_C_ROUND);
-		if (ret < 0)
-		{
-			fprintf(stderr, "Invalid argument syntax on line %zu", ptarr->_data[idx].linenum);
-			return ret;
-		}
-		_te_tarr_slice(ptarr, idx, ret, &tk_slice);
-		ret = te_parse_expr(&tk_slice, &pelem);
-		if (ret < 0)
-			return ret;
-		ret = _te_ast_call_append(parr, pelem);
-		if (ret < 0)
-		{
-			_te_ast_del(pelem);
-			return ret;
-		}
-		if (ptarr->_data[ret].t_id == TK_C_ROUND)
-			return ret;
-		idx += (size_t)ret + 1;
-	}
-
-	fprintf(stderr, "Invalid array definition on line %zu", ptarr->_data[0].linenum);
-	return -2;
-}
-
 int te_parse_branch(const te_tarr_st* ptarr, te_ast_branch_st* pbranch)
 {
 	assert(ptarr->length);
@@ -385,15 +315,226 @@ int te_parse_seq(const te_tarr_st* ptarr, te_ast_seq_st* pseq)
 	return idx;
 }
 
-// parses expressions with precedence >= 1 operators
-int parse_expr_p1(const te_tarr_st* ptarr, te_ast_st** ppexpr)
+// Parses comma seperated array elements
+int parse_expr_arr(const te_tarr_st* ptarr, te_ast_arr_st* parr)
+{
+	te_ast_st* pelem;
+	te_tarr_st tk_slice;
+	size_t idx = 0;
+	int ret;
+
+	while (idx < ptarr->length)
+	{
+		ret = te_find_elem_end(ptarr, idx, TK_O_SQUARE, TK_C_SQUARE);
+		if (ret < 0)
+		{
+			fprintf(stderr, "Invalid array element on line %zu", ptarr->_data[idx].linenum);
+			return ret;
+		}
+		_te_tarr_slice(ptarr, idx, ret, &tk_slice);
+		ret = te_parse_expr(&tk_slice, &pelem);
+		if (ret < 0)
+			return ret;
+		ret = _te_ast_arr_append(parr, pelem);
+		if (ret < 0)
+		{
+			_te_ast_del(pelem);
+			return ret;
+		}
+		if (ptarr->_data[ret].t_id == TK_C_SQUARE)
+			return ret;
+		idx += (size_t)ret + 1;
+	}
+
+	fprintf(stderr, "Invalid array definition on line %zu", ptarr->_data[0].linenum);
+	return -2;
+}
+
+// Parses comma seperated function arguments
+int parse_expr_args(const te_tarr_st* ptarr, te_ast_call_st* parr)
+{
+	te_ast_st* pelem;
+	te_tarr_st tk_slice;
+	size_t idx = 0;
+	int ret;
+
+	while (idx < ptarr->length)
+	{
+		ret = te_find_elem_end(ptarr, idx, TK_O_ROUND, TK_C_ROUND);
+		if (ret < 0)
+		{
+			fprintf(stderr, "Invalid argument syntax on line %zu", ptarr->_data[idx].linenum);
+			return ret;
+		}
+		_te_tarr_slice(ptarr, idx, ret, &tk_slice);
+		ret = te_parse_expr(&tk_slice, &pelem);
+		if (ret < 0)
+			return ret;
+		ret = _te_ast_call_append(parr, pelem);
+		if (ret < 0)
+		{
+			_te_ast_del(pelem);
+			return ret;
+		}
+		if (ptarr->_data[ret].t_id == TK_C_ROUND)
+			return ret;
+		idx += (size_t)ret + 1;
+	}
+
+	fprintf(stderr, "Invalid array definition on line %zu", ptarr->_data[0].linenum);
+	return -2;
+}
+
+// Parses a leaf node for an expression
+int parse_expr_leaf(const te_tarr_st* ptarr, te_ast_st** ppexpr)
 {
 
 }
 
-// parses expressions with precedence >= 0 operators (backwards parsing)
+// Parses expressions with precedence >= 1 operators
+int parse_expr_prec(const te_tarr_st* ptarr, te_ast_st** ppexpr, int prec)
+{
+	if (!ptarr->length)
+	{
+		te_ast_noexpr_st* pexpr = (te_ast_noexpr_st*)malloc(sizeof(te_ast_noexpr_st));
+		if (!pexpr)
+			goto OUT_OF_MEMORY;
+		_te_ast_noexpr_new(pexpr);
+		*ppexpr = pexpr;
+	}
+
+	te_tarr_st tk_slice;
+	te_ast_st* pexpr;
+	int ret;
+
+	int bbrac = 0;
+	int rbrac = 0;
+	int sbrac = 0;
+
+	int i = 0;
+	for (; i < ptarr->length; i++)
+	{
+		switch (ptarr->_data[i].t_id)
+		{
+		case TK_O_BRACE:
+			bbrac++;
+			continue;
+		case TK_C_BRACE:
+			if (!bbrac--)
+				goto INVALID_TOKEN;
+			continue;
+		case TK_O_ROUND:
+			rbrac++;
+			continue;
+		case TK_C_ROUND:
+			if (!rbrac--)
+				goto INVALID_TOKEN;
+			continue;
+		case TK_O_SQUARE:
+			rbrac++;
+			continue;
+		case TK_C_SQUARE:
+			if (!rbrac--)
+				goto INVALID_TOKEN;
+			continue;
+		}
+
+		if (bbrac || rbrac || sbrac)
+			continue;
+		if (_te_op_prec(ptarr->_data[i].t_id) != prec)
+			continue;
+
+		// Found the split point
+
+		if (i >= ptarr->length - 1)
+			goto INVALID_TOKEN;
+
+		te_ast_bin_st* pbin = (te_ast_bin_st*)malloc(sizeof(te_ast_bin_st));
+		if (!pbin)
+			goto OUT_OF_MEMORY;
+
+		switch (ptarr->_data[i].t_id)
+		{
+		case TK_OP_EQ: _te_ast_eq_new(pbin); break;
+		case TK_OP_NE: _te_ast_ne_new(pbin); break;
+		case TK_OP_LT: _te_ast_lt_new(pbin); break;
+		case TK_OP_GT: _te_ast_gt_new(pbin); break;
+		case TK_OP_LE: _te_ast_le_new(pbin); break;
+		case TK_OP_GE: _te_ast_ge_new(pbin); break;
+		default:
+			assert(false && "Found a non p1 op as p1 op, check the lexer\n");
+		}
+
+		_te_tarr_slice(ptarr, 0, i, &tk_slice);
+		ret = parse_expr_prec(&tk_slice, &pexpr, prec + 1);
+		if (ret < 0)
+		{
+			_te_ast_bin_del(pbin);
+			free(pbin);
+			return ret;
+		}
+		pbin->lval = pexpr;
+
+		_te_tarr_slice(ptarr, i + 1, ptarr->length, &tk_slice);
+		ret = parse_expr_prec(&tk_slice, &pexpr, prec);
+		if (ret < 0)
+		{
+			_te_ast_bin_del(pbin);
+			free(pbin);
+			return ret;
+		}
+		pbin->rval = pexpr;
+		
+		*ppexpr = pbin;
+		return i + 1 + ret;
+	}
+
+	// Max precedence level was reached
+	if (prec == MAX_PREC)
+	{
+		// Checking for parentheses
+		if (ptarr->_data[0].t_id == TK_O_ROUND)
+		{
+			i = ptarr->length - 1;
+			if (ptarr->_data[i].t_id != TK_C_ROUND)
+				goto INVALID_TOKEN;
+
+			_te_tarr_slice(ptarr, 1, i, &tk_slice);
+			return te_parse_expr(&tk_slice, ppexpr);
+		}
+
+		// the tokens MUST form an operator-less near leaf node
+		return parse_expr_leaf(ptarr, ppexpr);
+	}
+
+	// No operators were found at the current precedence level -> inc and search again
+	ret = parse_expr_prec(ptarr, &pexpr, prec + 1);
+	if (ret < 0)
+		return ret;
+	*ppexpr = pexpr;
+	return ptarr->length;
+
+INVALID_TOKEN:
+	fprintf(stderr, "Unexpected token on line %zu", ptarr->_data[i].linenum);
+	return -2;
+
+OUT_OF_MEMORY:
+	fprintf(stderr, "Out of memory\n");
+	return -1;
+}
+
+// Parses expressions with precedence >= 0 operators (backwards parsing)
 int parse_expr_p0(const te_tarr_st* ptarr, te_ast_st** ppexpr)
 {
+	if (!ptarr->length)
+	{
+		te_ast_noexpr_st* pexpr = (te_ast_noexpr_st*)malloc(sizeof(te_ast_noexpr_st));
+		if (!pexpr)
+			goto OUT_OF_MEMORY;
+		_te_ast_noexpr_new(pexpr);
+		*ppexpr = pexpr;
+	}
+
 	te_tarr_st tk_slice;
 	te_ast_st* pexpr = NULL;
 	int ret;
@@ -467,6 +608,7 @@ int parse_expr_p0(const te_tarr_st* ptarr, te_ast_st** ppexpr)
 
 		switch (t)
 		{
+			// token data is moved into the ast, as is pexpr
 #define HANDLE_OP(op)                                                                      \
 			{                                                                              \
 				te_ast_##op##_st* p = (te_ast_##op##_st*)malloc(sizeof(te_ast_##op##_st)); \
@@ -514,6 +656,7 @@ OUT_OF_MEMORY:
 	return -1;
 }
 
+// Parses any arbitrary expression
 int te_parse_expr(const te_tarr_st* ptarr, te_ast_st** ppexpr)
 {
 	if (!ptarr->length)
@@ -521,6 +664,7 @@ int te_parse_expr(const te_tarr_st* ptarr, te_ast_st** ppexpr)
 		te_ast_noexpr_st* pexpr = (te_ast_noexpr_st*)malloc(sizeof(te_ast_noexpr_st));
 		if (!pexpr)
 			goto OUT_OF_MEMORY;
+		_te_ast_noexpr_new(pexpr);
 		*ppexpr = pexpr;
 	}
 
@@ -671,7 +815,7 @@ OUT_OF_MEMORY:
 	return -1;
 }
 
-// returns the number of tokens read on success, -1 on error
+// Returns the number of tokens read on success, -1 on error
 int te_parse_module(const te_tarr_st* ptarr, te_ast_st** ppast)
 {
 	te_token_st* ptoken = ptarr->_data;
