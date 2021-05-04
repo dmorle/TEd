@@ -154,7 +154,7 @@ typedef struct
 }
 te_ast_arr_st;
 
-TE_API void _te_ast_arr_new(te_ast_arr_st* pself, size_t sz);
+TE_API int _te_ast_arr_new(te_ast_arr_st* pself, size_t sz);
 TE_API void _te_ast_arr_del(te_ast_arr_st* pself);
 
 TE_API int _te_ast_arr_append(te_ast_arr_st* pself, te_ast_st* pelem);
@@ -291,11 +291,11 @@ typedef struct
 	size_t argc;
 	size_t _mem_sz;
 	te_ast_st** ppargv;
-	char* name;  // NULL terminated string, name of the function
+	te_ast_st* pfn;   // must be a function reference, otherwise eval will fail
 }
 te_ast_call_st;
 
-TE_API void _te_ast_call_new(te_ast_call_st* pself, size_t sz);
+TE_API int _te_ast_call_new(te_ast_call_st* pself, size_t sz);
 TE_API void _te_ast_call_del(te_ast_call_st* pself);
 
 TE_API int _te_ast_call_append(te_ast_call_st* pself, te_ast_st* parg);

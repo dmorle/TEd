@@ -75,7 +75,7 @@ void _te_ast_return_del(te_ast_return_st* pself)
 }
 
 // Determines the position of the final token contained within a set of brackets for a given token array
-int te_find_brac_end(const te_tarr_st* ptarr, size_t start, te_token_et to_id, te_token_et tc_id)
+int find_brac_end(const te_tarr_st* ptarr, size_t start, te_token_et to_id, te_token_et tc_id)
 {
 	assert(to_id != tc_id);
 
@@ -93,7 +93,7 @@ int te_find_brac_end(const te_tarr_st* ptarr, size_t start, te_token_et to_id, t
 }
 
 // Determines the positiion of the next token with id t_id in the given token array
-int te_find_tk(const te_tarr_st* ptarr, size_t start, te_token_et tk)
+int find_tk(const te_tarr_st* ptarr, size_t start, te_token_et tk)
 {
 	for (size_t i = start; i < ptarr->length; i++)
 		if (ptarr->_data[i].t_id == tk)
@@ -103,7 +103,7 @@ int te_find_tk(const te_tarr_st* ptarr, size_t start, te_token_et tk)
 }
 
 // Finds the position of the end of a 'block'
-int te_find_block_end(const te_tarr_st* ptarr, size_t start)
+int find_block_end(const te_tarr_st* ptarr, size_t start)
 {
 	size_t bnum = 0;
 	for (size_t i = start; i < ptarr->length; i++)
@@ -127,7 +127,7 @@ int te_find_block_end(const te_tarr_st* ptarr, size_t start)
 }
 
 // Looks through the token array until a top level ',' or closing bracket is found
-int te_find_elem_end(const te_tarr_st* ptarr, size_t idx, te_token_et tk_open, te_token_et tk_close)
+int find_elem_end(const te_tarr_st* ptarr, size_t idx, te_token_et tk_open, te_token_et tk_close)
 {
 	// token values could be passed at compile time, but idk if its worth it
 	int brac = 0;
@@ -143,7 +143,7 @@ int te_find_elem_end(const te_tarr_st* ptarr, size_t idx, te_token_et tk_open, t
 	return -2;
 }
 
-int te_parse_branch(const te_tarr_st* ptarr, te_ast_branch_st* pbranch)
+int parse_branch(const te_tarr_st* ptarr, te_ast_branch_st* pbranch)
 {
 	assert(ptarr->length);
 	assert(ptarr->_data[0].t_id == TK_IF);
@@ -169,7 +169,7 @@ int te_parse_branch(const te_tarr_st* ptarr, te_ast_branch_st* pbranch)
 
 	// parsing the condition expression
 	start = 2;
-	ret = te_find_brac_end(ptarr, start, TK_O_ROUND, TK_C_ROUND);
+	ret = find_brac_end(ptarr, start, TK_O_ROUND, TK_C_ROUND);
 	if (ret < 0)
 	{
 		fprintf(stderr, "Missing closing ')' after 'if' on line %zu\n", ptarr->_data[end].linenum);
@@ -184,7 +184,7 @@ int te_parse_branch(const te_tarr_st* ptarr, te_ast_branch_st* pbranch)
 
 	// parsing the if block
 	start = end + 1;
-	ret = te_find_block_end(ptarr, start);
+	ret = find_block_end(ptarr, start);
 	if (ret < 0)
 	{
 		fprintf(stderr, "Unable to find the end of block after if statement on line %zu\n", ptarr->_data[end].linenum);
@@ -212,7 +212,7 @@ int te_parse_branch(const te_tarr_st* ptarr, te_ast_branch_st* pbranch)
 	return ret + 1;
 }
 
-int te_parse_for(const te_tarr_st* ptarr, te_ast_for_st* pfor)
+int parse_for(const te_tarr_st* ptarr, te_ast_for_st* pfor)
 {
 	assert(ptarr->length);
 	assert(ptarr->_data[0].t_id == TK_FOR);
@@ -248,7 +248,7 @@ int te_parse_for(const te_tarr_st* ptarr, te_ast_for_st* pfor)
 		return -2;
 	}
 
-	ret = te_find_brac_end(ptarr, 4, TK_O_ROUND, TK_C_ROUND);
+	ret = find_brac_end(ptarr, 4, TK_O_ROUND, TK_C_ROUND);
 	if (ret < 0)
 	{
 		fprintf(stderr, "Missing closing ')' after 'for' on line %zu\n", ptarr->_data[0].linenum);
@@ -270,7 +270,7 @@ int te_parse_for(const te_tarr_st* ptarr, te_ast_for_st* pfor)
 	return ret;
 }
 
-int te_parse_while(const te_tarr_st* ptarr, te_ast_while_st* pwhile)
+int parse_while(const te_tarr_st* ptarr, te_ast_while_st* pwhile)
 {
 	assert(ptarr->length);
 	assert(ptarr->_data[0].t_id == TK_WHILE);
@@ -290,7 +290,7 @@ int te_parse_while(const te_tarr_st* ptarr, te_ast_while_st* pwhile)
 	// TODO: Finish while loop parsing
 }
 
-int te_parse_seq(const te_tarr_st* ptarr, te_ast_seq_st* pseq)
+int parse_seq(const te_tarr_st* ptarr, te_ast_seq_st* pseq)
 {
 	te_tarr_st tk_slice;
 	te_ast_st* past;
@@ -315,7 +315,7 @@ int te_parse_seq(const te_tarr_st* ptarr, te_ast_seq_st* pseq)
 	return idx;
 }
 
-// Parses comma seperated array elements
+// Parses comma seperated array elements.  ptarr must start after the '['
 int parse_expr_arr(const te_tarr_st* ptarr, te_ast_arr_st* parr)
 {
 	te_ast_st* pelem;
@@ -325,7 +325,7 @@ int parse_expr_arr(const te_tarr_st* ptarr, te_ast_arr_st* parr)
 
 	while (idx < ptarr->length)
 	{
-		ret = te_find_elem_end(ptarr, idx, TK_O_SQUARE, TK_C_SQUARE);
+		ret = find_elem_end(ptarr, idx, TK_O_SQUARE, TK_C_SQUARE);
 		if (ret < 0)
 		{
 			fprintf(stderr, "Invalid array element on line %zu", ptarr->_data[idx].linenum);
@@ -350,8 +350,8 @@ int parse_expr_arr(const te_tarr_st* ptarr, te_ast_arr_st* parr)
 	return -2;
 }
 
-// Parses comma seperated function arguments
-int parse_expr_args(const te_tarr_st* ptarr, te_ast_call_st* parr)
+// Parses comma seperated function arguments.  ptarr must start after the '('
+int parse_expr_call(const te_tarr_st* ptarr, te_ast_call_st* parr)
 {
 	te_ast_st* pelem;
 	te_tarr_st tk_slice;
@@ -360,7 +360,7 @@ int parse_expr_args(const te_tarr_st* ptarr, te_ast_call_st* parr)
 
 	while (idx < ptarr->length)
 	{
-		ret = te_find_elem_end(ptarr, idx, TK_O_ROUND, TK_C_ROUND);
+		ret = find_elem_end(ptarr, idx, TK_O_ROUND, TK_C_ROUND);
 		if (ret < 0)
 		{
 			fprintf(stderr, "Invalid argument syntax on line %zu", ptarr->_data[idx].linenum);
@@ -381,14 +381,242 @@ int parse_expr_args(const te_tarr_st* ptarr, te_ast_call_st* parr)
 		idx += (size_t)ret + 1;
 	}
 
-	fprintf(stderr, "Invalid array definition on line %zu", ptarr->_data[0].linenum);
+	fprintf(stderr, "Invalid function call on line %zu", ptarr->_data[0].linenum);
 	return -2;
 }
 
 // Parses a leaf node for an expression
 int parse_expr_leaf(const te_tarr_st* ptarr, te_ast_st** ppexpr)
 {
+	if (!ptarr->length)
+	{
+		te_ast_noexpr_st* pexpr = (te_ast_noexpr_st*)malloc(sizeof(te_ast_noexpr_st));
+		if (!pexpr)
+			goto OUT_OF_MEMORY;
+		_te_ast_noexpr_new(pexpr);
+		*ppexpr = pexpr;
+	}
 
+	if (ptarr->length > 1)
+	{
+		te_tarr_st tk_slice;
+		te_ast_st* pexpr;
+		int ret;
+		int i;
+
+		switch (ptarr->_data[0].t_id)
+		{
+		case TK_O_SQUARE:
+			pexpr = (te_ast_st*)malloc(sizeof(te_ast_arr_st));
+			if (!pexpr)
+				goto OUT_OF_MEMORY;
+			ret = _te_ast_arr_new((te_ast_arr_st*)pexpr, ptarr->length / 2);
+			if (ret < 0)
+			{
+				free(pexpr);
+				goto OUT_OF_MEMORY;
+			}
+			_te_tarr_slice(ptarr, 1, ptarr->length, &tk_slice);
+			ret = parse_expr_arr(&tk_slice, (te_ast_arr_st*)pexpr);
+			if (ret < 0)
+			{
+				_te_ast_arr_del((te_ast_arr_st*)pexpr);
+				free(pexpr);
+				return ret;
+			}
+			i = ret;
+			break;
+
+		case TK_STR_LIT:
+			// Creating the string ast node
+			pexpr = (te_ast_st*)malloc(sizeof(te_ast_str_st));
+			if (!pexpr)
+				goto OUT_OF_MEMORY;
+			_te_ast_str_new((te_ast_str_st*)pexpr);
+			((te_ast_str_st*)pexpr)->val = ptarr->_data[0]._data;
+			ptarr->_data[0]._data = NULL;
+			i = 1;
+			break;
+
+		case TK_IDN:
+			pexpr = (te_ast_st*)malloc(sizeof(te_ast_var_st));
+			if (!pexpr)
+				goto OUT_OF_MEMORY;
+			_te_ast_var_new((te_ast_var_st*)pexpr);
+			((te_ast_var_st*)pexpr)->name = ptarr->_data[0]._data;
+			ptarr->_data[0]._data = NULL;
+			i = 1;
+			break;
+
+		default:
+			fprintf(stderr, "Unexpected token on line %zu", ptarr->_data[0].linenum);
+			return -2;
+		}
+
+		// base case
+		if (ptarr->length == i)
+		{
+			*ppexpr = pexpr;
+			return i;
+		}
+
+		for (; i < ptarr->length; i++)
+		{
+			switch (ptarr->_data[i].t_id)
+			{
+			case TK_O_ROUND:
+			{
+				// function call
+
+				// allocating the call node
+				te_ast_call_st* pcall = (te_ast_call_st*)malloc(sizeof(te_ast_call_st));
+				if (!pcall)
+				{
+					_te_ast_del(pexpr);
+					free(pexpr);
+					goto OUT_OF_MEMORY;
+				}
+				ret = _te_ast_call_new(pcall, ptarr->length / 2);
+				if (ret < 0)
+				{
+					free(pcall);
+					_te_ast_del(pexpr);
+					free(pexpr);
+					goto OUT_OF_MEMORY;
+				}
+				pcall->pfn = pexpr;
+				pexpr = pcall;
+
+				// parsing the arguments
+				_te_tarr_slice(ptarr, (size_t)i + 1, ptarr->length, &tk_slice);
+				ret = parse_expr_call(&tk_slice, pcall);
+				if (ret < 0)
+				{
+					_te_ast_del(pexpr);
+					free(pexpr);
+					return ret;
+				}
+
+				// fast foward by ret
+				i += ret;
+				break;
+			}
+			case TK_O_BRACE:
+			{
+				// indexing
+
+				// finding the closing ']'
+				ret = find_brac_end(ptarr, (size_t)i + 1, TK_O_SQUARE, TK_C_SQUARE);
+				if (ret < 0)
+				{
+					fprintf(stderr, "Missing closing ']' on line %zu", ptarr->_data[i]);
+					_te_ast_del(pexpr);
+					free(pexpr);
+					return ret;
+				}
+
+				// creating the idx node
+				te_ast_idx_st* pidx = (te_ast_idx_st*)malloc(sizeof(te_ast_idx_st));
+				if (!pidx)
+				{
+					_te_ast_del(pexpr);
+					free(pexpr);
+					goto OUT_OF_MEMORY;
+				}
+				_te_ast_idx_new(pidx);
+				pidx->lval = pexpr;
+				pexpr = pidx;
+
+				// parsing the idx rval
+				_te_tarr_slice(ptarr, (size_t)i + 1, ret, &tk_slice);
+				ret = te_parse_expr(&tk_slice, &(pidx->rval));
+				if (ret < 0)
+				{
+					_te_ast_del(pexpr);
+					free(pexpr);
+					return ret;
+				}
+
+				// fast forward to ret
+				i = ret;
+				break;
+			}
+			default:
+				fprintf(stderr, "Unexpected token on line %zu", ptarr->_data[i].linenum);
+				return -2;
+			}
+		}
+
+		*ppexpr = pexpr;
+		return ptarr->length;
+	}
+
+	// handling single token leaf nodes
+	switch (ptarr->_data[0].t_id)
+	{
+	case TK_NULL:
+	{
+		te_ast_null_st* pnull = (te_ast_null_st*)malloc(sizeof(te_ast_null_st));
+		if (!pnull)
+			goto OUT_OF_MEMORY;
+		_te_ast_null_new(pnull);
+		return 1;
+	}
+	case TK_TRUE:
+	{
+		te_ast_bool_st* pbool = (te_ast_bool_st*)malloc(sizeof(te_ast_bool_st));
+		if (!pbool)
+			goto OUT_OF_MEMORY;
+		_te_ast_bool_new(pbool);
+		pbool->val = true;
+		return 1;
+	}
+	case TK_FALSE:
+	{
+		te_ast_bool_st* pbool = (te_ast_bool_st*)malloc(sizeof(te_ast_bool_st));
+		if (!pbool)
+			goto OUT_OF_MEMORY;
+		_te_ast_bool_new(pbool);
+		pbool->val = false;
+		return 1;
+	}
+	case TK_INT_LIT:
+	{
+		te_ast_int_st* pint = (te_ast_int_st*)malloc(sizeof(te_ast_int_st));
+		if (!pint)
+			goto OUT_OF_MEMORY;
+		_te_ast_int_new(pint);
+		pint->val = (int64_t)(ptarr->_data[0]._data);
+		return 1;
+	}
+	case TK_STR_LIT:
+	{
+		te_ast_str_st* pstr = (te_ast_str_st*)malloc(sizeof(te_ast_str_st));
+		if (!pstr)
+			goto OUT_OF_MEMORY;
+		_te_ast_str_new(pstr);
+		pstr->val = ptarr->_data[0]._data;
+		ptarr->_data[0]._data = NULL;
+		return 1;
+	}
+	case TK_IDN:
+	{
+		te_ast_var_st* pvar = (te_ast_var_st*)malloc(sizeof(te_ast_var_st));
+		if (!pvar)
+			goto OUT_OF_MEMORY;
+		_te_ast_var_new(pvar);
+		pvar->name = ptarr->_data[0]._data;
+		ptarr->_data[0]._data = NULL;
+		return 1;
+	}
+	default:
+		fprintf(stderr, "Unexpected token on line %zu", ptarr->_data[0].linenum);
+		return -2;
+	}
+
+OUT_OF_MEMORY:
+	fprintf(stderr, "Out of memory\n");
+	return -1;
 }
 
 // Parses expressions with precedence >= 1 operators
@@ -701,13 +929,9 @@ int te_parse_expr(const te_tarr_st* ptarr, te_ast_st** ppexpr)
 		*ppexpr = ppexpr;
 		return ptarr->length;
 	}
-	case TK_O_SQUARE: // assuming an array definition
-		// TODO: Implementation of array definitions...
-		break;
-	default:
-		fprintf(stderr, "Invalid expression found on line %zu", ptarr->_data[0].linenum);
-		return -2;
 	}
+
+	return parse_expr_p0(ptarr, ppexpr);
 
 OUT_OF_MEMORY:
 	fprintf(stderr, "Out of memory\n");
@@ -731,7 +955,7 @@ int te_parse_block(const te_tarr_st* ptarr, te_ast_st** ppblock)
 		if (!pbranch)
 			goto OUT_OF_MEMORY;
 		_te_ast_branch_new(pbranch);
-		ret = te_parse_branch(ptarr, pbranch);
+		ret = parse_branch(ptarr, pbranch);
 		if (ret < 0)
 		{
 			_te_ast_branch_del(pbranch);
@@ -747,7 +971,7 @@ int te_parse_block(const te_tarr_st* ptarr, te_ast_st** ppblock)
 		if (!pfor)
 			goto OUT_OF_MEMORY;
 		_te_ast_for_new(pfor);
-		ret = te_parse_for(ptarr, pfor);
+		ret = parse_for(ptarr, pfor);
 		if (ret < 0)
 		{
 			_te_ast_for_del(pfor);
@@ -763,7 +987,7 @@ int te_parse_block(const te_tarr_st* ptarr, te_ast_st** ppblock)
 		if (!pwhile)
 			goto OUT_OF_MEMORY;
 		_te_ast_while_new(pwhile);
-		ret = te_parse_while(ptarr, pwhile);
+		ret = parse_while(ptarr, pwhile);
 		if (ret < 0)
 		{
 			_te_ast_while_del(pwhile);
@@ -795,7 +1019,7 @@ int te_parse_block(const te_tarr_st* ptarr, te_ast_st** ppblock)
 		if (!pseq)
 			goto OUT_OF_MEMORY;
 		_te_ast_seq_new(pseq, 5);
-		ret = te_parse_seq(ptarr, pseq);
+		ret = parse_seq(ptarr, pseq);
 		if (ret < 0)
 		{
 			_te_ast_seq_del(pseq);
