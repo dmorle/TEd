@@ -16,6 +16,7 @@ typedef enum
 	TK_C_ROUND,     // )
 	TK_O_SQUARE,    // [
 	TK_C_SQUARE,    // ]
+	TK_DOT,         // .
 	TK_COMMA,       // ,
 	TK_ITER,        // :
 	TK_ENDL,        // ;
