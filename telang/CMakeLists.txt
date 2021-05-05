@@ -1,7 +1,7 @@
 include_directories("include")
 
 add_library(
-	libtelang SHARED
+	libtel SHARED
 
 	"src/core/obj.c"
 	"src/core/int.c"
@@ -32,7 +32,7 @@ add_executable(
 
 	"include/telang/telapi.h"
 )
-target_link_libraries(telang libtelang)
+target_link_libraries(telang libtel)
 
 set_property(TARGET telang PROPERTY C_STANDARD 11)
-set_property(TARGET libtelang PROPERTY C_STANDARD 11)
+set_property(TARGET libtel PROPERTY C_STANDARD 11)

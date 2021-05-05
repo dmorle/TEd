@@ -1,0 +1,3 @@
+import io;
+
+print("%s %s", "hello", "world");

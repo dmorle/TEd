@@ -616,16 +616,17 @@ int parse_expr_call(const te_tarr_st* ptarr, te_ast_call_st* parr)
 		ret = te_parse_expr(&tk_slice, &pelem);
 		if (ret < 0)
 			return ret;
+		idx += (size_t)ret + 1;
 		ret = _te_ast_call_append(parr, pelem);
 		if (ret < 0)
 		{
 			_te_ast_del(pelem);
 			return ret;
 		}
-		if (ptarr->_data[ret].t_id == TK_C_ROUND)
+		if (ptarr->_data[idx].t_id == TK_C_ROUND)
 			return ret;
-		idx += (size_t)ret + 1;
 	}
+	return idx;
 
 	fprintf(stderr, "Invalid function call on line %zu", ptarr->_data[0].linenum);
 	return -2;
@@ -641,6 +642,7 @@ int parse_expr_leaf(const te_tarr_st* ptarr, te_ast_st** ppexpr)
 			goto OUT_OF_MEMORY;
 		_te_ast_noexpr_new(pexpr);
 		*ppexpr = pexpr;
+		return 0;
 	}
 
 	if (ptarr->length > 1)
@@ -734,7 +736,7 @@ int parse_expr_leaf(const te_tarr_st* ptarr, te_ast_st** ppexpr)
 				pexpr = pcall;
 
 				// parsing the arguments
-				_te_tarr_slice(ptarr, (size_t)i + 1, ptarr->length, &tk_slice);
+				_te_tarr_slice(ptarr, (size_t)++i, ptarr->length, &tk_slice);
 				ret = parse_expr_call(&tk_slice, pcall);
 				if (ret < 0)
 				{
@@ -755,7 +757,7 @@ int parse_expr_leaf(const te_tarr_st* ptarr, te_ast_st** ppexpr)
 				ret = find_brac_end(ptarr, (size_t)i + 1, TK_O_SQUARE, TK_C_SQUARE);
 				if (ret < 0)
 				{
-					fprintf(stderr, "Missing closing ']' on line %zu", ptarr->_data[i]);
+					fprintf(stderr, "Missing closing ']' on line %zu\n", ptarr->_data[i].linenum);
 					_te_ast_del(pexpr);
 					free(pexpr);
 					return ret;
@@ -783,12 +785,12 @@ int parse_expr_leaf(const te_tarr_st* ptarr, te_ast_st** ppexpr)
 					return ret;
 				}
 
-				// fast forward to ret
-				i = ret;
+				// fast forward by ret
+				i += ret;
 				break;
 			}
 			default:
-				fprintf(stderr, "Unexpected token on line %zu", ptarr->_data[i].linenum);
+				fprintf(stderr, "Unexpected token on line %zu\n", ptarr->_data[i].linenum);
 				return -2;
 			}
 		}
@@ -875,6 +877,7 @@ int parse_expr_prec(const te_tarr_st* ptarr, te_ast_st** ppexpr, int prec)
 			goto OUT_OF_MEMORY;
 		_te_ast_noexpr_new(pexpr);
 		*ppexpr = pexpr;
+		return 0;
 	}
 
 	te_tarr_st tk_slice;
@@ -1007,6 +1010,7 @@ int parse_expr_p0(const te_tarr_st* ptarr, te_ast_st** ppexpr)
 			goto OUT_OF_MEMORY;
 		_te_ast_noexpr_new(pexpr);
 		*ppexpr = pexpr;
+		return 0;
 	}
 
 	te_tarr_st tk_slice;
@@ -1053,7 +1057,7 @@ int parse_expr_p0(const te_tarr_st* ptarr, te_ast_st** ppexpr)
 		if (i == ptarr->length - 1)
 			goto INVALID_TOKEN;
 		_te_tarr_slice(ptarr, (size_t)i + 1, ptarr->length, &tk_slice);
-		ret = parse_expr_p1(&tk_slice, &pexpr);
+		ret = parse_expr_prec(&tk_slice, &pexpr, 1);
 		if (ret < 0)
 			return ret;
 		break;
@@ -1062,7 +1066,7 @@ int parse_expr_p0(const te_tarr_st* ptarr, te_ast_st** ppexpr)
 	// checking if the expression didn't contain any precedence 0 operators
 	if (!pexpr)
 	{
-		ret = parse_expr_p1(ptarr, &pexpr);
+		ret = parse_expr_prec(ptarr, &pexpr, 1);
 		if (ret < 0)
 			return ret;
 		*ppexpr = pexpr;
@@ -1163,6 +1167,7 @@ int parse_expr_imp(const te_tarr_st* ptarr, te_ast_imp_st* pimp)
 			goto OUT_OF_MEMORY;
 		ptarr->_data[i++]._data = NULL;
 	}
+	return ptarr->length;
 
 INVALID_IMP:
 	fprintf(stderr, "Invalid import expression on line %zu\n", ptarr->_data[0].linenum);
@@ -1183,6 +1188,7 @@ int te_parse_expr(const te_tarr_st* ptarr, te_ast_st** ppexpr)
 			goto OUT_OF_MEMORY;
 		_te_ast_noexpr_new(pexpr);
 		*ppexpr = pexpr;
+		return 0;
 	}
 
 	// handling leaf nodes and special cases
@@ -1216,6 +1222,24 @@ int te_parse_expr(const te_tarr_st* ptarr, te_ast_st** ppexpr)
 			goto OUT_OF_MEMORY;
 		_te_ast_continue_new(pcontinue);
 		*ppexpr = pcontinue;
+		return ptarr->length;
+	}
+	case TK_RETURN:
+	{
+		te_ast_return_st* preturn = (te_ast_return_st*)malloc(sizeof(te_ast_return_st));
+		if (!preturn)
+			goto OUT_OF_MEMORY;
+		_te_ast_return_new(preturn);
+		te_tarr_st tk_slice;
+		_te_tarr_slice(ptarr, 1, ptarr->length, &tk_slice);
+		ret = te_parse_expr(&tk_slice, &(preturn->ret));
+		if (ret < 0)
+		{
+			_te_ast_return_del(preturn);
+			free(preturn);
+			return ret;
+		}
+		*ppexpr = preturn;
 		return ptarr->length;
 	}
 	case TK_IMPORT:
@@ -1486,22 +1510,6 @@ int te_parse_block(const te_tarr_st* ptarr, te_ast_st** ppblock)
 		*ppblock = pwhile;
 		return ret;
 	}
-	case TK_RETURN:
-	{
-		te_ast_return_st* preturn = (te_ast_return_st*)malloc(sizeof(te_ast_return_st));
-		if (!preturn)
-			goto OUT_OF_MEMORY;
-		_te_ast_return_new(preturn);
-		ret = te_parse_return(ptarr, preturn);
-		if (ret < 0)
-		{
-			_te_ast_return_del(preturn);
-			free(preturn);
-			return ret;
-		}
-		*ppblock = preturn;
-		return ret;
-	}
 	case TK_O_BRACE:
 	{
 		te_ast_seq_st* pseq = (te_ast_seq_st*)malloc(sizeof(te_ast_seq_st));
@@ -1518,10 +1526,18 @@ int te_parse_block(const te_tarr_st* ptarr, te_ast_st** ppblock)
 		*ppblock = pseq;
 		return ret;
 	}
-	default:
-		te_parse_expr(ptarr, ppblock);
-		break;
 	}
+	
+	ret = find_tk(ptarr, 0, TK_ENDL);
+	if (ret < 0)
+	{
+		fprintf(stderr, "Invalid code block on line %zu", ptarr->_data[0].linenum);
+		return ret;
+	}
+
+	te_tarr_st tk_slice;
+	_te_tarr_slice(ptarr, 0, ret, &tk_slice);
+	return te_parse_expr(&tk_slice, ppblock) + 1;
 
 OUT_OF_MEMORY:
 	fprintf(stderr, "Out of memory\n");
@@ -1580,7 +1596,7 @@ int parse_func(const te_tarr_st* ptarr, te_ast_fn_st* pfn)
 
 	// parse the function body
 	te_tarr_st tk_slice;
-	_te_tarr_slice(ptarr, i + 1, ptarr->length, &tk_slice);
+	_te_tarr_slice(ptarr, ++i, ptarr->length, &tk_slice);
 	ret = te_parse_block(&tk_slice, &(pfn->pbody));
 	if (ret < 0)
 		return ret;
@@ -1591,7 +1607,7 @@ INVALID_FNDEF:
 	return -2;
 
 OUT_OF_MEMORY:
-	fprintf(stderr, "Out of memory\n", ptarr->_data[i].linenum);
+	fprintf(stderr, "Out of memory\n");
 	return -1;
 }
 
@@ -1647,7 +1663,7 @@ int te_parse_module(const te_tarr_st* ptarr, te_ast_st** ppast)
 			ret = find_tk(ptarr, i, TK_ENDL);
 			if (ret < 0)
 			{
-				fprintf(stderr, "Invalid expression on line %zu", ptarr->_data[i].linenum);
+				fprintf(stderr, "Invalid expression on line %zu\n", ptarr->_data[i].linenum);
 				goto CLEANUP;
 			}
 
@@ -1655,6 +1671,7 @@ int te_parse_module(const te_tarr_st* ptarr, te_ast_st** ppast)
 			ret = te_parse_expr(&tk_slice, &pelem);
 			if (ret < 0)
 				goto CLEANUP;
+			ret += 1;
 		}
 
 		// Updating the index and appending the new element
@@ -1667,6 +1684,8 @@ int te_parse_module(const te_tarr_st* ptarr, te_ast_st** ppast)
 			goto OUT_OF_MEMORY;
 		}
 	}
+	*ppast = pmodule;
+	return ptarr->length;
 
 OUT_OF_MEMORY:
 	fprintf(stderr, "Out of memory\n");

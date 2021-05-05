@@ -21,7 +21,6 @@ typedef enum
 
 	// internal nodes
 	AST_SEQ,
-	AST_IDX,
 	AST_FOR,
 	AST_WHILE,
 	AST_BREAK,

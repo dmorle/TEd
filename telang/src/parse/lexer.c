@@ -52,6 +52,155 @@ int _te_op_prec(te_token_et t)
 
 const int MAX_PREC = 6;
 
+void _te_token_print(te_token_st* pt)
+{
+	switch (pt->t_id)
+	{
+	case TK_O_BRACE:
+		printf("\n{");
+	case TK_C_BRACE:
+		printf("}\n");
+		break;
+	case TK_O_ROUND:
+		printf("(");
+		break;
+	case TK_C_ROUND:
+		printf(")");
+		break;
+	case TK_O_SQUARE:
+		printf("[");
+		break;
+	case TK_C_SQUARE:
+		printf("]");
+		break;
+	case TK_DOT:
+		printf(".");
+		break;
+	case TK_COMMA:
+		printf(", ");
+		break;
+	case TK_ITER:
+		printf(" : ");
+		break;
+	case TK_ENDL:
+		printf(";\n");
+		break;
+	case TK_OP_ASSIGN:
+		printf(" = ");
+		break;
+	case TK_OP_IADD:
+		printf(" += ");
+		break;
+	case TK_OP_ISUB:
+		printf(" -= ");
+		break;
+	case TK_OP_IMUL:
+		printf(" *= ");
+		break;
+	case TK_OP_IDIV:
+		printf(" /= ");
+		break;
+	case TK_OP_IMOD:
+		printf(" %= ");
+		break;
+	case TK_OP_IEXP:
+		printf(" ^= ");
+		break;
+	case TK_OP_EQ:
+		printf(" == ");
+		break;
+	case TK_OP_NE:
+		printf(" != ");
+		break;
+	case TK_OP_LT:
+		printf(" < ");
+		break;
+	case TK_OP_GT:
+		printf(" > ");
+		break;
+	case TK_OP_LE:
+		printf(" <= ");
+		break;
+	case TK_OP_GE:
+		printf(" >= ");
+		break;
+	case TK_OP_AND:
+		printf(" && ");
+		break;
+	case TK_OP_OR:
+		printf(" || ");
+		break;
+	case TK_OP_NOT:
+		printf("!");
+		break;
+	case TK_OP_ADD:
+		printf(" + ");
+		break;
+	case TK_OP_SUB:
+		printf(" - ");
+		break;
+	case TK_OP_MUL:
+		printf(" * ");
+		break;
+	case TK_OP_DIV:
+		printf(" / ");
+		break;
+	case TK_OP_MOD:
+		printf(" % ");
+		break;
+	case TK_OP_EXP:
+		printf(" ^ ");
+		break;
+	case TK_NULL:
+		printf("null");
+		break;
+	case TK_TRUE:
+		printf("true");
+		break;
+	case TK_FALSE:
+		printf("false");
+		break;
+	case TK_INT_LIT:
+		printf("%d", pt->_data);
+		break;
+	case TK_STR_LIT:
+		printf("\"%s\"", pt->_data);
+		break;
+	case TK_IDN:
+		printf("%s", pt->_data);
+		break;
+	case TK_IF:
+		printf("if ");
+		break;
+	case TK_ELSE:
+		printf("else ");
+		break;
+	case TK_FOR:
+		printf("for ");
+		break;
+	case TK_WHILE:
+		printf("while ");
+		break;
+	case TK_BREAK:
+		printf("break ");
+		break;
+	case TK_CONTINUE:
+		printf("continue ");
+		break;
+	case TK_FN:
+		printf("fn ");
+		break;
+	case TK_RETURN:
+		printf("return ");
+		break;
+	case TK_IMPORT:
+		printf("import ");
+		break;
+	default:
+		fprintf(stderr, "\nUnrecognized token\n");
+	}
+}
+
 void _te_token_del(te_token_st* pself)
 {
 	switch (pself->t_id)
@@ -115,6 +264,12 @@ void _te_tarr_slice(te_tarr_st* pself, size_t start, size_t end, te_tarr_st* pou
 	pout->length = end - start;
 	pout->_data = pself->_data + start;
 	pout->_mem_sz = 0;  // identifies pout as a slice
+}
+
+void _te_tarr_print(te_tarr_st* pself)
+{
+	for (size_t i = 0; i < pself->length; i++)
+		_te_token_print(pself->_data + i);
 }
 
 // reads a token from a buffer
@@ -229,10 +384,10 @@ int read_token(char* ptoken, size_t bufsz, te_tarr_st* ptarr)
 			ntoken._data = malloc(sizeof(char) * ((size_t)ret - 1));
 			if (!ntoken._data)
 				return -1;
-			memcpy(ntoken._data, (void*)(ptoken + 1), (size_t)ret - 2);
-			((char*)ntoken._data)[ret - 2] = '\0';
+			memcpy(ntoken._data, (void*)(ptoken + 1), (size_t)ret - 1);
+			((char*)ntoken._data)[ret - 1] = '\0';
 			_te_tarr_append(ptarr, &ntoken);
-			return ret;
+			return ret + 1;
 		}
 		if (c0 == '-' || ('0' <= c0 && c0 <= '9'))
 		{
@@ -265,7 +420,7 @@ int read_token(char* ptoken, size_t bufsz, te_tarr_st* ptarr)
 					break;
 
 #define CHECK_KEYWORD(kw, tk)                                         \
-			if (!memcmp(ptoken - sizeof(kw) + 1, kw, sizeof(kw) - 1)) \
+			if (!memcmp(ptoken, kw, sizeof(kw) - 1))                  \
 			{                                                         \
 				ntoken.t_id = tk;                                     \
 				goto RD_TK_END;                                       \
@@ -305,7 +460,7 @@ int read_token(char* ptoken, size_t bufsz, te_tarr_st* ptarr)
 			ntoken._data = malloc(sizeof(char) * ((size_t)ret + 1));
 			if (!ntoken._data)
 				return -1;
-			memcpy(ntoken._data, (void*)(ptoken - ret), (size_t)ret);
+			memcpy(ntoken._data, (void*)ptoken, (size_t)ret);
 			((char*)ntoken._data)[ret] = '\0';
 			_te_tarr_append(ptarr, &ntoken);
 			return ret;
@@ -343,6 +498,12 @@ int te_lex_f(FILE* pf, te_tarr_st* ptarr)
 
 int te_lex_buf(char* pbuf, size_t bufsz, te_tarr_st* ptarr)
 {
+	if (bufsz == 0)
+	{
+		fprintf(stderr, "Empty files are not allowed\n");
+		return -2;
+	}
+
 	size_t offset = 0;
 	size_t lcount = 1;
 	int ret;

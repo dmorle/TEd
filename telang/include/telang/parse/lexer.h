@@ -79,6 +79,8 @@ typedef struct
 }
 te_token_st;
 
+TE_API void _te_tk_print(te_token_st* pt);
+
 TE_API void _te_token_del(te_token_st* pself);
 
 typedef struct
@@ -98,6 +100,8 @@ TE_API void _te_tarr_del(te_tarr_st* pself);
 TE_API int _te_tarr_append(te_tarr_st* pself, te_token_st* ptoken);
 
 TE_API void _te_tarr_slice(te_tarr_st* pself, size_t start, size_t end, te_tarr_st* pout);
+
+TE_API void _te_tarr_print(te_tarr_st* pself);
 
 TE_API int te_lex_f(FILE* pf, te_tarr_st* ptarr);
 TE_API int te_lex_buf(char* pbuf, size_t bufsz, te_tarr_st* ptarr);
