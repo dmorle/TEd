@@ -1,5 +1,5 @@
-#ifndef TI_TISH_H
-#define TI_TISH_H
+#ifndef TE_TEDLANG_H
+#define TE_TEDLANG_H
 
 #ifdef _MSC_VER
 //  Microsoft 

@@ -1,9 +1,9 @@
 #ifndef TE_EVAL_H
 #define TE_EVAL_H
 
-#include <telang/telapi.h>
+#include <tedlang/tedl.h>
 
-#include <telang/parse/parser.h>
+#include <tedlang/parse/parser.h>
 
 TE_API int te_eval(const te_ast_st* past, te_obj_st** ppobj);
 

@@ -3,10 +3,10 @@
 
 #include <stdbool.h>
 
-#include <telang/telapi.h>
+#include <tedlang/tedl.h>
 
-#include <telang/core/obj.h>
-#include <telang/parse/lexer.h>
+#include <tedlang/core/obj.h>
+#include <tedlang/parse/lexer.h>
 
 typedef enum
 {

@@ -2,8 +2,8 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include <telang/parse/lexer.h>
-#include <telang/parse/parser.h>
+#include <tedlang/parse/lexer.h>
+#include <tedlang/parse/parser.h>
 
 int main(int argc, char** argv)
 {
@@ -17,7 +17,7 @@ int main(int argc, char** argv)
 	else
 	{
 		char* home = getenv("HOMEPATH");
-		sprintf(buf, "%s/source/repos/ted/telang/samples/hello_world.te", home);
+		sprintf(buf, "%s/source/repos/ted/tedlang/samples/hello_world.ted", home);
 	}
 
 	FILE* pf = fopen(buf, "rb");

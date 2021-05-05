@@ -1,7 +1,7 @@
 #ifndef TE_INT_H
 #define TE_INT_H
 
-#include <telang/core/obj.h>
+#include <tedlang/core/obj.h>
 
 typedef struct
 {

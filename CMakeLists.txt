@@ -7,4 +7,4 @@ project ("ted")
 
 # Include sub-projects.
 add_subdirectory ("ted")
-add_subdirectory ("telang")
+add_subdirectory ("tedlang")

@@ -13,16 +13,16 @@ add_library(
 
 	"src/interpreter/eval.c"
 
-	"include/telang/telapi.h"
-	"include/telang/core/obj.h"
-	"include/telang/core/int.h"
-	"include/telang/core/arr.h"
-	"include/telang/core/str.h"
+	"include/tedlang/tedl.h"
+	"include/tedlang/core/obj.h"
+	"include/tedlang/core/int.h"
+	"include/tedlang/core/arr.h"
+	"include/tedlang/core/str.h"
 
-	"include/telang/parse/lexer.h"
-	"include/telang/parse/parser.h"
+	"include/tedlang/parse/lexer.h"
+	"include/tedlang/parse/parser.h"
 
-	"include/telang/interpreter/eval.h"
+	"include/tedlang/interpreter/eval.h"
 )
 
 add_executable(
@@ -30,7 +30,7 @@ add_executable(
 
 	"src/main.c"
 
-	"include/telang/telapi.h"
+	"include/tedlang/tedl.h"
 )
 target_link_libraries(telang libtel)
 

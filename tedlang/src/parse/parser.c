@@ -1,6 +1,6 @@
 #define TE_SRC
 
-#include <telang/parse/parser.h>
+#include <tedlang/parse/parser.h>
 
 #include <stdlib.h>
 #include <stdbool.h>

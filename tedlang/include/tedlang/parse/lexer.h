@@ -5,7 +5,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-#include <telang/telapi.h>
+#include <tedlang/tedl.h>
 
 typedef enum
 {
