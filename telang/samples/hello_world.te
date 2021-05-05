@@ -1,3 +1,9 @@
 import io;
 
-print("%s %s", "hello", "world");
+fn main()
+{
+	for (e : ["hello", " ", "world", "\n"])
+		print("%s", e);
+};
+
+main();

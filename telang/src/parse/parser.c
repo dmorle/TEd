@@ -581,16 +581,18 @@ int parse_expr_arr(const te_tarr_st* ptarr, te_ast_arr_st* parr)
 		ret = te_parse_expr(&tk_slice, &pelem);
 		if (ret < 0)
 			return ret;
+		idx += ret + 1;
 		ret = _te_ast_arr_append(parr, pelem);
 		if (ret < 0)
 		{
 			_te_ast_del(pelem);
 			return ret;
 		}
-		if (ptarr->_data[ret].t_id == TK_C_SQUARE)
-			return ret;
-		idx += (size_t)ret + 1;
 	}
+
+	// exit condition
+	if (ptarr->_data[idx - 1].t_id == TK_C_SQUARE)
+		return idx + 1;
 
 	fprintf(stderr, "Invalid array definition on line %zu", ptarr->_data[0].linenum);
 	return -2;
@@ -808,6 +810,7 @@ int parse_expr_leaf(const te_tarr_st* ptarr, te_ast_st** ppexpr)
 		if (!pnull)
 			goto OUT_OF_MEMORY;
 		_te_ast_null_new(pnull);
+		*ppexpr = pnull;
 		return 1;
 	}
 	case TK_TRUE:
@@ -817,6 +820,7 @@ int parse_expr_leaf(const te_tarr_st* ptarr, te_ast_st** ppexpr)
 			goto OUT_OF_MEMORY;
 		_te_ast_bool_new(pbool);
 		pbool->val = true;
+		*ppexpr = pbool;
 		return 1;
 	}
 	case TK_FALSE:
@@ -826,6 +830,7 @@ int parse_expr_leaf(const te_tarr_st* ptarr, te_ast_st** ppexpr)
 			goto OUT_OF_MEMORY;
 		_te_ast_bool_new(pbool);
 		pbool->val = false;
+		*ppexpr = pbool;
 		return 1;
 	}
 	case TK_INT_LIT:
@@ -835,6 +840,7 @@ int parse_expr_leaf(const te_tarr_st* ptarr, te_ast_st** ppexpr)
 			goto OUT_OF_MEMORY;
 		_te_ast_int_new(pint);
 		pint->val = (int64_t)(ptarr->_data[0]._data);
+		*ppexpr = pint;
 		return 1;
 	}
 	case TK_STR_LIT:
@@ -845,6 +851,7 @@ int parse_expr_leaf(const te_tarr_st* ptarr, te_ast_st** ppexpr)
 		_te_ast_str_new(pstr);
 		pstr->val = ptarr->_data[0]._data;
 		ptarr->_data[0]._data = NULL;
+		*ppexpr = pstr;
 		return 1;
 	}
 	case TK_IDN:
@@ -855,6 +862,7 @@ int parse_expr_leaf(const te_tarr_st* ptarr, te_ast_st** ppexpr)
 		_te_ast_var_new(pvar);
 		pvar->name = ptarr->_data[0]._data;
 		ptarr->_data[0]._data = NULL;
+		*ppexpr = pvar;
 		return 1;
 	}
 	default:
@@ -1392,15 +1400,14 @@ int parse_for(const te_tarr_st* ptarr, te_ast_for_st* pfor)
 	ret = te_parse_expr(&tk_slice, &past);
 	if (ret < 0)
 		return ret;
-	idx += ret + 1;
+	idx++;
 	pfor->iter = past;
-	_te_tarr_slice(ptarr, (size_t)ret + 1, ptarr->length, &tk_slice);
+	_te_tarr_slice(ptarr, idx, ptarr->length, &tk_slice);
 	ret = te_parse_block(&tk_slice, &past);
 	if (ret < 0)
 		return ret;
-	ret += idx + 1;
 	pfor->body = past;
-	return ret;
+	return idx + ret;
 }
 
 // Parses a while loop, ie. while (...) ...;
@@ -1429,11 +1436,23 @@ int parse_seq(const te_tarr_st* ptarr, te_ast_seq_st* pseq)
 {
 	te_tarr_st tk_slice;
 	te_ast_st* past;
-	size_t idx = 0;
+	size_t idx = 1;
 	int ret;
 
 	while (idx < ptarr->length)
 	{
+		// Checking for end of sequence
+		if (ptarr->_data[idx].t_id == TK_C_BRACE)
+		{
+			if (++idx == ptarr->length || ptarr->_data[idx].t_id != TK_ENDL)
+			{
+				fprintf(stderr, "Unexpected token on line %zu\n", ptarr->_data[idx - 1].linenum);
+				return -2;
+			}
+			return idx + 1;
+		}
+
+		// Parsing the next block in the sequence
 		_te_tarr_slice(ptarr, idx, ptarr->length, &tk_slice);
 		ret = te_parse_block(&tk_slice, &past);
 		if (ret < 0)
@@ -1447,7 +1466,9 @@ int parse_seq(const te_tarr_st* ptarr, te_ast_seq_st* pseq)
 			return ret;
 		}
 	}
-	return idx;
+
+	fprintf(stderr, "Invalid sequence on line %zu\n", ptarr->_data[ptarr->length - 1].linenum);
+	return -2;
 }
 
 // Parses an arbitrary block
@@ -1455,7 +1476,7 @@ int te_parse_block(const te_tarr_st* ptarr, te_ast_st** ppblock)
 {
 	if (!ptarr->length)
 	{
-		fprintf(stderr, "Received invalid code block\n");
+		fprintf(stderr, "Received empty code block\n");
 		return -2;
 	}
 
@@ -1537,7 +1558,7 @@ int te_parse_block(const te_tarr_st* ptarr, te_ast_st** ppblock)
 
 	te_tarr_st tk_slice;
 	_te_tarr_slice(ptarr, 0, ret, &tk_slice);
-	return te_parse_expr(&tk_slice, ppblock) + 1;
+	return ret + 1;
 
 OUT_OF_MEMORY:
 	fprintf(stderr, "Out of memory\n");
@@ -1658,17 +1679,8 @@ int te_parse_module(const te_tarr_st* ptarr, te_ast_st** ppast)
 		}
 		else
 		{
-			// Assuming its a ; terminated expression
-			// blocks are not allowed at the module level
-			ret = find_tk(ptarr, i, TK_ENDL);
-			if (ret < 0)
-			{
-				fprintf(stderr, "Invalid expression on line %zu\n", ptarr->_data[i].linenum);
-				goto CLEANUP;
-			}
-
-			_te_tarr_slice(ptarr, i, ret, &tk_slice);
-			ret = te_parse_expr(&tk_slice, &pelem);
+			_te_tarr_slice(ptarr, i, ptarr->length, &tk_slice);
+			ret = te_parse_block(&tk_slice, &pelem);
 			if (ret < 0)
 				goto CLEANUP;
 			ret += 1;

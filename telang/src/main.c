@@ -7,7 +7,7 @@
 
 int main(int argc, char** argv)
 {
-	te_tarr_st tokens;
+	te_tarr_st tk_slice;
 	te_ast_st* past;
 	int ret;
 
@@ -27,14 +27,14 @@ int main(int argc, char** argv)
 		exit(1);
 	}
 	
-	ret = _te_tarr_new(&tokens, 128);
+	ret = _te_tarr_new(&tk_slice, 128);
 	if (ret < 0)
 	{
 		fprintf(stderr, "Out of memory\n");
 		exit(1);
 	}
 
-	ret = te_lex_f(pf, &tokens);
+	ret = te_lex_f(pf, &tk_slice);
 	fclose(pf);
 	if (ret < 0)
 	{
@@ -43,10 +43,10 @@ int main(int argc, char** argv)
 	}
 
 	printf("Finished Lexing...\nTokens:\n\n");
-	_te_tarr_print(&tokens);
+	_te_tarr_print(&tk_slice);
 	printf("\n\n");
 
-	ret = te_parse_module(&tokens, &past);
+	ret = te_parse_module(&tk_slice, &past);
 	if (ret < 0)
 	{
 		fprintf(stderr, "Unable to parse %s\n", buf);

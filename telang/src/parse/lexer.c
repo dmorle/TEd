@@ -7,6 +7,7 @@
 #include <ctype.h>
 #include <string.h>
 #include <assert.h>
+#include <inttypes.h>
 
 bool _te_is_op(te_token_et t)
 {
@@ -57,9 +58,10 @@ void _te_token_print(te_token_st* pt)
 	switch (pt->t_id)
 	{
 	case TK_O_BRACE:
-		printf("\n{");
+		printf("\n{\n");
+		break;
 	case TK_C_BRACE:
-		printf("}\n");
+		printf("}");
 		break;
 	case TK_O_ROUND:
 		printf("(");
@@ -161,13 +163,13 @@ void _te_token_print(te_token_st* pt)
 		printf("false");
 		break;
 	case TK_INT_LIT:
-		printf("%d", pt->_data);
+		printf("%" PRId64, (int64_t)pt->_data);
 		break;
 	case TK_STR_LIT:
-		printf("\"%s\"", pt->_data);
+		printf("\"%s\"", (char*)pt->_data);
 		break;
 	case TK_IDN:
-		printf("%s", pt->_data);
+		printf("%s", (char*)pt->_data);
 		break;
 	case TK_IF:
 		printf("if ");
