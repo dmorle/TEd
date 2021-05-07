@@ -25,4 +25,10 @@
 #	endif
 #endif
 
+#ifndef TE_SRC
+#	include <tedlang/core/eval.h>
+#	include <tedlang/parse/parser.h>
+#	include <tedlang/parse/lexer.h>
+#endif
+
 #endif
