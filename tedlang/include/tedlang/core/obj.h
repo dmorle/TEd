@@ -59,6 +59,10 @@ te_iterable_st;
 
 typedef struct
 {
+	// basic data
+	char name[64];
+	size_t objsize;
+
 	// Constructor / Destructor
 	te_obj_st*      (*ty_new)    ();
 	void            (*ty_del)    (te_obj_st*);
@@ -74,21 +78,24 @@ typedef struct
 	te_obj_st*      (*ty_idx)    (te_obj_st*, te_obj_st*);
 
 	// Binary Operators
-	te_obj_st*      (*ty_assign) (te_obj_st*, te_obj_st*);
-	te_obj_st*      (*ty_iadd)   (te_obj_st*, te_obj_st*);
-	te_obj_st*      (*ty_isub)   (te_obj_st*, te_obj_st*);
-	te_obj_st*      (*ty_imul)   (te_obj_st*, te_obj_st*);
-	te_obj_st*      (*ty_idiv)   (te_obj_st*, te_obj_st*);
-	te_obj_st*      (*ty_imod)   (te_obj_st*, te_obj_st*);
-	te_obj_st*      (*ty_iexp)   (te_obj_st*, te_obj_st*);
+	te_obj_st*      (*ty_assign) (te_obj_st**, te_obj_st*);
+	te_obj_st*      (*ty_iadd)   (te_obj_st**, te_obj_st*);
+	te_obj_st*      (*ty_isub)   (te_obj_st**, te_obj_st*);
+	te_obj_st*      (*ty_imul)   (te_obj_st**, te_obj_st*);
+	te_obj_st*      (*ty_idiv)   (te_obj_st**, te_obj_st*);
+	te_obj_st*      (*ty_imod)   (te_obj_st**, te_obj_st*);
+	te_obj_st*      (*ty_iexp)   (te_obj_st**, te_obj_st*);
+
 	te_obj_st*      (*ty_add)    (te_obj_st*, te_obj_st*);
 	te_obj_st*      (*ty_sub)    (te_obj_st*, te_obj_st*);
 	te_obj_st*      (*ty_mul)    (te_obj_st*, te_obj_st*);
 	te_obj_st*      (*ty_div)    (te_obj_st*, te_obj_st*);
 	te_obj_st*      (*ty_mod)    (te_obj_st*, te_obj_st*);
 	te_obj_st*      (*ty_exp)    (te_obj_st*, te_obj_st*);
+
 	te_obj_st*      (*ty_and)    (te_obj_st*, te_obj_st*);
 	te_obj_st*      (*ty_or)     (te_obj_st*, te_obj_st*);
+
 	te_obj_st*      (*ty_eq)     (te_obj_st*, te_obj_st*);
 	te_obj_st*      (*ty_ne)     (te_obj_st*, te_obj_st*);
 	te_obj_st*      (*ty_lt)     (te_obj_st*, te_obj_st*);

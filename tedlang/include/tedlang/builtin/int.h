@@ -14,11 +14,11 @@ TEDLANG_API int64_t te_int_int(te_obj_st* pself);
 TEDLANG_API const char* te_int_repr(te_obj_st* pself);
 TEDLANG_API te_iterable_st* te_int_iter(te_obj_st* pself);
 
-TEDLANG_API te_obj_st* te_int_iadd(te_obj_st* pself, te_obj_st* plval);
-TEDLANG_API te_obj_st* te_int_isub(te_obj_st* pself, te_obj_st* plval);
-TEDLANG_API te_obj_st* te_int_imul(te_obj_st* pself, te_obj_st* plval);
-TEDLANG_API te_obj_st* te_int_idiv(te_obj_st* pself, te_obj_st* plval);
-TEDLANG_API te_obj_st* te_int_imod(te_obj_st* pself, te_obj_st* plval);
+TEDLANG_API te_obj_st* te_int_iadd(te_obj_st** ppself, te_obj_st* plval);
+TEDLANG_API te_obj_st* te_int_isub(te_obj_st** ppself, te_obj_st* plval);
+TEDLANG_API te_obj_st* te_int_imul(te_obj_st** ppself, te_obj_st* plval);
+TEDLANG_API te_obj_st* te_int_idiv(te_obj_st** ppself, te_obj_st* plval);
+TEDLANG_API te_obj_st* te_int_imod(te_obj_st** ppself, te_obj_st* plval);
 TEDLANG_API te_obj_st* te_int_add(te_obj_st* pself, te_obj_st* plval);
 TEDLANG_API te_obj_st* te_int_sub(te_obj_st* pself, te_obj_st* plval);
 TEDLANG_API te_obj_st* te_int_mul(te_obj_st* pself, te_obj_st* plval);

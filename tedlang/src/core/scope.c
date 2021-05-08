@@ -18,6 +18,12 @@ inline uint64_t fnv_1a(char* s)
 	return h;
 }
 
+te_scope_st* scope_rehash(te_scope_st* pself)
+{
+	// TODO: double the number of buckets and rehash the elements
+	return NULL;  // tmp
+}
+
 void scope_bktnd_del(_te_scope_bktnd_st* pnd)
 {
 	if (!pnd)
@@ -68,19 +74,19 @@ void te_scope_del(te_scope_st* pself)
 	free(pself->pbuckets);
 }
 
-inline te_obj_st* scope_get(te_scope_st* pself, char* name, uint64_t h)
+inline te_obj_st** scope_get(te_scope_st* pself, char* name, uint64_t h)
 {
 	if (!pself)
 		return NULL;
 
 	for (_te_scope_bktnd_st* pnd = pself->pbuckets[h]; pnd; pnd = pnd->pnext)
 		if (!strcmp(name, pnd->name))
-			return pnd->pobj;
+			return &(pnd->pobj);
 
 	return scope_get(pself->pparent, name, h);
 }
 
-te_obj_st* te_scope_get(te_scope_st* pself, char* name)
+te_obj_st** te_scope_get(te_scope_st* pself, char* name)
 {
 	return scope_get(pself, name, fnv_1a(name) % pself->n_buckets);
 }
@@ -93,7 +99,6 @@ inline te_scope_st* scope_set(te_scope_st* pself, char* name, te_obj_st* pobj, u
 	for (_te_scope_bktnd_st* pnd = pself->pbuckets[h]; pnd; pnd = pnd->pnext)
 		if (!strcmp(name, pnd->name))
 		{
-			te_decref(pnd->pobj);
 			pnd->pobj = pobj;
 			return pself;
 		}
@@ -103,5 +108,35 @@ inline te_scope_st* scope_set(te_scope_st* pself, char* name, te_obj_st* pobj, u
 
 te_scope_st* te_scope_set(te_scope_st* pself, char* name, te_obj_st* pobj)
 {
-	return scope_set(pself, name, pobj, fnv_1a(name) % pself->n_buckets);
+	uint64_t h = fnv_1a(name) % pself->n_buckets;
+
+	if (scope_set(pself, name, pobj, h))
+		return pself;
+
+	// adding a new element
+	_te_scope_bktnd_st** ppnd = pself->pbuckets + h;
+	while (*ppnd)
+		ppnd = &(*ppnd)->pnext;
+	
+	*ppnd = (_te_scope_bktnd_st*)malloc(sizeof(_te_scope_bktnd_st));
+	if (!*ppnd)
+		return NULL;
+
+	_te_scope_bktnd_st* pnd = *ppnd;
+	size_t nmsz = strlen(name);
+	pnd->name = malloc(sizeof(char) * (nmsz + 1));
+	if (!pnd->name)
+	{
+		free(pnd);
+		*ppnd = NULL;
+		return NULL;
+	}
+	memcpy(pnd->name, name, nmsz + 1);
+	pnd->pobj = pobj;
+
+	pself->curr_lf = (pself->curr_lf * pself->n_buckets + 1) / pself->n_buckets;
+	if (pself->curr_lf > pself->target_lf)
+		return scope_rehash(pself);
+
+	return pself;
 }
