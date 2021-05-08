@@ -8,3 +8,4 @@ project ("ted")
 # Include sub-projects.
 add_subdirectory ("ted")
 add_subdirectory ("tedlang")
+add_subdirectory ("fptest")
