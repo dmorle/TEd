@@ -5,6 +5,10 @@
 
 #include <tedlang/core/obj.h>
 
+te_obj_st* default_new();
+void default_del(te_obj_st* pself);
+te_obj_st* default_cpy(te_obj_st* pself);
+bool default_bool(te_obj_st* pself);
 
 void te_incref(te_obj_st* pobj)
 {

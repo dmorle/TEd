@@ -24,8 +24,6 @@ typedef struct __te_scope
 }
 te_scope_st;
 
-te_scope_st te_global_scope;
-
 TEDLANG_API te_scope_st* te_scope_alloc   (te_scope_st* pparent, size_t sz, float lf);
 TEDLANG_API te_scope_st* te_scope_new     (te_scope_st* pself, te_scope_st* pparent, size_t sz, float lf);
 TEDLANG_API void         te_scope_del     (te_scope_st* pself);

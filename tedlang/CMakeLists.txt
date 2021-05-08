@@ -17,6 +17,7 @@ add_library(
 	"src/builtin/bool.c"
 	"src/builtin/int.c"
 	"src/builtin/str.c"
+	"src/builtin/fn.c"
 
 	"include/tedlang/tedl.h"
 	"include/tedlang/core/obj.h"
@@ -28,6 +29,7 @@ add_library(
 	"include/tedlang/builtin/bool.h"
 	"include/tedlang/builtin/int.h"
 	"include/tedlang/builtin/str.h"
+	"include/tedlang/builtin/fn.h"
 )
 
 add_executable(

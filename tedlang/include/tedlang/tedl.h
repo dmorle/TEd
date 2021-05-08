@@ -29,6 +29,9 @@
 #	include <tedlang/core/eval.h>
 #	include <tedlang/parse/parser.h>
 #	include <tedlang/parse/lexer.h>
+#else
+#   define DEFAULT_SCOPESZ 64
+#   define DEFAULT_SCOPELF 0.75
 #endif
 
 #endif

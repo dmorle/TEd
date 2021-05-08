@@ -8,9 +8,43 @@
 
 typedef struct __te_obj te_obj_st;
 
+TEDLANG_API void            te_del    (te_obj_st*);
+TEDLANG_API te_obj_st*      te_cpy    (te_obj_st*);
+
+TEDLANG_API bool            te_bool   (te_obj_st*);
+TEDLANG_API int64_t         te_int    (te_obj_st*);
+TEDLANG_API const char*     te_repr   (te_obj_st*);
+TEDLANG_API te_obj_st*      te_call   (te_obj_st*, te_fnargs_st);
+TEDLANG_API te_iterable_st* te_iter   (te_obj_st*);
+TEDLANG_API te_obj_st*      te_not    (te_obj_st*);
+TEDLANG_API te_obj_st*      te_idx    (te_obj_st*, te_obj_st*);
+
+TEDLANG_API te_obj_st*      te_assign (te_obj_st*, te_obj_st*);
+TEDLANG_API te_obj_st*      te_iadd   (te_obj_st*, te_obj_st*);
+TEDLANG_API te_obj_st*      te_isub   (te_obj_st*, te_obj_st*);
+TEDLANG_API te_obj_st*      te_imul   (te_obj_st*, te_obj_st*);
+TEDLANG_API te_obj_st*      te_idiv   (te_obj_st*, te_obj_st*);
+TEDLANG_API te_obj_st*      te_imod   (te_obj_st*, te_obj_st*);
+TEDLANG_API te_obj_st*      te_iexp   (te_obj_st*, te_obj_st*);
+TEDLANG_API te_obj_st*      te_add    (te_obj_st*, te_obj_st*);
+TEDLANG_API te_obj_st*      te_sub    (te_obj_st*, te_obj_st*);
+TEDLANG_API te_obj_st*      te_mul    (te_obj_st*, te_obj_st*);
+TEDLANG_API te_obj_st*      te_div    (te_obj_st*, te_obj_st*);
+TEDLANG_API te_obj_st*      te_mod    (te_obj_st*, te_obj_st*);
+TEDLANG_API te_obj_st*      te_exp    (te_obj_st*, te_obj_st*);
+TEDLANG_API te_obj_st*      te_and    (te_obj_st*, te_obj_st*);
+TEDLANG_API te_obj_st*      te_or     (te_obj_st*, te_obj_st*);
+TEDLANG_API te_obj_st*      te_eq     (te_obj_st*, te_obj_st*);
+TEDLANG_API te_obj_st*      te_ne     (te_obj_st*, te_obj_st*);
+TEDLANG_API te_obj_st*      te_lt     (te_obj_st*, te_obj_st*);
+TEDLANG_API te_obj_st*      te_gt     (te_obj_st*, te_obj_st*);
+TEDLANG_API te_obj_st*      te_le     (te_obj_st*, te_obj_st*);
+TEDLANG_API te_obj_st*      te_ge     (te_obj_st*, te_obj_st*);
+
 typedef struct
 {
 	size_t argc;
+	char** pnames;
 	te_obj_st** ppargs;
 }
 te_fnargs_st;
@@ -28,12 +62,13 @@ typedef struct
 	// Constructor / Destructor
 	te_obj_st*      (*ty_new)    ();
 	void            (*ty_del)    (te_obj_st*);
+	te_obj_st*      (*ty_cpy)    (te_obj_st*);
 
 	// Special Operators
 	bool            (*ty_bool)   (te_obj_st*);
 	int64_t         (*ty_int)    (te_obj_st*);
-	const char*     (*ty_str)    (te_obj_st*);
-	te_obj_st*      (*ty_call)   (te_fnargs_st);
+	const char*     (*ty_repr)   (te_obj_st*);
+	te_obj_st*      (*ty_call)   (te_obj_st*, te_fnargs_st);
 	te_iterable_st* (*ty_iter)   (te_obj_st*);
 	te_obj_st*      (*ty_not)    (te_obj_st*);
 	te_obj_st*      (*ty_idx)    (te_obj_st*, te_obj_st*);
@@ -71,7 +106,10 @@ typedef struct __te_obj
 }
 te_obj_st;
 
-TEDLANG_API void te_incref(te_obj_st* pObj);
-TEDLANG_API void te_decref(te_obj_st* pObj);
+TEDLANG_API void te_obj_new(te_obj_st* pself, te_type_st* pty);
+#define te_obj_del(pself)
+
+TEDLANG_API void te_incref(te_obj_st* pobj);
+TEDLANG_API void te_decref(te_obj_st* pobj);
 
 #endif
