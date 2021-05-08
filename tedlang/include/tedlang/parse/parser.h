@@ -69,10 +69,10 @@ typedef struct
 }
 te_ast_st;
 
-TE_API void __te_ast_ty_new(te_ast_st* pself, te_ast_et ty);
+TEDLANG_API void __te_ast_ty_new(te_ast_st* pself, te_ast_et ty);
 
 // deallocates a generic ast node
-TE_API void _te_ast_del(te_ast_st* pself);
+TEDLANG_API void _te_ast_del(te_ast_st* pself);
 
 // data nodes
 
@@ -96,8 +96,8 @@ typedef struct
 }
 te_ast_var_st;
 
-TE_API void _te_ast_var_new(te_ast_var_st* pself);
-TE_API void _te_ast_var_del(te_ast_var_st* pself);
+TEDLANG_API void _te_ast_var_new(te_ast_var_st* pself);
+TEDLANG_API void _te_ast_var_del(te_ast_var_st* pself);
 
 // represents a null value in tedlang
 // returns te_null_st* on eval
@@ -119,7 +119,7 @@ typedef struct
 }
 te_ast_bool_st;
 
-TE_API void _te_ast_bool_new(te_ast_bool_st* pself);
+TEDLANG_API void _te_ast_bool_new(te_ast_bool_st* pself);
 #define _te_ast_bool_del(pself)
 
 // contains an integer
@@ -131,7 +131,7 @@ typedef struct
 }
 te_ast_int_st;
 
-TE_API void _te_ast_int_new(te_ast_int_st* pself);
+TEDLANG_API void _te_ast_int_new(te_ast_int_st* pself);
 #define _te_ast_int_del(pself)
 
 // contains a NULL terminated string
@@ -143,8 +143,8 @@ typedef struct
 }
 te_ast_str_st;
 
-TE_API void _te_ast_str_new(te_ast_str_st* pself);
-TE_API void _te_ast_str_del(te_ast_str_st* pself);
+TEDLANG_API void _te_ast_str_new(te_ast_str_st* pself);
+TEDLANG_API void _te_ast_str_del(te_ast_str_st* pself);
 
 // contains an array of te_ast_st* which contain the elements of the array
 // returns te_arr_st* on eval
@@ -157,10 +157,10 @@ typedef struct
 }
 te_ast_arr_st;
 
-TE_API int _te_ast_arr_new(te_ast_arr_st* pself, size_t sz);
-TE_API void _te_ast_arr_del(te_ast_arr_st* pself);
+TEDLANG_API int _te_ast_arr_new(te_ast_arr_st* pself, size_t sz);
+TEDLANG_API void _te_ast_arr_del(te_ast_arr_st* pself);
 
-TE_API int _te_ast_arr_append(te_ast_arr_st* pself, te_ast_st* pelem);
+TEDLANG_API int _te_ast_arr_append(te_ast_arr_st* pself, te_ast_st* pelem);
 
 // special cases for expressions
 
@@ -198,11 +198,11 @@ typedef struct
 te_ast_seq_st;
 
 // returns -1 on failure
-TE_API int _te_ast_seq_new(te_ast_seq_st* pself, size_t sz);
-TE_API void _te_ast_seq_del(te_ast_seq_st* pself);
+TEDLANG_API int _te_ast_seq_new(te_ast_seq_st* pself, size_t sz);
+TEDLANG_API void _te_ast_seq_del(te_ast_seq_st* pself);
 
 // returns -1 on failure
-TE_API int _te_ast_seq_append(te_ast_seq_st* pself, te_ast_st* pexpr);
+TEDLANG_API int _te_ast_seq_append(te_ast_seq_st* pself, te_ast_st* pexpr);
 
 // iterates through an iterable type iter (string, array), passing each element to idx
 // returns NULL on eval
@@ -215,8 +215,8 @@ typedef struct
 }
 te_ast_for_st;
 
-TE_API void _te_ast_for_new(te_ast_for_st* pself);
-TE_API void _te_ast_for_del(te_ast_for_st* pself);
+TEDLANG_API void _te_ast_for_new(te_ast_for_st* pself);
+TEDLANG_API void _te_ast_for_del(te_ast_for_st* pself);
 
 // evals body until cond returns false
 // returns NULL on eval
@@ -228,8 +228,8 @@ typedef struct
 }
 te_ast_while_st;
 
-TE_API void _te_ast_while_new(te_ast_while_st* pself);
-TE_API void _te_ast_while_del(te_ast_while_st* pself);
+TEDLANG_API void _te_ast_while_new(te_ast_while_st* pself);
+TEDLANG_API void _te_ast_while_del(te_ast_while_st* pself);
 
 // evals cond, true => eval(if_body), false => eval(else_body)
 // returns NULL on eval
@@ -242,8 +242,8 @@ typedef struct
 }
 te_ast_branch_st;
 
-TE_API void _te_ast_branch_new(te_ast_branch_st* pself);
-TE_API void _te_ast_branch_del(te_ast_branch_st* pself);
+TEDLANG_API void _te_ast_branch_new(te_ast_branch_st* pself);
+TEDLANG_API void _te_ast_branch_del(te_ast_branch_st* pself);
 
 // exit point of a function
 // returns te_obj_st* or NULL on eval depending on ret
@@ -254,8 +254,8 @@ typedef struct
 }
 te_ast_return_st;
 
-TE_API void _te_ast_return_new(te_ast_return_st* pself);
-TE_API void _te_ast_return_del(te_ast_return_st* pself);
+TEDLANG_API void _te_ast_return_new(te_ast_return_st* pself);
+TEDLANG_API void _te_ast_return_del(te_ast_return_st* pself);
 
 // calls a tesh function
 // returns either te_obj_st* or NULL on eval depending on the function
@@ -269,10 +269,10 @@ typedef struct
 }
 te_ast_call_st;
 
-TE_API int _te_ast_call_new(te_ast_call_st* pself, size_t sz);
-TE_API void _te_ast_call_del(te_ast_call_st* pself);
+TEDLANG_API int _te_ast_call_new(te_ast_call_st* pself, size_t sz);
+TEDLANG_API void _te_ast_call_del(te_ast_call_st* pself);
 
-TE_API int _te_ast_call_append(te_ast_call_st* pself, te_ast_st* parg);
+TEDLANG_API int _te_ast_call_append(te_ast_call_st* pself, te_ast_st* parg);
 
 // function definition
 // stores local variables, runs pbody, restores local variables
@@ -287,10 +287,10 @@ typedef struct
 }
 te_ast_fn_st;
 
-TE_API int _te_ast_fn_new(te_ast_fn_st* pself, size_t sz);
-TE_API void _te_ast_fn_del(te_ast_fn_st* pself);
+TEDLANG_API int _te_ast_fn_new(te_ast_fn_st* pself, size_t sz);
+TEDLANG_API void _te_ast_fn_del(te_ast_fn_st* pself);
 
-TE_API int _te_ast_fn_add_arg(te_ast_fn_st* pself, char* arg);
+TEDLANG_API int _te_ast_fn_add_arg(te_ast_fn_st* pself, char* arg);
 
 // returns NULL on eval
 typedef struct
@@ -302,10 +302,10 @@ typedef struct
 }
 te_ast_imp_st;
 
-TE_API int _te_ast_imp_new(te_ast_imp_st* pself, size_t sz);
-TE_API void _te_ast_imp_del(te_ast_imp_st* pself);
+TEDLANG_API int _te_ast_imp_new(te_ast_imp_st* pself, size_t sz);
+TEDLANG_API void _te_ast_imp_del(te_ast_imp_st* pself);
 
-TE_API int _te_ast_imp_append(te_ast_imp_st* pself, char* imp_elem);
+TEDLANG_API int _te_ast_imp_append(te_ast_imp_st* pself, char* imp_elem);
 
 // represents the contents of any tesh file
 // returns NULL on eval
@@ -318,10 +318,10 @@ typedef struct
 }
 te_ast_module_st;
 
-TE_API int _te_ast_module_new(te_ast_module_st* pself, size_t sz);
-TE_API void _te_ast_module_del(te_ast_module_st* pself);
+TEDLANG_API int _te_ast_module_new(te_ast_module_st* pself, size_t sz);
+TEDLANG_API void _te_ast_module_del(te_ast_module_st* pself);
 
-TE_API int _te_ast_module_append(te_ast_module_st* pself, te_ast_st* pelem);
+TEDLANG_API int _te_ast_module_append(te_ast_module_st* pself, te_ast_st* pelem);
 
 // Binary operators
 
@@ -335,8 +335,8 @@ typedef struct
 }
 te_ast_p0_st;
 
-TE_API void _te_ast_p0_new(te_ast_p0_st* pself, te_ast_et ast_ty);
-TE_API void _te_ast_p0_del(te_ast_p0_st* pself);
+TEDLANG_API void _te_ast_p0_new(te_ast_p0_st* pself, te_ast_et ast_ty);
+TEDLANG_API void _te_ast_p0_del(te_ast_p0_st* pself);
 
 typedef te_ast_p0_st
         te_ast_assign_st,
@@ -364,8 +364,8 @@ typedef struct
 }
 te_ast_bin_st;
 
-TE_API void _te_ast_bin_new(te_ast_bin_st* pself, te_ast_et ast_ty);
-TE_API void _te_ast_bin_del(te_ast_bin_st* pself);
+TEDLANG_API void _te_ast_bin_new(te_ast_bin_st* pself, te_ast_et ast_ty);
+TEDLANG_API void _te_ast_bin_del(te_ast_bin_st* pself);
 
 typedef te_ast_bin_st
         te_ast_eq_st,
@@ -401,8 +401,8 @@ typedef te_ast_bin_st
 #define _te_ast_exp_new( pself ) _te_ast_bin_new( pself, AST_EXP )
 #define _te_ast_idx_new( pself ) _te_ast_bin_new( pself, AST_IDX )
 
-TE_API int te_parse_expr   (const te_tarr_st* ptarr, te_ast_st** ppast);
-TE_API int te_parse_block  (const te_tarr_st* ptarr, te_ast_st** ppast);
-TE_API int te_parse_module (const te_tarr_st* ptarr, te_ast_st** ppast);
+TEDLANG_API int te_parse_expr   (const te_tarr_st* ptarr, te_ast_st** ppast);
+TEDLANG_API int te_parse_block  (const te_tarr_st* ptarr, te_ast_st** ppast);
+TEDLANG_API int te_parse_module (const te_tarr_st* ptarr, te_ast_st** ppast);
 
 #endif

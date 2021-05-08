@@ -17,15 +17,15 @@
 #endif
 
 
-#ifndef TE_API
-#	ifdef TE_SRC
-#		define TE_API EXPORT
+#ifndef TEDLANG_API
+#	ifdef TEDLANG_SRC
+#		define TEDLANG_API EXPORT
 #	else
-#		define TE_API IMPORT
+#		define TEDLANG_API IMPORT
 #	endif
 #endif
 
-#ifndef TE_SRC
+#ifndef TEDLANG_SRC
 #	include <tedlang/core/eval.h>
 #	include <tedlang/parse/parser.h>
 #	include <tedlang/parse/lexer.h>

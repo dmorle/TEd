@@ -1,4 +1,4 @@
-#define TE_SRC
+#define TEDLANG_SRC
 
 #include <stdlib.h>
 #include <stdbool.h>

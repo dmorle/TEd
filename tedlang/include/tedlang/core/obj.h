@@ -71,7 +71,7 @@ typedef struct __te_obj
 }
 te_obj_st;
 
-TE_API void te_incref(te_obj_st* pObj);
-TE_API void te_decref(te_obj_st* pObj);
+TEDLANG_API void te_incref(te_obj_st* pObj);
+TEDLANG_API void te_decref(te_obj_st* pObj);
 
 #endif

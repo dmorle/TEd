@@ -26,12 +26,12 @@ te_scope_st;
 
 te_scope_st te_global_scope;
 
-TE_API te_scope_st* te_scope_alloc   (te_scope_st* pparent, size_t sz, float lf);
-TE_API te_scope_st* te_scope_new     (te_scope_st* pself, te_scope_st* pparent, size_t sz, float lf);
-TE_API void         te_scope_del     (te_scope_st* pself);
+TEDLANG_API te_scope_st* te_scope_alloc   (te_scope_st* pparent, size_t sz, float lf);
+TEDLANG_API te_scope_st* te_scope_new     (te_scope_st* pself, te_scope_st* pparent, size_t sz, float lf);
+TEDLANG_API void         te_scope_del     (te_scope_st* pself);
 
-TE_API te_obj_st*   te_scope_get     (te_scope_st* pself, char* name);
+TEDLANG_API te_obj_st*   te_scope_get     (te_scope_st* pself, char* name);
 // set will steals the pobj pointer, name is copied if nessisary
-TE_API te_scope_st* te_scope_set     (te_scope_st* pself, char* name, te_obj_st* pobj);
+TEDLANG_API te_scope_st* te_scope_set     (te_scope_st* pself, char* name, te_obj_st* pobj);
 
 #endif
