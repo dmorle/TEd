@@ -9,12 +9,20 @@ add_library(
 	"src/parse/lexer.c"
 	"src/parse/parser.c"
 
+	"src/builtin/bool.c"
+	"src/builtin/int.c"
+	"src/builtin/str.c"
+
 	"include/tedlang/tedl.h"
 	"include/tedlang/core/obj.h"
 	"include/tedlang/core/eval.h"
 	"include/tedlang/core/scope.h"
 	"include/tedlang/parse/lexer.h"
 	"include/tedlang/parse/parser.h"
+
+	"include/tedlang/builtin/bool.h"
+	"include/tedlang/builtin/int.h"
+	"include/tedlang/builtin/str.h"
 )
 
 add_executable(
