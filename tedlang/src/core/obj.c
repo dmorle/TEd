@@ -49,7 +49,7 @@ te_obj_st* te_not(te_obj_st* pself)
 {
 }
 
-te_obj_st* te_idx(te_obj_st* pself, te_obj_st* prval)
+te_obj_st** te_idx(te_obj_st* pself, te_obj_st* prval)
 {
 }
 

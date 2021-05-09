@@ -10,6 +10,10 @@
 void __te_ast_ty_new(te_ast_st* pself, te_ast_et ty)
 {
 	pself->ast_ty = ty;
+	pself->lin_beg = 0;
+	pself->lin_end = 0;
+	pself->col_beg = 0;
+	pself->col_end = 0;
 }
 
 void _te_ast_del(te_ast_st* pself)
@@ -451,23 +455,6 @@ int _te_ast_module_append(te_ast_module_st* pself, te_ast_st* pelem)
 	return 0;
 }
 
-void _te_ast_p0_new(te_ast_p0_st* pself, te_ast_et ast_ty)
-{
-	pself->super.ast_ty = ast_ty;
-	pself->rval = NULL;
-	pself->name = NULL;
-}
-void _te_ast_p0_del(te_ast_p0_st* pself)
-{
-	if (pself->rval)
-	{
-		_te_ast_del(pself->rval);
-		free(pself->rval);
-	}
-	if (pself->name)
-		free(pself->name);
-}
-
 void _te_ast_bin_new(te_ast_bin_st* pself, te_ast_et ast_ty)
 {
 	pself->super.ast_ty = ast_ty;
@@ -486,6 +473,42 @@ void _te_ast_bin_del(te_ast_bin_st* pself)
 		_te_ast_del(pself->rval);
 		free(pself->rval);
 	}
+}
+
+int init_bin_op(te_ast_bin_st* pbin, te_token_et tk)
+{
+	switch (tk)
+	{
+	case TK_OP_ASSIGN: _te_ast_assign_new(pbin); break;
+	case TK_OP_IADD: _te_ast_iadd_new(pbin); break;
+	case TK_OP_ISUB: _te_ast_isub_new(pbin); break;
+	case TK_OP_IMUL: _te_ast_imul_new(pbin); break;
+	case TK_OP_IDIV: _te_ast_idiv_new(pbin); break;
+	case TK_OP_IMOD: _te_ast_imod_new(pbin); break;
+	case TK_OP_IEXP: _te_ast_iexp_new(pbin); break;
+
+	case TK_OP_EQ: _te_ast_eq_new(pbin); break;
+	case TK_OP_NE: _te_ast_ne_new(pbin); break;
+	case TK_OP_LT: _te_ast_lt_new(pbin); break;
+	case TK_OP_GT: _te_ast_gt_new(pbin); break;
+	case TK_OP_LE: _te_ast_le_new(pbin); break;
+	case TK_OP_GE: _te_ast_ge_new(pbin); break;
+		
+	case TK_OP_AND: _te_ast_and_new(pbin); break;
+	case TK_OP_OR: _te_ast_or_new(pbin); break;
+
+	case TK_OP_ADD: _te_ast_add_new(pbin); break;
+	case TK_OP_SUB: _te_ast_sub_new(pbin); break;
+	case TK_OP_MUL: _te_ast_mul_new(pbin); break;
+	case TK_OP_DIV: _te_ast_div_new(pbin); break;
+	case TK_OP_MOD: _te_ast_mod_new(pbin); break;
+	case TK_OP_EXP: _te_ast_exp_new(pbin); break;
+
+	default:
+		assert(false && "Found a non op as an op, check the lexer\n");
+		return -2;
+	}
+	return 0;
 }
 
 // helper functions for parsing
@@ -557,6 +580,50 @@ int find_elem_end(const te_tarr_st* ptarr, size_t idx, te_token_et tk_open, te_t
 			return idx;
 	}
 	return -2;
+}
+
+// finds a p0 op (if one exists) starting from the right
+int find_p0_op(const te_tarr_st* ptarr, int idx)
+{
+	int bbrac = 0;
+	int rbrac = 0;
+	int sbrac = 0;
+
+	for (; idx >= 0; idx--)
+	{
+		switch (ptarr->_data[idx].t_id)
+		{
+		case TK_C_BRACE:
+			bbrac++;
+			continue;
+		case TK_O_BRACE:
+			if (!bbrac--)
+				return -1;
+			continue;
+		case TK_C_ROUND:
+			rbrac++;
+			continue;
+		case TK_O_ROUND:
+			if (!rbrac--)
+				return -1;
+			continue;
+		case TK_C_SQUARE:
+			rbrac++;
+			continue;
+		case TK_O_SQUARE:
+			if (!rbrac--)
+				return -1;
+			continue;
+		}
+
+		if (bbrac || rbrac || sbrac)
+			continue;
+		if (_te_op_prec(ptarr->_data[idx].t_id) != 0)
+			continue;
+
+		return idx;
+	}
+	return -1;
 }
 
 // expression parsing
@@ -875,8 +942,134 @@ OUT_OF_MEMORY:
 	return -1;
 }
 
-// Parses expressions with precedence >= 1 operators
-int parse_expr_prec(const te_tarr_st* ptarr, te_ast_st** ppexpr, int prec)
+// Parses expressions with any precedence operators
+int parse_expr_prec(const te_tarr_st* ptarr, te_ast_st** ppexpr, int prec);
+
+// Parses expressions with any precedence operators.  R to L parsing => L to R evaluation
+int parse_expr_rtolprec(const te_tarr_st* ptarr, te_ast_st** ppexpr, int prec)
+{
+	if (!ptarr->length)
+	{
+		te_ast_noexpr_st* pexpr = (te_ast_noexpr_st*)malloc(sizeof(te_ast_noexpr_st));
+		if (!pexpr)
+			goto OUT_OF_MEMORY;
+		_te_ast_noexpr_new(pexpr);
+		*ppexpr = pexpr;
+		return 0;
+	}
+
+	te_tarr_st tk_slice;
+	te_ast_st* pexpr;
+	int ret;
+
+	int bbrac = 0;
+	int rbrac = 0;
+	int sbrac = 0;
+
+	int i = ptarr->length - 1;
+	for (; i >= 0; i--)
+	{
+		switch (ptarr->_data[i].t_id)
+		{
+		case TK_C_BRACE:
+			bbrac++;
+			continue;
+		case TK_O_BRACE:
+			if (!bbrac--)
+				goto INVALID_TOKEN;
+			continue;
+		case TK_C_ROUND:
+			rbrac++;
+			continue;
+		case TK_O_ROUND:
+			if (!rbrac--)
+				goto INVALID_TOKEN;
+			continue;
+		case TK_C_SQUARE:
+			rbrac++;
+			continue;
+		case TK_O_SQUARE:
+			if (!rbrac--)
+				goto INVALID_TOKEN;
+			continue;
+		}
+
+		if (bbrac || rbrac || sbrac)
+			continue;
+		if (_te_op_prec(ptarr->_data[i].t_id) != prec)
+			continue;
+
+		// Found the split point
+
+		if (i == 0)
+			goto INVALID_TOKEN;
+
+		te_ast_bin_st* pbin = (te_ast_bin_st*)malloc(sizeof(te_ast_bin_st));
+		if (!pbin)
+			goto OUT_OF_MEMORY;
+		if (init_bin_op(pbin, ptarr->_data[i].t_id) < 0)
+			return -2;
+
+		_te_tarr_slice(ptarr, 0, i, &tk_slice);
+		ret = parse_expr_prec(&tk_slice, &pexpr, prec);
+		if (ret < 0)
+		{
+			_te_ast_bin_del(pbin);
+			free(pbin);
+			return ret;
+		}
+		pbin->lval = pexpr;
+
+		_te_tarr_slice(ptarr, i + 1, ptarr->length, &tk_slice);
+		ret = parse_expr_prec(&tk_slice, &pexpr, prec + 1);
+		if (ret < 0)
+		{
+			_te_ast_bin_del(pbin);
+			free(pbin);
+			return ret;
+		}
+		pbin->rval = pexpr;
+		
+		*ppexpr = pbin;
+		return i + 1 + ret;
+	}
+
+	// Max precedence level was reached
+	if (prec == MAX_PREC)
+	{
+		// Checking for parentheses
+		if (ptarr->_data[0].t_id == TK_O_ROUND)
+		{
+			i = ptarr->length - 1;
+			if (ptarr->_data[i].t_id != TK_C_ROUND)
+				goto INVALID_TOKEN;
+
+			_te_tarr_slice(ptarr, 1, i, &tk_slice);
+			return te_parse_expr(&tk_slice, ppexpr);
+		}
+
+		// the tokens MUST form an operator-less near leaf node
+		return parse_expr_leaf(ptarr, ppexpr);
+	}
+
+	// No operators were found at the current precedence level -> inc and search again
+	ret = parse_expr_prec(ptarr, &pexpr, prec + 1);
+	if (ret < 0)
+		return ret;
+	*ppexpr = pexpr;
+	return ptarr->length;
+
+INVALID_TOKEN:
+	fprintf(stderr, "Unexpected token on line %zu", ptarr->_data[i].linenum);
+	return -2;
+
+OUT_OF_MEMORY:
+	fprintf(stderr, "Out of memory\n");
+	return -1;
+}
+
+// Parses expressions with any precedence operators.  L to R parsing => R to L evaluation
+int parse_expr_ltorprec(const te_tarr_st* ptarr, te_ast_st** ppexpr, int prec)
 {
 	if (!ptarr->length)
 	{
@@ -937,18 +1130,8 @@ int parse_expr_prec(const te_tarr_st* ptarr, te_ast_st** ppexpr, int prec)
 		te_ast_bin_st* pbin = (te_ast_bin_st*)malloc(sizeof(te_ast_bin_st));
 		if (!pbin)
 			goto OUT_OF_MEMORY;
-
-		switch (ptarr->_data[i].t_id)
-		{
-		case TK_OP_EQ: _te_ast_eq_new(pbin); break;
-		case TK_OP_NE: _te_ast_ne_new(pbin); break;
-		case TK_OP_LT: _te_ast_lt_new(pbin); break;
-		case TK_OP_GT: _te_ast_gt_new(pbin); break;
-		case TK_OP_LE: _te_ast_le_new(pbin); break;
-		case TK_OP_GE: _te_ast_ge_new(pbin); break;
-		default:
-			assert(false && "Found a non p1 op as p1 op, check the lexer\n");
-		}
+		if (init_bin_op(pbin, ptarr->_data[i].t_id) < 0)
+			return -2;
 
 		_te_tarr_slice(ptarr, 0, i, &tk_slice);
 		ret = parse_expr_prec(&tk_slice, &pexpr, prec + 1);
@@ -969,7 +1152,7 @@ int parse_expr_prec(const te_tarr_st* ptarr, te_ast_st** ppexpr, int prec)
 			return ret;
 		}
 		pbin->rval = pexpr;
-		
+
 		*ppexpr = pbin;
 		return i + 1 + ret;
 	}
@@ -1008,138 +1191,13 @@ OUT_OF_MEMORY:
 	return -1;
 }
 
-// Parses expressions with precedence >= 0 operators (backwards parsing)
-int parse_expr_p0(const te_tarr_st* ptarr, te_ast_st** ppexpr)
+int parse_expr_prec(const te_tarr_st* ptarr, te_ast_st** ppexpr, int prec)
 {
-	if (!ptarr->length)
-	{
-		te_ast_noexpr_st* pexpr = (te_ast_noexpr_st*)malloc(sizeof(te_ast_noexpr_st));
-		if (!pexpr)
-			goto OUT_OF_MEMORY;
-		_te_ast_noexpr_new(pexpr);
-		*ppexpr = pexpr;
-		return 0;
-	}
+	// adjust this function for added precedence levels with different evaluation orders
 
-	te_tarr_st tk_slice;
-	te_ast_st* pexpr = NULL;
-	int ret;
-
-	int bbrac = 0;
-	int rbrac = 0;
-	int sbrac = 0;
-
-	int i = ptarr->length - 1;
-	for (; i >= 0; i--)
-	{
-		switch (ptarr->_data[i].t_id)
-		{
-		case TK_C_BRACE:
-			bbrac++;
-			continue;
-		case TK_O_BRACE:
-			if (!bbrac--)
-				goto INVALID_TOKEN;
-			continue;
-		case TK_C_ROUND:
-			rbrac++;
-			continue;
-		case TK_O_ROUND:
-			if (!rbrac--)
-				goto INVALID_TOKEN;
-			continue;
-		case TK_C_SQUARE:
-			rbrac++;
-			continue;
-		case TK_O_SQUARE:
-			if (!rbrac--)
-				goto INVALID_TOKEN;
-			continue;
-		}
-
-		if (bbrac || rbrac || sbrac)
-			continue;
-		if (_te_op_prec(ptarr->_data[i].t_id) != 0)
-			continue;
-
-		if (i == ptarr->length - 1)
-			goto INVALID_TOKEN;
-		_te_tarr_slice(ptarr, (size_t)i + 1, ptarr->length, &tk_slice);
-		ret = parse_expr_prec(&tk_slice, &pexpr, 1);
-		if (ret < 0)
-			return ret;
-		break;
-	}
-
-	// checking if the expression didn't contain any precedence 0 operators
-	if (!pexpr)
-	{
-		ret = parse_expr_prec(ptarr, &pexpr, 1);
-		if (ret < 0)
-			return ret;
-		*ppexpr = pexpr;
-		return ptarr->length;
-	}
-
-	// found precedence 0 operator, rvalue is in pexpr
-	if (!i)
-		goto INVALID_TOKEN;
-
-	te_token_et t = ptarr->_data[i].t_id;
-	while (i > 0)
-	{
-		// only identifiers are allowed for lvalues
-		if (ptarr->_data[--i].t_id != TK_IDN)
-			goto INVALID_TOKEN;
-
-		switch (t)
-		{
-			// token data is moved into the ast, as is pexpr
-#define HANDLE_OP(op)                                                                      \
-			{                                                                              \
-				te_ast_##op##_st* p = (te_ast_##op##_st*)malloc(sizeof(te_ast_##op##_st)); \
-				if (!p)                                                                    \
-				{                                                                          \
-					_te_ast_del(pexpr);                                                    \
-					goto OUT_OF_MEMORY;                                                    \
-				}                                                                          \
-				p->name = ptarr->_data[i]._data;                                           \
-				ptarr->_data[i--]._data = NULL;                                            \
-				_te_ast_##op##_new(p);                                                     \
-				p->rval = pexpr;                                                           \
-				pexpr = p;                                                                 \
-			}                                                                              \
-			break
-
-		// macro magic
-		case TK_OP_ASSIGN:
-			HANDLE_OP(assign);
-		case TK_OP_IADD:
-			HANDLE_OP(iadd);
-		case TK_OP_ISUB:
-			HANDLE_OP(isub);
-		case TK_OP_IMUL:
-			HANDLE_OP(imul);
-		case TK_OP_IDIV:
-			HANDLE_OP(idiv);
-		case TK_OP_IMOD:
-			HANDLE_OP(imod);
-		case TK_OP_IEXP:
-			HANDLE_OP(iexp);
-#undef HANDLE_OP
-		default:
-			assert(false && "Found a non p0 op as p0 op, check the lexer\n");
-		}
-	}
-	return ptarr->length;
-
-INVALID_TOKEN:
-	fprintf(stderr, "Unexpected token on line %zu", ptarr->_data[i].linenum);
-	return -2;
-
-OUT_OF_MEMORY:
-	fprintf(stderr, "Out of memory\n");
-	return -1;
+	if (prec) // Currently only precedence 0 uses right to left evaulation (L to R parsing)
+		return parse_expr_ltorprec(ptarr, ppexpr, prec);
+	return parse_expr_rtolprec(ptarr, ppexpr, prec);
 }
 
 // Parses an import expression

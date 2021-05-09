@@ -17,7 +17,7 @@ TEDLANG_API const char*     te_repr   (te_obj_st*);
 TEDLANG_API te_obj_st*      te_call   (te_obj_st*, te_fnargs_st);
 TEDLANG_API te_iterable_st* te_iter   (te_obj_st*);
 TEDLANG_API te_obj_st*      te_not    (te_obj_st*);
-TEDLANG_API te_obj_st*      te_idx    (te_obj_st*, te_obj_st*);
+TEDLANG_API te_obj_st**     te_idx    (te_obj_st*, te_obj_st*);
 
 TEDLANG_API te_obj_st*      te_assign (te_obj_st*, te_obj_st*);
 TEDLANG_API te_obj_st*      te_iadd   (te_obj_st*, te_obj_st*);
@@ -75,7 +75,7 @@ typedef struct
 	te_obj_st*      (*ty_call)   (te_obj_st*, te_fnargs_st);
 	te_iterable_st* (*ty_iter)   (te_obj_st*);
 	te_obj_st*      (*ty_not)    (te_obj_st*);
-	te_obj_st*      (*ty_idx)    (te_obj_st*, te_obj_st*);
+	te_obj_st**     (*ty_idx)    (te_obj_st*, te_obj_st*);  // produces an lval
 
 	// Binary Operators
 	te_obj_st*      (*ty_assign) (te_obj_st**, te_obj_st*);
