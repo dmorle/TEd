@@ -39,5 +39,7 @@ add_executable(
 )
 target_link_libraries(tedlang libtedl)
 
+set_property(TARGET tedlang PROPERTY LINKER_LANGUAGE C)
 set_property(TARGET tedlang PROPERTY C_STANDARD 11)
+set_property(TARGET libtedl PROPERTY LINKER_LANGUAGE C)
 set_property(TARGET libtedl PROPERTY C_STANDARD 11)

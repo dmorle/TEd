@@ -3,10 +3,9 @@
 #
 cmake_minimum_required (VERSION 3.8)
 
-project ("ted")
+project ("ted" C CXX)
 
 # Include sub-projects.
 add_subdirectory ("tedlang")
 add_subdirectory ("tedcore")
 add_subdirectory ("tedtext")
-add_subdirectory ("tedwin")

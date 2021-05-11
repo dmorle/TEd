@@ -1,6 +1,7 @@
 #include <Windows.h>
 
-#include <ted/ted.h>
+#include <tedwin/ted.hpp>
+#include <tedcore/tedcore.hpp>
 
 LRESULT on_paint(WPARAM wparam, LPARAM lparam)
 {
@@ -28,14 +29,14 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR pCmdLine,
 
 	wc.lpfnWndProc = WindowProc;
 	wc.hInstance = hInstance;
-	wc.lpszClassName = cls_name;
-	
+	wc.lpszClassName = "ted";
+
 	RegisterClass(&wc);
 
 	hwnd = CreateWindowEx(
 		0,
-		cls_name,
-		win_name,
+		"ted",
+		"ted",
 		0,
 		CW_USEDEFAULT,
 		CW_USEDEFAULT,
