@@ -16,7 +16,7 @@ extern te_type_st _te_fn_ty;
 
 typedef struct
 {
-	te_obj_st;
+	te_obj_st super;
 	te_ast_st* pbody;
 }
 te_fn_st;

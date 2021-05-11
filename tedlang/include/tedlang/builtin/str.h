@@ -21,7 +21,7 @@ extern te_type_st _te_str_ty;
 
 typedef struct
 {
-	te_obj_st;
+	te_obj_st super;
 	char* val;
 }
 te_str_st;

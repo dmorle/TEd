@@ -35,7 +35,7 @@ extern te_type_st _te_int_ty;
 
 typedef struct
 {
-	te_obj_st;
+	te_obj_st super;
 	int64_t val;
 }
 te_int_st;
