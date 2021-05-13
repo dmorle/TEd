@@ -8,6 +8,8 @@ include_directories("include")
 # libtedl
 
 if (WIN32)
+	enable_language(ASM_MASM)
+
 	add_library(
 		libtedl SHARED
 
@@ -17,7 +19,7 @@ if (WIN32)
 		"src/parse/lexer.c"
 		"src/parse/parser.c"
 		"src/core/windows/import.c"
-		"src/util/string.s"
+		"src/util/string.asm"
 
 		"src/builtin/bool.c"
 		"src/builtin/int.c"
@@ -42,7 +44,6 @@ if (WIN32)
 	target_link_libraries(libtedl user32.lib)
 	target_link_libraries(libtedl kernel32.lib)
 
-	set_property(TARGET libtedl PROPERTY LINKER_LANGUAGE C)
 	set_property(TARGET libtedl PROPERTY C_STANDARD 11)
 
 else()

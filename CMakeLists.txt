@@ -3,7 +3,7 @@
 #
 cmake_minimum_required (VERSION 3.8)
 
-project ("ted" ASM_MASM C CXX)
+project ("ted" C CXX)
 
 # Include sub-projects.
 add_subdirectory ("tedlang")
