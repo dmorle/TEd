@@ -8,6 +8,22 @@
 
 typedef struct __te_obj te_obj_st;
 
+typedef struct
+{
+	size_t argc;
+	char** pnames;
+	te_obj_st** ppargs;
+}
+te_fnargs_st;
+
+typedef void* te_iter_ctx;
+typedef struct
+{
+	te_iter_ctx(*start)(te_obj_st*);
+	te_obj_st* (*next)(te_iter_ctx);
+}
+te_iterable_st;
+
 TEDLANG_API void            te_del    (te_obj_st*);
 TEDLANG_API te_obj_st*      te_cpy    (te_obj_st*);
 
@@ -40,22 +56,6 @@ TEDLANG_API te_obj_st*      te_lt     (te_obj_st*, te_obj_st*);
 TEDLANG_API te_obj_st*      te_gt     (te_obj_st*, te_obj_st*);
 TEDLANG_API te_obj_st*      te_le     (te_obj_st*, te_obj_st*);
 TEDLANG_API te_obj_st*      te_ge     (te_obj_st*, te_obj_st*);
-
-typedef struct
-{
-	size_t argc;
-	char** pnames;
-	te_obj_st** ppargs;
-}
-te_fnargs_st;
-
-typedef void* te_iter_ctx;
-typedef struct
-{
-	te_iter_ctx (*start)(te_obj_st*);
-	te_obj_st*  (*next)(te_iter_ctx);
-}
-te_iterable_st;
 
 typedef struct
 {
