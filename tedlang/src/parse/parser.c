@@ -1406,6 +1406,8 @@ int parse_branch(const te_tarr_st* ptarr, te_ast_branch_st* pbranch)
 			return ret;
 		pbranch->else_body = past;
 	}
+	else
+		pbranch->else_body = NULL;
 
 	return ret + 1;
 }

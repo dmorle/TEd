@@ -243,7 +243,7 @@ typedef struct
 {
 	te_ast_st super;
 	te_ast_st* if_body;
-	te_ast_st* else_body;
+	te_ast_st* else_body;  // NULL if there is no else block
 	te_ast_st* cond;  // Must return te_bool_st* on eval
 }
 te_ast_branch_st;
@@ -252,7 +252,7 @@ TEDLANG_API void _te_ast_branch_new(te_ast_branch_st* pself);
 TEDLANG_API void _te_ast_branch_del(te_ast_branch_st* pself);
 
 // exit point of a function
-// returns te_obj_st* or NULL on eval depending on ret
+// returns NULL on eval
 typedef struct
 {
 	te_ast_st super;

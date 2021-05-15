@@ -28,6 +28,8 @@ te_obj_st* te_fn_new()
 
 	te_obj_new(pfn, &_te_fn_ty);
 	pfn->pbody = NULL;
+	pfn->argc = 0;
+	pfn->ppargv = NULL;
 	return (te_obj_st*)pfn;
 }
 
@@ -37,7 +39,16 @@ void te_fn_del(te_obj_st* pself)
 
 	te_obj_del(pself);
 	if (self.pbody)
+	{
 		_te_ast_del(self.pbody);
+		free(self.pbody);
+	}
+	if (self.ppargv)
+	{
+		for (char** pe = self.ppargv; pe < self.ppargv + self.argc; pe++)
+			free(*pe);
+		free(self.ppargv);
+	}
 }
 
 const char* te_fn_repr(te_obj_st* pself)

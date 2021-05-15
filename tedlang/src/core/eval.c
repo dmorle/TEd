@@ -9,6 +9,7 @@
 #include <tedlang/builtin/bool.h>
 #include <tedlang/builtin/int.h>
 #include <tedlang/builtin/str.h>
+#include <tedlang/builtin/fn.h>
 
 static bool inerror = false;
 static bool inbreak = false;
@@ -33,13 +34,13 @@ void* te_seterr(const char* err, ...)
 
 }
 
-te_obj_st** te_get_lval(te_scope_st* pscope, const te_ast_st* past)
+te_obj_st** te_lval(te_scope_st* pscope, const te_ast_st* past)
 {
 }
 
 te_obj_st* eval_empty(te_scope_st* pscope, const te_ast_noexpr_st* pempty)
 {
-	// TODO: create the null builtin type
+	// TODO: create the builtin type: null
 }
 
 te_obj_st* eval_var(te_scope_st* pscope, te_ast_var_st* pvar)
@@ -52,13 +53,13 @@ te_obj_st* eval_var(te_scope_st* pscope, te_ast_var_st* pvar)
 
 te_obj_st* eval_null(te_scope_st* pscope, te_ast_null_st* pnull)
 {
-	// TODO: create the null builtin type
+	// TODO: create the builtin type: null
 }
 
 te_obj_st* eval_bool(te_scope_st* pscope, te_ast_bool_st* pbool)
 {
 	te_bool_st* npbool = te_bool_new();
-	if (!npbool)
+	if (te_haserr())
 		return NULL;
 	npbool->val = pbool->val;
 	return npbool;
@@ -67,7 +68,7 @@ te_obj_st* eval_bool(te_scope_st* pscope, te_ast_bool_st* pbool)
 te_obj_st* eval_int(te_scope_st* pscope, te_ast_int_st* pint)
 {
 	te_int_st* npint = te_int_new();
-	if (!npint)
+	if (te_haserr())
 		return NULL;
 	npint->val = pint->val;
 	return npint;
@@ -76,7 +77,7 @@ te_obj_st* eval_int(te_scope_st* pscope, te_ast_int_st* pint)
 te_obj_st* eval_str(te_scope_st* pscope, te_ast_str_st* pstr)
 {
 	te_str_st* npstr = te_str_new();
-	if (!npstr)
+	if (te_haserr())
 		return NULL;
 	size_t sz = te_strlen(pstr->val);
 	npstr->val = (char*)malloc(sizeof(char) * sz);
@@ -91,7 +92,7 @@ te_obj_st* eval_str(te_scope_st* pscope, te_ast_str_st* pstr)
 
 te_obj_st* eval_arr(te_scope_st* pscope, const te_ast_arr_st* parr)
 {
-	// TODO: create the array builtin type
+	// TODO: create the builtin type: array
 }
 
 te_obj_st* eval_seq(te_scope_st* pscope, const te_ast_seq_st* pseq)
@@ -111,13 +112,13 @@ te_obj_st* eval_seq(te_scope_st* pscope, const te_ast_seq_st* pseq)
 te_obj_st* eval_for(te_scope_st* pscope, const te_ast_for_st* pfor)
 {
 	te_obj_st* piter = te_eval(pscope, pfor->iter);
-	if (inerror)
+	if (te_haserr())
 		return NULL;
 	if (!piter)
 		return te_seterr("For loop does not contain an iterable value");
 
 	te_obj_st* pctx = te_start(piter);
-	if (inerror)
+	if (te_haserr())
 		goto CLEAN_UP;
 	if (inbreak || incontinue)
 	{
@@ -140,7 +141,7 @@ te_obj_st* eval_for(te_scope_st* pscope, const te_ast_for_st* pfor)
 			te_seterr("Unable to add variable '%s' to the scope", pfor->it);
 			break;
 		}
-		te_decref(te_eval(pscope, pfor->body));
+		te_decref_s(te_eval(pscope, pfor->body));
 		if (te_haserr() || plastret)
 			break;
 
@@ -157,8 +158,7 @@ te_obj_st* eval_for(te_scope_st* pscope, const te_ast_for_st* pfor)
 	}
 
 CLEAN_UP:
-	if (pctx)
-		te_decref(pctx);
+	te_decref_s(pctx);
 	te_decref(piter);
 	return NULL;
 }
@@ -179,7 +179,7 @@ te_obj_st* eval_while(te_scope_st* pscope, const te_ast_while_st* pwhile)
 			break;
 		}
 		te_decref(pcond);
-		te_decref(te_eval(pscope, pwhile->body));
+		te_decref_s(te_eval(pscope, pwhile->body));
 		if (te_haserr() || plastret)
 			return NULL;
 
@@ -210,18 +210,70 @@ te_obj_st* eval_continue(te_scope_st* pscope, const te_ast_continue_st* pcontinu
 
 te_obj_st* eval_branch(te_scope_st* pscope, const te_ast_branch_st* pbranch)
 {
+	te_obj_st* pcond = te_eval(pscope, pbranch->cond);
+	if (te_haserr())
+		return NULL;
+	if (!pcond)
+		return te_seterr("Invalid if statement condition");
+
+	// errors can be ignored here, they'll be propagated back
+	te_obj_st* ptmp = NULL;
+	if (te_bool(pcond))
+		ptmp = te_eval(pscope, pbranch->if_body);
+	else if (pbranch->else_body)
+		ptmp = te_eval(pscope, pbranch->else_body);
+	
+	te_decref_s(ptmp);
+	te_decref(pcond);
+	return NULL;
 }
 
 te_obj_st* eval_return(te_scope_st* pscope, const te_ast_return_st* preturn)
 {
+	te_obj_st* pret = NULL;
+	if (preturn->ret)
+	{
+		pret = te_eval(pscope, preturn->ret);
+		if (te_haserr())
+			return NULL;
+		if (!pret)
+			return te_seterr("Invalid return value");
+	}
+	else
+	{
+		// TODO: create the builtin type: null
+	}
+
+	plastret = pret;
+	return NULL;
 }
 
 te_obj_st* eval_call(te_scope_st* pscope, const te_ast_call_st* pcall)
 {
 }
 
-te_obj_st* eval_fn(te_scope_st* pscope, const te_ast_fn_st* pfn)
+te_obj_st* eval_fn(te_scope_st* pscope, te_ast_fn_st* pfn)
 {
+	te_fn_st* npfn = te_fn_new();
+	if (te_haserr())
+		return NULL;
+	te_scope_st* pfnscope = te_scope_set(pscope, pfn->name, npfn);
+	if (!pfnscope)
+	{
+		te_decref(npfn);
+		return te_seterr("Out of memory");
+	}
+	npfn->pscope = pfnscope;
+
+	// moving the members of the ast node into the new object, preventing an unnessisary expensive copy
+	npfn->pbody = pfn->pbody;
+	npfn->argc = pfn->argc;
+	npfn->ppargv = pfn->ppargv;
+
+	pfn->pbody = NULL;
+	pfn->ppargv = NULL;
+
+	return NULL;
 }
 
 te_obj_st* eval_imp(te_scope_st* pscope, const te_ast_imp_st* pimp)
@@ -232,57 +284,72 @@ te_obj_st* eval_module(te_scope_st* pscope, const te_ast_module_st* pmodule)
 {
 }
 
-te_obj_st* eval_assign(te_scope_st* pscope, const te_ast_assign_st* passign)
-{
+#define fn_eval_iop(TY)                                                      \
+te_obj_st* eval_##TY(te_scope_st* pscope, const te_ast_##TY##_st* piop)      \
+{																			 \
+	te_obj_st* prval = te_eval(pscope, piop->rval);						     \
+	if (te_haserr()) return NULL;											 \
+	if (!prval)      return te_seterr("Invalid r-value for assignment");	 \
+	te_obj_st** pplval = te_lval(pscope, piop->lval);					     \
+	if (te_haserr()) return NULL;											 \
+	assert(pplval && *pplval);												 \
+	te_obj_st* pret = te_assign(pplval, prval);								 \
+	if (te_haserr()) {														 \
+		te_decref(pret);													 \
+		return NULL;}														 \
+	te_incref_s(pret);														 \
+	te_decref(prval);														 \
+	return pret;															 \
 }
 
-te_obj_st* eval_iadd(te_scope_st* pscope, const te_ast_iadd_st* piadd)
-{
+fn_eval_iop(assign)
+fn_eval_iop(iadd)
+fn_eval_iop(isub)
+fn_eval_iop(imul)
+fn_eval_iop(idiv)
+fn_eval_iop(imod)
+fn_eval_iop(iexp)
+#undef fn_eval_iop
+
+#define fn_eval_cmp_op(TY)                                                \
+te_obj_st* eval_##TY(te_scope_st* pscope, const te_ast_##TY##_st* pcmp)   \
+{                                                                         \
+	te_obj_st* plval = te_eval(pscope, pcmp->lval);                       \
+	if (te_haserr())                                                      \
+		return NULL;                                                      \
+	if (!plval)                                                           \
+		return te_seterr("Invalid l-value for comparison");               \
+	te_obj_st* prval = te_eval(pscope, pcmp->rval);                       \
+	if (te_haserr()) {                                                    \
+		te_decref(plval);                                                 \
+		return NULL;}                                                     \
+	if (!prval) {                                                         \
+		te_decref(plval);                                                 \
+		return te_seterr("Invalid r-value for comparison");}              \
+	te_obj_st* presult = te_##TY(plval, prval);                           \
+	if (te_haserr()) {                                                    \
+		te_decref(prval);                                                 \
+		te_decref(plval);                                                 \
+		te_decref_s(presult);                                             \
+		return NULL;}                                                     \
+	if (!presult) {                                                       \
+		te_decref(prval);                                                 \
+		te_decref(plval);                                                 \
+		te_decref_s(presult);                                             \
+		return te_seterr("Invalid comparison result");}                   \
+	te_incref(presult);                                                   \
+	te_decref(plval);                                                     \
+	te_decref(prval);                                                     \
+	return presult;                                                       \
 }
 
-te_obj_st* eval_isub(te_scope_st* pscope, const te_ast_isub_st* pisub)
-{
-}
-
-te_obj_st* eval_imul(te_scope_st* pscope, const te_ast_imul_st* pimul)
-{
-}
-
-te_obj_st* eval_idiv(te_scope_st* pscope, const te_ast_idiv_st* pidiv)
-{
-}
-
-te_obj_st* eval_imod(te_scope_st* pscope, const te_ast_imod_st* pimod)
-{
-}
-
-te_obj_st* eval_iexp(te_scope_st* pscope, const te_ast_iexp_st* piexp)
-{
-}
-
-te_obj_st* eval_eq(te_scope_st* pscope, const te_ast_eq_st* peq)
-{
-}
-
-te_obj_st* eval_ne(te_scope_st* pscope, const te_ast_ne_st* pne)
-{
-}
-
-te_obj_st* eval_lt(te_scope_st* pscope, const te_ast_lt_st* plt)
-{
-}
-
-te_obj_st* eval_gt(te_scope_st* pscope, const te_ast_gt_st* pgt)
-{
-}
-
-te_obj_st* eval_le(te_scope_st* pscope, const te_ast_le_st* ple)
-{
-}
-
-te_obj_st* eval_ge(te_scope_st* pscope, const te_ast_ge_st* pge)
-{
-}
+fn_eval_cmp_op(eq)
+fn_eval_cmp_op(ne)
+fn_eval_cmp_op(lt)
+fn_eval_cmp_op(gt)
+fn_eval_cmp_op(le)
+fn_eval_cmp_op(ge)
+#undef fn_eval_cmp_op
 
 te_obj_st* eval_and(te_scope_st* pscope, const te_ast_and_st* pand)
 {
@@ -320,8 +387,11 @@ te_obj_st* eval_idx(te_scope_st* pscope, const te_ast_idx_st* pidx)
 {
 }
 
-te_obj_st* te_eval(te_scope_st* pscope, const te_ast_st* past)
+te_obj_st* te_eval(te_scope_st* pscope, te_ast_st* past)
 {
+	if (te_haserr())
+		return NULL;
+
 	// polymorphism in C!
 	switch (past->ast_ty)
 	{

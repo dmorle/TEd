@@ -17,7 +17,10 @@ extern te_type_st _te_fn_ty;
 typedef struct
 {
 	te_obj_st super;
+	te_scope_st* pscope;  // reference to the scope in which the function was defined
 	te_ast_st* pbody;
+	size_t argc;
+	char** ppargv;
 }
 te_fn_st;
 

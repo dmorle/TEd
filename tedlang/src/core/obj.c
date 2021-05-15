@@ -103,7 +103,7 @@ te_obj_st** te_idx(te_obj_st* pself, te_obj_st* prval)
 
 te_obj_st* te_assign(te_obj_st** ppself, te_obj_st* prval)
 {
-	if ((*ppself)->ty->ty_assign)
+	if (*ppself && (*ppself)->ty->ty_assign)
 		return (*ppself)->ty->ty_assign(ppself, prval);
 
 	te_incref(prval);
@@ -345,4 +345,18 @@ void te_decref(te_obj_st* pobj)
 	pobj->is_valid = false;
 	pobj->ty->ty_del(pobj);
 	free(pobj);
+}
+
+void te_incref_s(te_obj_st* pobj)
+{
+	if (!pobj)
+		return;
+	te_incref(pobj);
+}
+
+void te_decref_s(te_obj_st* pobj)
+{
+	if (!pobj)
+		return;
+	te_decref(pobj);
 }
