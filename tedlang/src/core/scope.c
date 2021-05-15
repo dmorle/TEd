@@ -99,6 +99,8 @@ inline te_scope_st* scope_set(te_scope_st* pself, char* name, te_obj_st* pobj, u
 	for (_te_scope_bktnd_st* pnd = pself->pbuckets[h]; pnd; pnd = pnd->pnext)
 		if (!strcmp(name, pnd->name))
 		{
+			te_decref(pnd->pobj);
+			te_incref(pobj);
 			pnd->pobj = pobj;
 			return pself;
 		}

@@ -16,46 +16,39 @@ typedef struct
 }
 te_fnargs_st;
 
-typedef void* te_iter_ctx;
-typedef struct
-{
-	te_iter_ctx(*start)(te_obj_st*);
-	te_obj_st* (*next)(te_iter_ctx);
-}
-te_iterable_st;
+TEDLANG_API void            te_del    (te_obj_st* pself);
+TEDLANG_API te_obj_st*      te_cpy    (te_obj_st* pself);
 
-TEDLANG_API void            te_del    (te_obj_st*);
-TEDLANG_API te_obj_st*      te_cpy    (te_obj_st*);
+TEDLANG_API bool            te_bool   (te_obj_st* pself);
+TEDLANG_API int64_t         te_int    (te_obj_st* pself);
+TEDLANG_API const char*     te_repr   (te_obj_st* pself);
+TEDLANG_API te_obj_st*      te_call   (te_obj_st* pself, te_fnargs_st args);
+TEDLANG_API te_obj_st*      te_start  (te_obj_st* pself);
+TEDLANG_API te_obj_st*      te_next   (te_obj_st* pself, te_obj_st* piterctx);
+TEDLANG_API te_obj_st*      te_not    (te_obj_st* pself);
+TEDLANG_API te_obj_st**     te_idx    (te_obj_st* pself, te_obj_st* pidx);
 
-TEDLANG_API bool            te_bool   (te_obj_st*);
-TEDLANG_API int64_t         te_int    (te_obj_st*);
-TEDLANG_API const char*     te_repr   (te_obj_st*);
-TEDLANG_API te_obj_st*      te_call   (te_obj_st*, te_fnargs_st);
-TEDLANG_API te_iterable_st* te_iter   (te_obj_st*);
-TEDLANG_API te_obj_st*      te_not    (te_obj_st*);
-TEDLANG_API te_obj_st**     te_idx    (te_obj_st*, te_obj_st*);
-
-TEDLANG_API te_obj_st*      te_assign (te_obj_st*, te_obj_st*);
-TEDLANG_API te_obj_st*      te_iadd   (te_obj_st*, te_obj_st*);
-TEDLANG_API te_obj_st*      te_isub   (te_obj_st*, te_obj_st*);
-TEDLANG_API te_obj_st*      te_imul   (te_obj_st*, te_obj_st*);
-TEDLANG_API te_obj_st*      te_idiv   (te_obj_st*, te_obj_st*);
-TEDLANG_API te_obj_st*      te_imod   (te_obj_st*, te_obj_st*);
-TEDLANG_API te_obj_st*      te_iexp   (te_obj_st*, te_obj_st*);
-TEDLANG_API te_obj_st*      te_add    (te_obj_st*, te_obj_st*);
-TEDLANG_API te_obj_st*      te_sub    (te_obj_st*, te_obj_st*);
-TEDLANG_API te_obj_st*      te_mul    (te_obj_st*, te_obj_st*);
-TEDLANG_API te_obj_st*      te_div    (te_obj_st*, te_obj_st*);
-TEDLANG_API te_obj_st*      te_mod    (te_obj_st*, te_obj_st*);
-TEDLANG_API te_obj_st*      te_exp    (te_obj_st*, te_obj_st*);
-TEDLANG_API te_obj_st*      te_and    (te_obj_st*, te_obj_st*);
-TEDLANG_API te_obj_st*      te_or     (te_obj_st*, te_obj_st*);
-TEDLANG_API te_obj_st*      te_eq     (te_obj_st*, te_obj_st*);
-TEDLANG_API te_obj_st*      te_ne     (te_obj_st*, te_obj_st*);
-TEDLANG_API te_obj_st*      te_lt     (te_obj_st*, te_obj_st*);
-TEDLANG_API te_obj_st*      te_gt     (te_obj_st*, te_obj_st*);
-TEDLANG_API te_obj_st*      te_le     (te_obj_st*, te_obj_st*);
-TEDLANG_API te_obj_st*      te_ge     (te_obj_st*, te_obj_st*);
+TEDLANG_API te_obj_st*      te_assign (te_obj_st* pself, te_obj_st* prval);
+TEDLANG_API te_obj_st*      te_iadd   (te_obj_st* pself, te_obj_st* prval);
+TEDLANG_API te_obj_st*      te_isub   (te_obj_st* pself, te_obj_st* prval);
+TEDLANG_API te_obj_st*      te_imul   (te_obj_st* pself, te_obj_st* prval);
+TEDLANG_API te_obj_st*      te_idiv   (te_obj_st* pself, te_obj_st* prval);
+TEDLANG_API te_obj_st*      te_imod   (te_obj_st* pself, te_obj_st* prval);
+TEDLANG_API te_obj_st*      te_iexp   (te_obj_st* pself, te_obj_st* prval);
+TEDLANG_API te_obj_st*      te_add    (te_obj_st* pself, te_obj_st* prval);
+TEDLANG_API te_obj_st*      te_sub    (te_obj_st* pself, te_obj_st* prval);
+TEDLANG_API te_obj_st*      te_mul    (te_obj_st* pself, te_obj_st* prval);
+TEDLANG_API te_obj_st*      te_div    (te_obj_st* pself, te_obj_st* prval);
+TEDLANG_API te_obj_st*      te_mod    (te_obj_st* pself, te_obj_st* prval);
+TEDLANG_API te_obj_st*      te_exp    (te_obj_st* pself, te_obj_st* prval);
+TEDLANG_API te_obj_st*      te_and    (te_obj_st* pself, te_obj_st* prval);
+TEDLANG_API te_obj_st*      te_or     (te_obj_st* pself, te_obj_st* prval);
+TEDLANG_API te_obj_st*      te_eq     (te_obj_st* pself, te_obj_st* prval);
+TEDLANG_API te_obj_st*      te_ne     (te_obj_st* pself, te_obj_st* prval);
+TEDLANG_API te_obj_st*      te_lt     (te_obj_st* pself, te_obj_st* prval);
+TEDLANG_API te_obj_st*      te_gt     (te_obj_st* pself, te_obj_st* prval);
+TEDLANG_API te_obj_st*      te_le     (te_obj_st* pself, te_obj_st* prval);
+TEDLANG_API te_obj_st*      te_ge     (te_obj_st* pself, te_obj_st* prval);
 
 typedef struct
 {
@@ -64,7 +57,7 @@ typedef struct
 	size_t objsize;
 
 	// Constructor / Destructor
-	te_obj_st*      (*ty_new)    ();
+	te_obj_st*      (*ty_new)    ();  // creates a new instance of the type with a reference count of 1
 	void            (*ty_del)    (te_obj_st*);
 	te_obj_st*      (*ty_cpy)    (te_obj_st*);
 
@@ -73,7 +66,8 @@ typedef struct
 	int64_t         (*ty_int)    (te_obj_st*);
 	const char*     (*ty_repr)   (te_obj_st*);  // never free the data returned, it should be managed by the object's type or the object
 	te_obj_st*      (*ty_call)   (te_obj_st*, te_fnargs_st);
-	te_iterable_st* (*ty_iter)   (te_obj_st*);
+	te_obj_st*      (*ty_start)  (te_obj_st*);  // returns an iterable context
+	te_obj_st*      (*ty_next)   (te_obj_st*, te_obj_st*);  // retrieves the next element if it exists, NULL otherwise
 	te_obj_st*      (*ty_not)    (te_obj_st*);
 	te_obj_st**     (*ty_idx)    (te_obj_st*, te_obj_st*);  // produces an lval
 

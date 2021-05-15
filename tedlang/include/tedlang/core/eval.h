@@ -10,6 +10,8 @@
 extern te_scope_st global_scope;
 
 TEDLANG_API void te_init(); // initializes the interpreter
+
+TEDLANG_API bool  te_haserr();
 TEDLANG_API void* te_seterr(const char* err, ...);  // always returns NULL
 
 TEDLANG_API te_obj_st** te_get_lval(te_scope_st* pscope, const te_ast_st* past);

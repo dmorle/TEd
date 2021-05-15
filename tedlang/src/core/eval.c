@@ -1,8 +1,19 @@
 #define TEDLANG_SRC
 
+#include <stdlib.h>
+#include <stdbool.h>
 #include <assert.h>
 
 #include <tedlang/core/eval.h>
+#include <tedlang/util/string.h>
+#include <tedlang/builtin/bool.h>
+#include <tedlang/builtin/int.h>
+#include <tedlang/builtin/str.h>
+
+static bool inerror = false;
+static bool inbreak = false;
+static bool incontinue = false;
+static te_obj_st* plastret = NULL;
 
 te_scope_st global_scope = {
 	NULL,
@@ -28,50 +39,173 @@ te_obj_st** te_get_lval(te_scope_st* pscope, const te_ast_st* past)
 
 te_obj_st* eval_empty(te_scope_st* pscope, const te_ast_noexpr_st* pempty)
 {
+	// TODO: create the null builtin type
 }
 
-te_obj_st* eval_var(te_scope_st* pscope, const te_ast_var_st* pvar)
+te_obj_st* eval_var(te_scope_st* pscope, te_ast_var_st* pvar)
 {
+	te_obj_st** ppobj = te_scope_get(pscope, pvar->name);
+	if (ppobj)
+		return *ppobj;
+	return te_seterr("Reference to undefined variable '%s'", pvar->name);
 }
 
-te_obj_st* eval_null(te_scope_st* pscope, const te_ast_null_st* pnull)
+te_obj_st* eval_null(te_scope_st* pscope, te_ast_null_st* pnull)
 {
+	// TODO: create the null builtin type
 }
 
-te_obj_st* eval_bool(te_scope_st* pscope, const te_ast_bool_st* pbool)
+te_obj_st* eval_bool(te_scope_st* pscope, te_ast_bool_st* pbool)
 {
+	te_bool_st* npbool = te_bool_new();
+	if (!npbool)
+		return NULL;
+	npbool->val = pbool->val;
+	return npbool;
 }
 
-te_obj_st* eval_int(te_scope_st* pscope, const te_ast_int_st* pint)
+te_obj_st* eval_int(te_scope_st* pscope, te_ast_int_st* pint)
 {
+	te_int_st* npint = te_int_new();
+	if (!npint)
+		return NULL;
+	npint->val = pint->val;
+	return npint;
 }
 
-te_obj_st* eval_str(te_scope_st* pscope, const te_ast_str_st* pstr)
+te_obj_st* eval_str(te_scope_st* pscope, te_ast_str_st* pstr)
 {
+	te_str_st* npstr = te_str_new();
+	if (!npstr)
+		return NULL;
+	size_t sz = te_strlen(pstr->val);
+	npstr->val = (char*)malloc(sizeof(char) * sz);
+	if (!npstr->val)
+	{
+		te_decref(npstr);
+		return NULL;
+	}
+	te_memcpy(npstr->val, pstr->val, sz);
+	return npstr;
 }
 
 te_obj_st* eval_arr(te_scope_st* pscope, const te_ast_arr_st* parr)
 {
+	// TODO: create the array builtin type
 }
 
 te_obj_st* eval_seq(te_scope_st* pscope, const te_ast_seq_st* pseq)
 {
+	te_obj_st* ptmp;
+	for (size_t i = 0; i < pseq->expr_num; i++)
+	{
+		ptmp = te_eval(pscope, pseq->ppnds[i]);
+		if (ptmp)
+			te_decref(ptmp);
+		if (te_haserr() || plastret || inbreak || incontinue)
+			break;
+	}
+	return NULL;
 }
 
 te_obj_st* eval_for(te_scope_st* pscope, const te_ast_for_st* pfor)
 {
+	te_obj_st* piter = te_eval(pscope, pfor->iter);
+	if (inerror)
+		return NULL;
+	if (!piter)
+		return te_seterr("For loop does not contain an iterable value");
+
+	te_obj_st* pctx = te_start(piter);
+	if (inerror)
+		goto CLEAN_UP;
+	if (inbreak || incontinue)
+	{
+		te_seterr("Invalid state for starting a for loop");
+		goto CLEAN_UP;
+	}
+
+	te_scope_st* pret;
+	te_obj_st* pval;
+	while (true)
+	{
+		pval = te_next(piter, pctx);
+		if (te_haserr() || !pval)
+			break;
+
+		pret = te_scope_set(pscope, pfor->it, pval);
+		te_decref(pval);
+		if (!pret)
+		{
+			te_seterr("Unable to add variable '%s' to the scope", pfor->it);
+			break;
+		}
+		te_decref(te_eval(pscope, pfor->body));
+		if (te_haserr() || plastret)
+			break;
+
+		if (inbreak)
+		{
+			inbreak = false;
+			break;
+		}
+		if (incontinue)
+		{
+			incontinue = false;
+			continue;
+		}
+	}
+
+CLEAN_UP:
+	if (pctx)
+		te_decref(pctx);
+	te_decref(piter);
+	return NULL;
 }
 
 te_obj_st* eval_while(te_scope_st* pscope, const te_ast_while_st* pwhile)
 {
+	te_obj_st* pcond;
+	while (true)
+	{
+		pcond = te_eval(pscope, pwhile->cond);
+		if (te_haserr())
+			return NULL;
+		if (!pcond)
+			return te_seterr("Invalid while loop condition");
+		if (!te_bool(pcond))
+		{
+			te_decref(pcond);
+			break;
+		}
+		te_decref(pcond);
+		te_decref(te_eval(pscope, pwhile->body));
+		if (te_haserr() || plastret)
+			return NULL;
+
+		if (inbreak)
+		{
+			inbreak = false;
+			break;
+		}
+		if (incontinue)
+		{
+			incontinue = false;
+			continue;
+		}
+	}
 }
 
 te_obj_st* eval_break(te_scope_st* pscope, const te_ast_break_st* pbreak)
 {
+	inbreak = true;
+	return NULL;
 }
 
 te_obj_st* eval_continue(te_scope_st* pscope, const te_ast_continue_st* pcontinue)
 {
+	incontinue = true;
+	return NULL;
 }
 
 te_obj_st* eval_branch(te_scope_st* pscope, const te_ast_branch_st* pbranch)

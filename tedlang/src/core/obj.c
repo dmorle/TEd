@@ -65,10 +65,18 @@ te_obj_st* te_call(te_obj_st* pself, te_fnargs_st args)
 	return te_seterr("Unable to call object with type %s", pself->ty->name);
 }
 
-te_iterable_st* te_iter(te_obj_st* pself)
+te_obj_st* te_start(te_obj_st* pself)
 {
-	if (pself->ty->ty_iter)
-		return pself->ty->ty_iter(pself);
+	if (pself->ty->ty_start)
+		return pself->ty->ty_start(pself);
+
+	return te_seterr("Unable to create an iteration context for an object with type %s", pself->ty->name);
+}
+
+te_obj_st* te_next(te_obj_st* pself, te_obj_st* pctx)
+{
+	if (pself->ty->ty_next)
+		return pself->ty->ty_next(pself, pctx);
 
 	return te_seterr("Unable to iterate through an object with type %s", pself->ty->name);
 }
@@ -319,11 +327,17 @@ te_obj_st* te_ge(te_obj_st* plval, te_obj_st* prval)
 
 void te_incref(te_obj_st* pobj)
 {
+	if (!pobj)
+		return;
+
 	pobj->n_ref++;
 }
 
 void te_decref(te_obj_st* pobj)
 {
+	if (!pobj)
+		return;
+
 	pobj->n_ref--;
 	if (pobj->n_ref)
 		return;
