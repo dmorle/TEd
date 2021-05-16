@@ -1,5 +1,5 @@
-#ifndef TE_BOOL_H
-#define TE_BOOL_H
+#ifndef TEDLANG_BOOL_H
+#define TEDLANG_BOOL_H
 
 #include <tedlang/tedl.h>
 #include <tedlang/core/obj.h>

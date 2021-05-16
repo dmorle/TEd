@@ -21,9 +21,11 @@ if (WIN32)
 		"src/core/windows/import.c"
 		"src/util/string.asm"
 
+		"src/builtin/null.c"
 		"src/builtin/bool.c"
 		"src/builtin/int.c"
 		"src/builtin/str.c"
+		"src/builtin/arr.c"
 		"src/builtin/fn.c"
 
 		"include/tedlang/tedl.h"
@@ -35,9 +37,11 @@ if (WIN32)
 		"include/tedlang/parse/parser.h"
 		"include/tedlang/util/string.h"
 
+		"include/tedlang/builtin/null.h"
 		"include/tedlang/builtin/bool.h"
 		"include/tedlang/builtin/int.h"
 		"include/tedlang/builtin/str.h"
+		"include/tedlang/builtin/arr.h"
 		"include/tedlang/builtin/fn.h"
 	)
 

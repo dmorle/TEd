@@ -9,6 +9,8 @@
 #include <tedlang/builtin/fn.h>
 
 te_type_st _te_fn_ty = {
+	.name = "fn",
+	.objsize = sizeof(te_fn_st),
 	.ty_new = te_fn_new,
 	.ty_del = te_fn_del,
 	.ty_repr = te_fn_repr,
@@ -17,14 +19,14 @@ te_type_st _te_fn_ty = {
 };
 
 #define self (*(te_fn_st*)pself)
-#define ASSERT_TYPE_RET(ret) if (pself->ty != &_te_fn_ty) { te_seterr("Invalid Type"); return ret; }
-#define ASSERT_TYPE ASSERT_TYPE_RET(NULL)
+#define CHECK_TYPE_RET(ret) if (pself->ty != &_te_fn_ty) { te_seterr("Invalid Type"); return ret; }
+#define CHECK_TYPE CHECK_TYPE_RET(NULL)
 
 te_obj_st* te_fn_new()
 {
 	te_fn_st* pfn = (te_fn_st*)malloc(sizeof(te_fn_st));
 	if (!pfn)
-		return NULL;
+		return te_seterr("Out of memory");
 
 	te_obj_new(pfn, &_te_fn_ty);
 	pfn->pbody = NULL;
@@ -35,7 +37,7 @@ te_obj_st* te_fn_new()
 
 void te_fn_del(te_obj_st* pself)
 {
-	ASSERT_TYPE_RET();
+	CHECK_TYPE_RET();
 
 	te_obj_del(pself);
 	if (self.pbody)
@@ -55,14 +57,14 @@ const char* te_fn_repr(te_obj_st* pself)
 {
 	static char prepr[64];
 
-	ASSERT_TYPE;
+	CHECK_TYPE;
 	
 	// TODO: Implementation
 }
 
 te_obj_st* te_fn_call(te_obj_st* pself, te_fnargs_st args)
 {
-	ASSERT_TYPE;
+	CHECK_TYPE;
 
 	te_scope_st lscope;
 	if (!te_scope_new(&lscope, &global_scope, DEFAULT_SCOPESZ, DEFAULT_SCOPELF))

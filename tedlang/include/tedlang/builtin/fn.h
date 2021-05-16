@@ -1,5 +1,5 @@
-#ifndef TE_FN_H
-#define TE_FN_H
+#ifndef TEDLANG_FN_H
+#define TEDLANG_FN_H
 
 #include <tedlang/tedl.h>
 #include <tedlang/core/obj.h>
