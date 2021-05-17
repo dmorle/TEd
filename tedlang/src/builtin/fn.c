@@ -66,14 +66,21 @@ te_obj_st* te_fn_call(te_obj_st* pself, te_fnargs_st args)
 {
 	CHECK_TYPE;
 
+	if (self.argc != args.argc)
+		return te_seterr("Function argument mismatch: expected %zu, recieved %zu", self.argc, args.argc);
+
 	te_scope_st lscope;
 	if (!te_scope_new(&lscope, &global_scope, DEFAULT_SCOPESZ, DEFAULT_SCOPELF))
 		return NULL;
-
 	for (size_t i = 0; i < args.argc; i++)
-	{
-		args.pnames[i];
-	}
+		if (!te_scope_set(&lscope, self.ppargv[i], args.ppargs[i]))
+		{
+			te_scope_del(&lscope);
+			return te_seterr("Out of memory");
+		}
+
+	te_obj_st* pret = te_eval(&lscope, self.pbody);
 
 	te_scope_del(&lscope);
+	return pret;
 }

@@ -264,7 +264,7 @@ TEDLANG_API void _te_ast_return_new(te_ast_return_st* pself);
 TEDLANG_API void _te_ast_return_del(te_ast_return_st* pself);
 
 // calls a tesh function
-// returns either te_obj_st* or NULL on eval depending on the function
+// returns te_obj_st* on eval depending on the function
 typedef struct
 {
 	te_ast_st super;

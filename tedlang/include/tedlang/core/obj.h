@@ -11,7 +11,6 @@ typedef struct __te_obj te_obj_st;
 typedef struct
 {
 	size_t argc;
-	char** pnames;
 	te_obj_st** ppargs;
 }
 te_fnargs_st;
@@ -22,7 +21,7 @@ TEDLANG_API te_obj_st*      te_cpy    (te_obj_st* pself);
 TEDLANG_API bool            te_bool   (te_obj_st* pself);
 TEDLANG_API int64_t         te_int    (te_obj_st* pself);
 TEDLANG_API const char*     te_repr   (te_obj_st* pself);
-TEDLANG_API te_obj_st*      te_call   (te_obj_st* pself, te_fnargs_st args);
+TEDLANG_API te_obj_st*      te_call   (te_obj_st* pself, const te_fnargs_st* pargs);
 TEDLANG_API te_obj_st*      te_start  (te_obj_st* pself);
 TEDLANG_API te_obj_st*      te_next   (te_obj_st* pself, te_obj_st* piterctx);
 TEDLANG_API te_obj_st*      te_not    (te_obj_st* pself);
@@ -65,7 +64,7 @@ typedef struct
 	bool            (*ty_bool)   (te_obj_st*);
 	int64_t         (*ty_int)    (te_obj_st*);
 	const char*     (*ty_repr)   (te_obj_st*);  // never free the data returned, it should be managed by the object's type or the object
-	te_obj_st*      (*ty_call)   (te_obj_st*, te_fnargs_st);
+	te_obj_st*      (*ty_call)   (te_obj_st*, const te_fnargs_st*);
 	te_obj_st*      (*ty_start)  (te_obj_st*);  // returns an iterable context
 	te_obj_st*      (*ty_next)   (te_obj_st*, te_obj_st*);  // retrieves the next element if it exists, NULL otherwise
 	te_obj_st*      (*ty_not)    (te_obj_st*);

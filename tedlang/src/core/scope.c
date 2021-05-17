@@ -45,6 +45,12 @@ te_scope_st* te_scope_alloc(te_scope_st* pparent, size_t sz, float lf)
 	return npscope;
 }
 
+void te_scope_free(te_scope_st* pself)
+{
+	te_scope_del(pself);
+	free(pself);
+}
+
 te_scope_st* te_scope_new(te_scope_st* pself, te_scope_st* pparent, size_t sz, float lf)
 {
 	assert(sz);
@@ -134,6 +140,7 @@ te_scope_st* te_scope_set(te_scope_st* pself, char* name, te_obj_st* pobj)
 		return NULL;
 	}
 	memcpy(pnd->name, name, nmsz + 1);
+	te_incref(pobj);
 	pnd->pobj = pobj;
 
 	pself->curr_lf = (pself->curr_lf * pself->n_buckets + 1) / pself->n_buckets;
@@ -141,4 +148,39 @@ te_scope_st* te_scope_set(te_scope_st* pself, char* name, te_obj_st* pobj)
 		return scope_rehash(pself);
 
 	return pself;
+}
+
+inline void scope_rm(te_scope_st* pself, char* name, uint64_t h)
+{
+	if (!pself)
+		return;
+
+	// seperate proc for if its the first element in the list
+	_te_scope_bktnd_st* pnd = pself->pbuckets[h];
+	if (!pnd)
+		return;
+
+	if (!strcmp(name, pnd->name))
+	{
+		// TODO: switch around the pointers
+	}
+
+	// general proc for an element along the chain
+	for (; pnd->pnext; pnd = pnd->pnext)
+		if (!strcmp(name, pnd->pnext->name))
+		{
+			_te_scope_bktnd_st* ptmpnd = pnd->pnext;
+			pnd->pnext = ptmpnd->pnext;
+			ptmpnd->pnext = NULL;
+			scope_bktnd_del(ptmpnd);
+			pself->curr_lf = (pself->curr_lf * pself->n_buckets - 1) / pself->n_buckets;
+			return;
+		}
+
+	scope_rm(pself->pparent, name, h);
+}
+
+void te_scope_rm(te_scope_st* pself, char* name)
+{
+	scope_rm(pself, name, fnv_1a(name));
 }

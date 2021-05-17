@@ -5,6 +5,7 @@
 #include <assert.h>
 
 #include <tedlang/core/eval.h>
+#include <tedlang/core/import.h>
 #include <tedlang/util/string.h>
 #include <tedlang/builtin/null.h>
 #include <tedlang/builtin/bool.h>
@@ -113,20 +114,20 @@ te_obj_st* eval_arr(te_scope_st* pscope, const te_ast_arr_st* parr)
 		*(nparr->ppelems + i) = te_eval(pscope, parr->ppelems[i]);
 		if (te_haserr())
 		{
-			while (i > 0)
+			while (--i > 0)
 				te_decref(*(nparr->ppelems + i));
 			return NULL;
 		}
 		if (!*(nparr->ppelems + i))
 		{
-			while (i > 0)
+			while (--i > 0)
 				te_decref(*(nparr->ppelems + i));
 			return te_seterr("Invalid array element");
 		}
 	}
 	nparr->length = parr->length;
 
-	return 
+	return nparr;
 }
 
 te_obj_st* eval_seq(te_scope_st* pscope, const te_ast_seq_st* pseq)
@@ -282,6 +283,47 @@ te_obj_st* eval_return(te_scope_st* pscope, const te_ast_return_st* preturn)
 
 te_obj_st* eval_call(te_scope_st* pscope, const te_ast_call_st* pcall)
 {
+	// Retrieving the function and building the argument
+	te_obj_st* pfn = te_eval(pscope, pcall->pfn);
+	RET_ON_ERR;
+	if (!pfn)
+		return te_seterr("Invalid value for function call");
+	te_fnargs_st fnargs;
+	fnargs.argc = pcall->argc;
+	fnargs.ppargs = (te_obj_st**)malloc(sizeof(te_obj_st*) * fnargs.argc);
+	if (!fnargs.ppargs)
+	{
+		te_decref(pfn);
+		return te_seterr("Out of memory");
+	}
+	for (size_t i = 0; i < fnargs.argc; i++)
+	{
+		fnargs.ppargs[i] = te_eval(pscope, pcall->ppargv[i]);
+		if (te_haserr())
+		{
+			while (--i > 0)
+				te_decref(fnargs.ppargs[i]);
+			return NULL;
+		}
+		if (!fnargs.ppargs[i])
+		{
+			while (--i > 0)
+				te_decref(fnargs.ppargs[i]);
+			return te_seterr("Invalid function argument");
+		}
+	}
+
+	// Calling the function
+	te_obj_st* pret = te_call(pfn, &fnargs);
+
+	// Cleanup - this stuff needs to run even if te_call failed
+	for (size_t i = 0; i < fnargs.argc; i++)
+		te_decref(fnargs.ppargs[i]);
+	free(fnargs.ppargs);
+	te_decref(pfn);
+
+	// if theres an error, it'll automatically propagate
+	return pret;
 }
 
 te_obj_st* eval_fn(te_scope_st* pscope, te_ast_fn_st* pfn)
@@ -310,6 +352,12 @@ te_obj_st* eval_fn(te_scope_st* pscope, te_ast_fn_st* pfn)
 
 te_obj_st* eval_imp(te_scope_st* pscope, const te_ast_imp_st* pimp)
 {
+	te_module_st mod;
+	if (!open_module_ast(&mod, pimp))
+		return te_seterr("Unable to open module: %s", pimp->imp_pth[pimp->length - 1]);
+	if (!import_module(pscope, &mod))
+		return te_seterr("Unable to import module: %s", pimp->imp_pth[pimp->length - 1]);
+	return NULL;
 }
 
 te_obj_st* eval_module(te_scope_st* pscope, const te_ast_module_st* pmodule)

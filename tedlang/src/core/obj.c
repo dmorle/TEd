@@ -57,10 +57,10 @@ const char* te_repr(te_obj_st* pself)
 	return pself->ty->name;
 }
 
-te_obj_st* te_call(te_obj_st* pself, te_fnargs_st args)
+te_obj_st* te_call(te_obj_st* pself, const te_fnargs_st* pargs)
 {
 	if (pself->ty->ty_call)
-		return pself->ty->ty_call(pself, args);
+		return pself->ty->ty_call(pself, pargs);
 
 	return te_seterr("Unable to call object with type %s", pself->ty->name);
 }
