@@ -90,6 +90,7 @@ int _te_ast_arr_append(te_ast_arr_st* pself, te_ast_st* pelem)
 {
 	assert(pself->super.ast_ty == AST_ARR);
 	assert(pself->_mem_sz);
+	assert(pself->ppelems);
 
 	// resize pself->ppnds if needed
 	if (pself->length == pself->_mem_sz)

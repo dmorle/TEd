@@ -1,5 +1,5 @@
-#ifndef TEDLANG_NULL_H
-#define TEDLANG_NULL_H
+#ifndef TEDLANG_ARR_H
+#define TEDLANG_ARR_H
 
 #include <stdbool.h>
 
@@ -10,7 +10,6 @@ TEDLANG_API te_obj_st* te_arr_new();
 TEDLANG_API void te_arr_del(te_obj_st* pself);
 
 TEDLANG_API bool te_arr_bool(te_obj_st* pself);
-TEDLANG_API int64_t te_arr_int(te_obj_st* pself);
 TEDLANG_API const char* te_arr_repr(te_obj_st* pself);
 TEDLANG_API te_obj_st* te_arr_start(te_obj_st* pself);
 TEDLANG_API te_obj_st* te_arr_next(te_obj_st* pself);
@@ -25,7 +24,8 @@ extern te_type_st _te_arr_ty;
 typedef struct
 {
 	te_obj_st super;
-	size_t nelems;
+	size_t length;
+	size_t _mem_sz;
 	te_obj_st** ppelems;
 }
 te_arr_st;

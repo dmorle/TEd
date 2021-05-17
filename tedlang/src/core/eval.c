@@ -6,15 +6,19 @@
 
 #include <tedlang/core/eval.h>
 #include <tedlang/util/string.h>
+#include <tedlang/builtin/null.h>
 #include <tedlang/builtin/bool.h>
 #include <tedlang/builtin/int.h>
 #include <tedlang/builtin/str.h>
+#include <tedlang/builtin/arr.h>
 #include <tedlang/builtin/fn.h>
 
 static bool inerror = false;
 static bool inbreak = false;
 static bool incontinue = false;
 static te_obj_st* plastret = NULL;
+
+#define RET_ON_ERR if (te_haserr()) return NULL
 
 te_scope_st global_scope = {
 	NULL,
@@ -40,7 +44,8 @@ te_obj_st** te_lval(te_scope_st* pscope, const te_ast_st* past)
 
 te_obj_st* eval_empty(te_scope_st* pscope, const te_ast_noexpr_st* pempty)
 {
-	// TODO: create the builtin type: null
+	te_null_st* npnull = te_null_new();
+	return npnull;
 }
 
 te_obj_st* eval_var(te_scope_st* pscope, te_ast_var_st* pvar)
@@ -53,14 +58,14 @@ te_obj_st* eval_var(te_scope_st* pscope, te_ast_var_st* pvar)
 
 te_obj_st* eval_null(te_scope_st* pscope, te_ast_null_st* pnull)
 {
-	// TODO: create the builtin type: null
+	te_null_st* npnull = te_null_new();
+	return npnull;
 }
 
 te_obj_st* eval_bool(te_scope_st* pscope, te_ast_bool_st* pbool)
 {
 	te_bool_st* npbool = te_bool_new();
-	if (te_haserr())
-		return NULL;
+	RET_ON_ERR;
 	npbool->val = pbool->val;
 	return npbool;
 }
@@ -68,8 +73,7 @@ te_obj_st* eval_bool(te_scope_st* pscope, te_ast_bool_st* pbool)
 te_obj_st* eval_int(te_scope_st* pscope, te_ast_int_st* pint)
 {
 	te_int_st* npint = te_int_new();
-	if (te_haserr())
-		return NULL;
+	RET_ON_ERR;
 	npint->val = pint->val;
 	return npint;
 }
@@ -77,14 +81,13 @@ te_obj_st* eval_int(te_scope_st* pscope, te_ast_int_st* pint)
 te_obj_st* eval_str(te_scope_st* pscope, te_ast_str_st* pstr)
 {
 	te_str_st* npstr = te_str_new();
-	if (te_haserr())
-		return NULL;
+	RET_ON_ERR;
 	size_t sz = te_strlen(pstr->val);
 	npstr->val = (char*)malloc(sizeof(char) * sz);
 	if (!npstr->val)
 	{
 		te_decref(npstr);
-		return NULL;
+		return te_seterr("Out of memory");
 	}
 	te_memcpy(npstr->val, pstr->val, sz);
 	return npstr;
@@ -92,7 +95,38 @@ te_obj_st* eval_str(te_scope_st* pscope, te_ast_str_st* pstr)
 
 te_obj_st* eval_arr(te_scope_st* pscope, const te_ast_arr_st* parr)
 {
-	// TODO: create the builtin type: array
+	te_arr_st* nparr = te_arr_new();
+	RET_ON_ERR;
+	
+	assert(parr->length < parr->_mem_sz);
+
+	nparr->ppelems = (te_obj_st**)malloc(sizeof(te_obj_st*) * parr->_mem_sz);
+	if (!nparr->ppelems)
+	{
+		te_decref(nparr);
+		return te_seterr("Out of memory");
+	}
+	nparr->_mem_sz = parr->_mem_sz;
+
+	for (size_t i = 0; i < parr->length; i++)
+	{
+		*(nparr->ppelems + i) = te_eval(pscope, parr->ppelems[i]);
+		if (te_haserr())
+		{
+			while (i > 0)
+				te_decref(*(nparr->ppelems + i));
+			return NULL;
+		}
+		if (!*(nparr->ppelems + i))
+		{
+			while (i > 0)
+				te_decref(*(nparr->ppelems + i));
+			return te_seterr("Invalid array element");
+		}
+	}
+	nparr->length = parr->length;
+
+	return 
 }
 
 te_obj_st* eval_seq(te_scope_st* pscope, const te_ast_seq_st* pseq)
@@ -112,8 +146,7 @@ te_obj_st* eval_seq(te_scope_st* pscope, const te_ast_seq_st* pseq)
 te_obj_st* eval_for(te_scope_st* pscope, const te_ast_for_st* pfor)
 {
 	te_obj_st* piter = te_eval(pscope, pfor->iter);
-	if (te_haserr())
-		return NULL;
+	RET_ON_ERR;
 	if (!piter)
 		return te_seterr("For loop does not contain an iterable value");
 
@@ -211,8 +244,7 @@ te_obj_st* eval_continue(te_scope_st* pscope, const te_ast_continue_st* pcontinu
 te_obj_st* eval_branch(te_scope_st* pscope, const te_ast_branch_st* pbranch)
 {
 	te_obj_st* pcond = te_eval(pscope, pbranch->cond);
-	if (te_haserr())
-		return NULL;
+	RET_ON_ERR;
 	if (!pcond)
 		return te_seterr("Invalid if statement condition");
 
@@ -234,14 +266,14 @@ te_obj_st* eval_return(te_scope_st* pscope, const te_ast_return_st* preturn)
 	if (preturn->ret)
 	{
 		pret = te_eval(pscope, preturn->ret);
-		if (te_haserr())
-			return NULL;
+		RET_ON_ERR;
 		if (!pret)
 			return te_seterr("Invalid return value");
 	}
 	else
 	{
-		// TODO: create the builtin type: null
+		te_null_st* npnull = te_null_new();
+		return npnull;
 	}
 
 	plastret = pret;
@@ -255,8 +287,7 @@ te_obj_st* eval_call(te_scope_st* pscope, const te_ast_call_st* pcall)
 te_obj_st* eval_fn(te_scope_st* pscope, te_ast_fn_st* pfn)
 {
 	te_fn_st* npfn = te_fn_new();
-	if (te_haserr())
-		return NULL;
+	RET_ON_ERR;
 	te_scope_st* pfnscope = te_scope_set(pscope, pfn->name, npfn);
 	if (!pfnscope)
 	{
@@ -266,6 +297,7 @@ te_obj_st* eval_fn(te_scope_st* pscope, te_ast_fn_st* pfn)
 	npfn->pscope = pfnscope;
 
 	// moving the members of the ast node into the new object, preventing an unnessisary expensive copy
+	// this is only possible because functions are restriced to the global scope
 	npfn->pbody = pfn->pbody;
 	npfn->argc = pfn->argc;
 	npfn->ppargv = pfn->ppargv;
@@ -288,7 +320,7 @@ te_obj_st* eval_module(te_scope_st* pscope, const te_ast_module_st* pmodule)
 te_obj_st* eval_##TY(te_scope_st* pscope, const te_ast_##TY##_st* piop)      \
 {																			 \
 	te_obj_st* prval = te_eval(pscope, piop->rval);						     \
-	if (te_haserr()) return NULL;											 \
+	RET_ON_ERR;																 \
 	if (!prval)      return te_seterr("Invalid r-value for assignment");	 \
 	te_obj_st** pplval = te_lval(pscope, piop->lval);					     \
 	if (te_haserr()) return NULL;											 \
@@ -315,8 +347,7 @@ fn_eval_iop(iexp)
 te_obj_st* eval_##TY(te_scope_st* pscope, const te_ast_##TY##_st* pcmp)   \
 {                                                                         \
 	te_obj_st* plval = te_eval(pscope, pcmp->lval);                       \
-	if (te_haserr())                                                      \
-		return NULL;                                                      \
+	RET_ON_ERR;															  \
 	if (!plval)                                                           \
 		return te_seterr("Invalid l-value for comparison");               \
 	te_obj_st* prval = te_eval(pscope, pcmp->rval);                       \
