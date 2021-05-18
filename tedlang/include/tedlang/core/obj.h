@@ -111,7 +111,7 @@ TEDLANG_API void te_obj_new(te_obj_st* pself, te_type_st* pty);
 
 TEDLANG_API void te_incref(te_obj_st* pobj);
 TEDLANG_API void te_decref(te_obj_st* pobj);
-TEDLANG_API void te_incref_s(te_obj_st* pobj);
-TEDLANG_API void te_decref_s(te_obj_st* pobj);
+#define te_incref_s(pobj) if (pobj) te_incref(pobj)
+#define te_decref_s(pobj) if (pobj) te_decref(pobj)
 
 #endif

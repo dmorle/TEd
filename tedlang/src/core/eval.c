@@ -20,6 +20,7 @@ static bool incontinue = false;
 static te_obj_st* plastret = NULL;
 
 #define RET_ON_ERR if (te_haserr()) return NULL
+#define JMP_ON_ERR(LBL) if (te_haserr()) goto LBL
 
 te_scope_st global_scope = {
 	NULL,
@@ -31,6 +32,9 @@ te_scope_st global_scope = {
 
 void te_init()
 {
+	void* pret = te_scope_new(&global_scope, NULL, DEFAULT_SCOPESZ, DEFAULT_SCOPELF);
+	if (!pret)
+		te_seterr("Out of memory");
 
 }
 
@@ -298,14 +302,14 @@ te_obj_st* eval_call(te_scope_st* pscope, const te_ast_call_st* pcall)
 	}
 	for (size_t i = 0; i < fnargs.argc; i++)
 	{
-		fnargs.ppargs[i] = te_eval(pscope, pcall->ppargv[i]);
+		*(fnargs.ppargs + i) = te_eval(pscope, *(pcall->ppargv + i));
 		if (te_haserr())
 		{
 			while (--i > 0)
 				te_decref(fnargs.ppargs[i]);
 			return NULL;
 		}
-		if (!fnargs.ppargs[i])
+		if (!*(fnargs.ppargs + i))
 		{
 			while (--i > 0)
 				te_decref(fnargs.ppargs[i]);
@@ -339,7 +343,7 @@ te_obj_st* eval_fn(te_scope_st* pscope, te_ast_fn_st* pfn)
 	npfn->pscope = pfnscope;
 
 	// moving the members of the ast node into the new object, preventing an unnessisary expensive copy
-	// this is only possible because functions are restriced to the global scope
+	// this is only possible because functions are restricted to the global scope
 	npfn->pbody = pfn->pbody;
 	npfn->argc = pfn->argc;
 	npfn->ppargv = pfn->ppargv;
@@ -353,15 +357,25 @@ te_obj_st* eval_fn(te_scope_st* pscope, te_ast_fn_st* pfn)
 te_obj_st* eval_imp(te_scope_st* pscope, const te_ast_imp_st* pimp)
 {
 	te_module_st mod;
-	if (!open_module_ast(&mod, pimp))
+	if (!module_load(&mod, pimp))
 		return te_seterr("Unable to open module: %s", pimp->imp_pth[pimp->length - 1]);
-	if (!import_module(pscope, &mod))
+	void* ret = module_import(pscope, &mod);
+	module_close(&mod);
+	if (!ret)
 		return te_seterr("Unable to import module: %s", pimp->imp_pth[pimp->length - 1]);
 	return NULL;
 }
 
 te_obj_st* eval_module(te_scope_st* pscope, const te_ast_module_st* pmodule)
 {
+	te_obj_st* ptmp;
+	for (te_ast_st** ppelem = pmodule->ppelems; ppelem < pmodule->ppelems + pmodule->elem_num; ppelem++)
+	{
+		ptmp = te_eval(pscope, *ppelem);
+		RET_ON_ERR;
+		te_decref_s(ptmp);
+	}
+	return NULL;
 }
 
 #define fn_eval_iop(TY)                                                      \
@@ -389,82 +403,55 @@ fn_eval_iop(imul)
 fn_eval_iop(idiv)
 fn_eval_iop(imod)
 fn_eval_iop(iexp)
+
 #undef fn_eval_iop
 
-#define fn_eval_cmp_op(TY)                                                \
-te_obj_st* eval_##TY(te_scope_st* pscope, const te_ast_##TY##_st* pcmp)   \
-{                                                                         \
-	te_obj_st* plval = te_eval(pscope, pcmp->lval);                       \
-	RET_ON_ERR;															  \
-	if (!plval)                                                           \
-		return te_seterr("Invalid l-value for comparison");               \
-	te_obj_st* prval = te_eval(pscope, pcmp->rval);                       \
-	if (te_haserr()) {                                                    \
-		te_decref(plval);                                                 \
-		return NULL;}                                                     \
-	if (!prval) {                                                         \
-		te_decref(plval);                                                 \
-		return te_seterr("Invalid r-value for comparison");}              \
-	te_obj_st* presult = te_##TY(plval, prval);                           \
-	if (te_haserr()) {                                                    \
-		te_decref(prval);                                                 \
-		te_decref(plval);                                                 \
-		te_decref_s(presult);                                             \
-		return NULL;}                                                     \
-	if (!presult) {                                                       \
-		te_decref(prval);                                                 \
-		te_decref(plval);                                                 \
-		te_decref_s(presult);                                             \
-		return te_seterr("Invalid comparison result");}                   \
-	te_incref(presult);                                                   \
-	te_decref(plval);                                                     \
-	te_decref(prval);                                                     \
-	return presult;                                                       \
+#define fn_eval_bin_op(TY)												\
+te_obj_st* eval_##TY(te_scope_st* pscope, const te_ast_##TY##_st* pcmp) \
+{																		\
+	te_obj_st* plval = te_eval(pscope, pcmp->lval);						\
+	RET_ON_ERR;															\
+	if (!plval)															\
+		return te_seterr("Invalid left argument for binary operator");	\
+	te_obj_st* prval = te_eval(pscope, pcmp->rval);						\
+	if (te_haserr())													\
+	{																	\
+		te_decref(plval);												\
+		return NULL;													\
+	}																	\
+	if (!prval)															\
+	{																	\
+		te_decref(plval);												\
+		return te_seterr("Invalid right argument for binary operator");	\
+	}																	\
+	te_obj_st* presult = te_##TY(plval, prval);							\
+	te_decref(plval);													\
+	te_decref(prval);													\
+	if (te_haserr())													\
+		return NULL;													\
+	if (!presult)														\
+		return te_seterr("Invalid binary operator result");				\
+	te_incref(presult);													\
+	return presult;														\
 }
 
-fn_eval_cmp_op(eq)
-fn_eval_cmp_op(ne)
-fn_eval_cmp_op(lt)
-fn_eval_cmp_op(gt)
-fn_eval_cmp_op(le)
-fn_eval_cmp_op(ge)
-#undef fn_eval_cmp_op
+fn_eval_bin_op(eq)
+fn_eval_bin_op(ne)
+fn_eval_bin_op(lt)
+fn_eval_bin_op(gt)
+fn_eval_bin_op(le)
+fn_eval_bin_op(ge)
+fn_eval_bin_op(and)
+fn_eval_bin_op(or)
+fn_eval_bin_op(add)
+fn_eval_bin_op(sub)
+fn_eval_bin_op(mul)
+fn_eval_bin_op(div)
+fn_eval_bin_op(mod)
+fn_eval_bin_op(exp)
+fn_eval_bin_op(idx)
 
-te_obj_st* eval_and(te_scope_st* pscope, const te_ast_and_st* pand)
-{
-}
-
-te_obj_st* eval_or(te_scope_st* pscope, const te_ast_or_st* por)
-{
-}
-
-te_obj_st* eval_add(te_scope_st* pscope, const te_ast_add_st* padd)
-{
-}
-
-te_obj_st* eval_sub(te_scope_st* pscope, const te_ast_sub_st* psub)
-{
-}
-
-te_obj_st* eval_mul(te_scope_st* pscope, const te_ast_mul_st* pmul)
-{
-}
-
-te_obj_st* eval_div(te_scope_st* pscope, const te_ast_div_st* pdiv)
-{
-}
-
-te_obj_st* eval_mod(te_scope_st* pscope, const te_ast_mod_st * pexp)
-{
-}
-
-te_obj_st* eval_exp(te_scope_st* pscope, const te_ast_exp_st* pexp)
-{
-}
-
-te_obj_st* eval_idx(te_scope_st* pscope, const te_ast_idx_st* pidx)
-{
-}
+#undef fn_eval_bin_op
 
 te_obj_st* te_eval(te_scope_st* pscope, te_ast_st* past)
 {
@@ -516,6 +503,6 @@ te_obj_st* te_eval(te_scope_st* pscope, te_ast_st* past)
 	case AST_IDX:       return eval_idx      (pscope, past);
 	default:
 		assert(false);
-		return NULL;  // tmp
+		return te_seterr("Invalid AST Node");  // tmp
 	}
 }

@@ -20,8 +20,40 @@ inline uint64_t fnv_1a(char* s)
 
 te_scope_st* scope_rehash(te_scope_st* pself)
 {
-	// TODO: double the number of buckets and rehash the elements
-	return NULL;  // tmp
+	const static size_t incrate = 4;
+
+	// setup
+	size_t nsz = pself->n_buckets * incrate;
+	_te_scope_bkt_st* npbuckets = (_te_scope_bkt_st*)malloc(sizeof(_te_scope_bkt_st) * nsz);
+	if (!npbuckets)
+		return NULL;
+
+	// rehashing
+	_te_scope_bktnd_st* pnext = NULL;
+	for (_te_scope_bktnd_st** ppnd = pself->pbuckets; ppnd < pself->pbuckets + pself->n_buckets; ppnd++)
+		for (_te_scope_bktnd_st* pnd = *ppnd; pnd; pnd = pnext)
+		{
+			pnext = pnd->pnext;
+
+			uint64_t h = fnv_1a(pnd->name) % nsz;
+			if (!npbuckets[h])
+				npbuckets[h] = pnd;
+			else
+			{
+				_te_scope_bktnd_st* npnd = npbuckets[h];
+				for (; npnd->pnext; npnd = npnd->pnext);
+				npnd->pnext = pnd;
+			}
+			pnd->pnext = NULL;
+		}
+
+	// cleanup
+	free(pself->pbuckets);
+	pself->pbuckets = npbuckets;
+	pself->n_buckets = nsz;
+	pself->curr_lf /= incrate;
+	
+	return pself;
 }
 
 void scope_bktnd_del(_te_scope_bktnd_st* pnd)
@@ -30,7 +62,9 @@ void scope_bktnd_del(_te_scope_bktnd_st* pnd)
 		return;
 	free(pnd->name);
 	te_decref(pnd->pobj);
-	scope_bktnd_del(pnd->pnext);
+	_te_scope_bktnd_st* pnext = pnd->pnext;
+	free(pnd);
+	scope_bktnd_del(pnext);
 }
 
 te_scope_st* te_scope_alloc(te_scope_st* pparent, size_t sz, float lf)

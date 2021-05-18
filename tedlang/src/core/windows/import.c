@@ -1,6 +1,8 @@
 #define TEDLANG_SRC
+#define _CRT_DECLARE_GLOBAL_VARIABLES_DIRECTLY
 
 #include <stdio.h>
+#include <stdbool.h>
 #include <string.h>
 #include <assert.h>
 
@@ -12,18 +14,74 @@
 #include <tedlang/parse/parser.h>
 #include <tedlang/util/string.h>
 
+#define MAX_IMPDIRS 1024
+#define TEDLIB_FOLDER "tedlib\\"
+
+char* pimpdirs[MAX_IMPDIRS] = { NULL };
+size_t nimpdirs = 0;
+
+void te_init_impdirs()
+{
+	// Currently only adding the tedlib directory
+
+	char* impdir = (char*)malloc(sizeof(char) * MAX_PATH);
+	if (!impdir)
+	{
+		te_seterr("Out of memory");
+		return;
+	}
+
+	DWORD offset = GetModuleFileNameA(NULL, impdir, MAX_PATH);
+	if (!offset)
+	{
+		DWORD err = GetLastError();
+		te_seterr("Windows error: %lu", err);
+		free(impdir);
+		return;
+	}
+
+	while (impdir[--offset] != '\\' && impdir[offset] != '/');
+	if (++offset + sizeof(TEDLIB_FOLDER) >= MAX_PATH)
+	{
+		te_seterr("tedlib path buffer overflow");
+		return;
+	}
+
+	te_memcpy(impdir + offset, TEDLIB_FOLDER, sizeof(TEDLIB_FOLDER));
+	void* ret = te_add_impdir(impdir);
+
+	// giving the memory allocated in impdir to te_add_impdir
+	if (!te_add_impdir(impdir))
+	{
+		free(impdir);
+		te_seterr("Unable to initialize standard import directories");
+	}
+}
+
+char* te_add_impdir(char* impdir)
+{
+	if (nimpdirs == MAX_IMPDIRS)
+		return NULL;
+	return pimpdirs[nimpdirs++] = impdir;
+}
+
 #define EXT_SZ 8
 static char imppth[MAX_PATH + EXT_SZ];
 
 bool file_exists(LPCTSTR szPath)
 {
 	DWORD dw_attrib = GetFileAttributes(szPath);
-
-	if (dw_attrib != INVALID_FILE_ATTRIBUTES && (dw_attrib & FILE_ATTRIBUTE_DIRECTORY))
-	{
-		;
-	}
-	return TE_MODULE_NONE;
+	return (
+		dw_attrib != INVALID_FILE_ATTRIBUTES && (
+			dw_attrib & (
+				FILE_ATTRIBUTE_HIDDEN |
+				FILE_ATTRIBUTE_NORMAL |
+				FILE_ATTRIBUTE_READONLY
+			)
+		) && !(
+			dw_attrib & FILE_ATTRIBUTE_DIRECTORY
+		)
+	);
 }
 
 te_module_et imp_exists(const char* pth, const te_ast_imp_st* pimp)
@@ -103,11 +161,11 @@ te_module_st* load_script(te_module_st* pmodule)
 
 te_module_st* load_bin(te_module_st* pmodule)
 {
-	// TODO: windows implementation of load_bin via LoadLibrary
+	// TODO: Determine a dynamic link library structure for tedlang extensions
 	return NULL;
 }
 
-te_module_st* open_module_ast(te_module_st* pmodule, const te_ast_imp_st* pimp)
+te_module_st* module_load(te_module_st* pmodule, const te_ast_imp_st* pimp)
 {
 	te_module_et ty = TE_MODULE_NONE;
 	for (size_t i = 0; i < nimpdirs; i++)
@@ -133,17 +191,36 @@ te_module_st* open_module_ast(te_module_st* pmodule, const te_ast_imp_st* pimp)
 	assert(false && "imp_exists returned an invalid value");
 }
 
-te_module_st* open_module_raw(te_module_st* pmodule, const char* modpth)
+te_scope_st* module_import(te_scope_st* pscope, const te_module_st* pmodule)
 {
-
+	switch (pmodule->ty)
+	{
+	case TE_MODULE_NONE:
+		return te_seterr("Unable to import an uninitialized module");
+	case TE_MODULE_INV:
+		return NULL;
+	case TE_MODULE_SCRIPT:
+	{
+		te_obj_st* pobj = te_eval(pscope, pmodule->past);
+		if (te_haserr())
+			return NULL;
+		return pscope;
+	}
+	case TE_MODULE_BIN:
+		return pmodule->loadmod(pscope);
+	default:
+		assert(false);
+		return te_seterr("Unrecognized module type");
+	}
 }
 
-te_scope_st* import_module(te_scope_st* pscope, const te_module_st* pmodule)
+void module_close(te_module_st* pmodule)
 {
+	// Currently only TE_MODULE_SCRIPT needs deallocation
 
-}
-
-void close_module(te_module_st* pmodule)
-{
-
+	if (pmodule->ty == TE_MODULE_SCRIPT)
+	{
+		_te_ast_del(pmodule->past);
+		free(pmodule->past);
+	}
 }

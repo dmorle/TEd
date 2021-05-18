@@ -346,17 +346,3 @@ void te_decref(te_obj_st* pobj)
 	pobj->ty->ty_del(pobj);
 	free(pobj);
 }
-
-void te_incref_s(te_obj_st* pobj)
-{
-	if (!pobj)
-		return;
-	te_incref(pobj);
-}
-
-void te_decref_s(te_obj_st* pobj)
-{
-	if (!pobj)
-		return;
-	te_decref(pobj);
-}
