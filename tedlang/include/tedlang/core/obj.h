@@ -65,7 +65,7 @@ typedef struct
 	int64_t         (*ty_int)    (te_obj_st*);
 	const char*     (*ty_repr)   (te_obj_st*);  // never free the data returned, it should be managed by the object's type or the object
 	te_obj_st*      (*ty_call)   (te_obj_st*, const te_fnargs_st*);
-	te_obj_st*      (*ty_start)  (te_obj_st*);  // returns an iterable context
+	te_obj_st*      (*ty_start)  (te_obj_st*);  // returns an iterable context, memory is managed by te_eval
 	te_obj_st*      (*ty_next)   (te_obj_st*, te_obj_st*);  // retrieves the next element if it exists, NULL otherwise
 	te_obj_st*      (*ty_not)    (te_obj_st*);
 	te_obj_st**     (*ty_idx)    (te_obj_st*, te_obj_st*);  // produces an lval

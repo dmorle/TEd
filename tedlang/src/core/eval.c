@@ -56,9 +56,10 @@ te_obj_st* eval_empty(te_scope_st* pscope, const te_ast_noexpr_st* pempty)
 te_obj_st* eval_var(te_scope_st* pscope, te_ast_var_st* pvar)
 {
 	te_obj_st** ppobj = te_scope_get(pscope, pvar->name);
-	if (ppobj)
-		return *ppobj;
-	return te_seterr("Reference to undefined variable '%s'", pvar->name);
+	if (!ppobj)
+		return te_seterr("Reference to undefined variable '%s'", pvar->name);
+	te_incref(*ppobj);
+	return *ppobj;
 }
 
 te_obj_st* eval_null(te_scope_st* pscope, te_ast_null_st* pnull)
