@@ -5,6 +5,7 @@
 #include <tedlang/core/obj.h>
 #include <tedlang/core/eval.h>
 #include <tedlang/builtin/int.h>
+#include <tedlang/builtin/bool.h>
 #include <tedlang/util/string.h>
 
 te_type_st _te_int_ty = {
@@ -37,6 +38,7 @@ te_type_st _te_int_ty = {
 };
 
 #define self (*(te_int_st*)pself)
+#define rval (*(te_int_st*)prval)
 #define CHECK_TYPE_RET(ret) if (pself->ty != &_te_int_ty) { te_seterr("Invalid Type"); return ret; }
 #define CHECK_TYPE CHECK_TYPE_RET(NULL)
 #define CHECK_PTYPE_RET(ret) if ((*ppself)->ty != &_te_int_ty) { te_seterr("Invalid Type"); return ret; }
@@ -105,7 +107,7 @@ te_obj_st* te_int_iadd(te_obj_st** ppself, te_obj_st* prval)
 		(*(te_int_st**)ppself)->val += ((te_int_st*)prval)->val;
 		return *ppself;
 	}
-	return te_seterr("Invalid l-value type '%s' for integer addition", prval->ty->name);
+	return te_seterr("Invalid type '%s' for integer addition", prval->ty->name);
 }
 
 te_obj_st* te_int_isub(te_obj_st** ppself, te_obj_st* prval)
@@ -116,7 +118,7 @@ te_obj_st* te_int_isub(te_obj_st** ppself, te_obj_st* prval)
 		(*(te_int_st**)ppself)->val -= ((te_int_st*)prval)->val;
 		return *ppself;
 	}
-	return te_seterr("Invalid l-value type '%s' for integer subtraction", prval->ty->name);
+	return te_seterr("Invalid type '%s' for integer subtraction", prval->ty->name);
 }
 
 te_obj_st* te_int_imul(te_obj_st** ppself, te_obj_st* prval)
@@ -127,7 +129,7 @@ te_obj_st* te_int_imul(te_obj_st** ppself, te_obj_st* prval)
 		(*(te_int_st**)ppself)->val *= ((te_int_st*)prval)->val;
 		return *ppself;
 	}
-	return te_seterr("Invalid l-value type '%s' for integer multiplication", prval->ty->name);
+	return te_seterr("Invalid type '%s' for integer multiplication", prval->ty->name);
 }
 
 te_obj_st* te_int_idiv(te_obj_st** ppself, te_obj_st* prval)
@@ -138,7 +140,7 @@ te_obj_st* te_int_idiv(te_obj_st** ppself, te_obj_st* prval)
 		(*(te_int_st**)ppself)->val /= ((te_int_st*)prval)->val;
 		return *ppself;
 	}
-	return te_seterr("Invalid l-value type '%s' for integer division", prval->ty->name);
+	return te_seterr("Invalid type '%s' for integer division", prval->ty->name);
 }
 
 te_obj_st* te_int_imod(te_obj_st** ppself, te_obj_st* prval)
@@ -149,7 +151,7 @@ te_obj_st* te_int_imod(te_obj_st** ppself, te_obj_st* prval)
 		(*(te_int_st**)ppself)->val %= ((te_int_st*)prval)->val;
 		return *ppself;
 	}
-	return te_seterr("Invalid l-value type '%s' for integer modulo", prval->ty->name);
+	return te_seterr("Invalid type '%s' for integer modulo", prval->ty->name);
 }
 
 int64_t ipow(int64_t base, uint8_t exp)
@@ -236,68 +238,181 @@ te_obj_st* te_int_iexp(te_obj_st** ppself, te_obj_st* prval)
 	CHECK_PTYPE;
 	if (prval->ty == &_te_int_ty)
 	{
-		if (((te_int_st*)prval)->val > 0)
+		if (((te_int_st*)prval)->val >= 0)
 			(*(te_int_st**)ppself)->val = ipow((*(te_int_st**)ppself)->val, ((te_int_st*)prval)->val);
-		else if (((te_int_st*)prval)->val < 0)
-			;  // TODO: Implementation
 		else
-			(*(te_int_st**)ppself)->val = 1;  // yes, 0^0 will be 1
+			(*(te_int_st**)ppself)->val = 0;
 		return *ppself;
 	}
-	return te_seterr("Invalid l-value type '%s' for integer modulo", prval->ty->name);
+	return te_seterr("Invalid type '%s' for integer modulo", prval->ty->name);
 }
 
 te_obj_st* te_int_add(te_obj_st* pself, te_obj_st* prval)
 {
 	CHECK_TYPE;
+	if (prval->ty == &_te_int_ty)
+	{
+		te_int_st* pint = (te_int_st*)te_int_new();
+		if (te_haserr())
+			return NULL;
+		pint->val = self.val + rval.val;
+		return pint;
+	}
+	// TODO: Implmement float builtin type
+	return te_seterr("Invalid type '%s' for integer addition", prval->ty->name);
 }
 
 te_obj_st* te_int_sub(te_obj_st* pself, te_obj_st* prval)
 {
 	CHECK_TYPE;
+	if (prval->ty == &_te_int_ty)
+	{
+		te_int_st* pint = (te_int_st*)te_int_new();
+		if (te_haserr())
+			return NULL;
+		pint->val = self.val - rval.val;
+		return pint;
+	}
+	// TODO: Implmement float builtin type
+	return te_seterr("Invalid type '%s' for integer subtraction", prval->ty->name);
 }
 
 te_obj_st* te_int_mul(te_obj_st* pself, te_obj_st* prval)
 {
 	CHECK_TYPE;
+	if (prval->ty == &_te_int_ty)
+	{
+		te_int_st* pint = (te_int_st*)te_int_new();
+		if (te_haserr())
+			return NULL;
+		pint->val = self.val * rval.val;
+		return pint;
+	}
+	// TODO: Implmement float builtin type
+	return te_seterr("Invalid type '%s' for integer multiplication", prval->ty->name);
 }
 
 te_obj_st* te_int_div(te_obj_st* pself, te_obj_st* prval)
 {
 	CHECK_TYPE;
+	if (prval->ty == &_te_int_ty)
+	{
+		te_int_st* pint = (te_int_st*)te_int_new();
+		if (te_haserr())
+			return NULL;
+		pint->val = self.val / rval.val;
+		return pint;
+	}
+	// TODO: Implmement float builtin type
+	return te_seterr("Invalid type '%s' for integer division", prval->ty->name);
 }
 
 te_obj_st* te_int_mod(te_obj_st* pself, te_obj_st* prval)
 {
 	CHECK_TYPE;
+	if (prval->ty != &_te_int_ty)
+		return te_seterr("Invalid type '%s' for integer modulo", prval->ty->name);
+	
+	te_int_st* pint = (te_int_st*)te_int_new();
+	if (te_haserr())
+		return NULL;
+	pint->val = self.val % rval.val;
+	return pint;
+}
+
+te_obj_st* te_int_exp(te_obj_st* pself, te_obj_st* prval)
+{
+	CHECK_TYPE;
+	if (prval->ty == &_te_int_ty)
+	{
+		te_int_st* pint = (te_int_st*)te_int_new();
+		if (te_haserr())
+			return NULL;
+
+		if (rval.val >= 0)
+			pint->val = ipow(self.val, rval.val);
+		else
+			pint->val = 0;
+		return pint;
+	}
+	// TODO: Implmement float builtin type
+	return te_seterr("Invalid type '%s' for integer exponentiation", prval->ty->name);
 }
 
 te_obj_st* te_int_eq(te_obj_st* pself, te_obj_st* prval)
 {
 	CHECK_TYPE;
+	if (prval->ty == &_te_int_ty)
+	{
+		te_bool_st* pbool = (te_bool_st*)te_bool_new();
+		pbool->val = self.val == rval.val;
+		return pbool;
+	}
+	// TODO: Implmement float builtin type
+	return te_seterr("Invalid type '%s' for numeric comparison", prval->ty->name);
 }
 
 te_obj_st* te_int_ne(te_obj_st* pself, te_obj_st* prval)
 {
 	CHECK_TYPE;
+	if (prval->ty == &_te_int_ty)
+	{
+		te_bool_st* pbool = (te_bool_st*)te_bool_new();
+		pbool->val = self.val != rval.val;
+		return pbool;
+	}
+	// TODO: Implmement float builtin type
+	return te_seterr("Invalid type '%s' for numeric comparison", prval->ty->name);
 }
 
 te_obj_st* te_int_lt(te_obj_st* pself, te_obj_st* prval)
 {
 	CHECK_TYPE;
+	if (prval->ty == &_te_int_ty)
+	{
+		te_bool_st* pbool = (te_bool_st*)te_bool_new();
+		pbool->val = self.val < rval.val;
+		return pbool;
+	}
+	// TODO: Implmement float builtin type
+	return te_seterr("Invalid type '%s' for numeric comparison", prval->ty->name);
 }
 
 te_obj_st* te_int_gt(te_obj_st* pself, te_obj_st* prval)
 {
 	CHECK_TYPE;
+	if (prval->ty == &_te_int_ty)
+	{
+		te_bool_st* pbool = (te_bool_st*)te_bool_new();
+		pbool->val = self.val > rval.val;
+		return pbool;
+	}
+	// TODO: Implmement float builtin type
+	return te_seterr("Invalid type '%s' for numeric comparison", prval->ty->name);
 }
 
 te_obj_st* te_int_le(te_obj_st* pself, te_obj_st* prval)
 {
 	CHECK_TYPE;
+	if (prval->ty == &_te_int_ty)
+	{
+		te_bool_st* pbool = (te_bool_st*)te_bool_new();
+		pbool->val = self.val <= rval.val;
+		return pbool;
+	}
+	// TODO: Implmement float builtin type
+	return te_seterr("Invalid type '%s' for numeric comparison", prval->ty->name);
 }
 
 te_obj_st* te_int_ge(te_obj_st* pself, te_obj_st* prval)
 {
 	CHECK_TYPE;
+	if (prval->ty == &_te_int_ty)
+	{
+		te_bool_st* pbool = (te_bool_st*)te_bool_new();
+		pbool->val = self.val >= rval.val;
+		return pbool;
+	}
+	// TODO: Implmement float builtin type
+	return te_seterr("Invalid type '%s' for numeric comparison", prval->ty->name);
 }

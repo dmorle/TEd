@@ -1,6 +1,7 @@
 #define TEDLANG_SRC
 
 #include <stdlib.h>
+#include <stdbool.h>
 #include <string.h>
 
 #include <tedlang/core/obj.h>
@@ -55,11 +56,18 @@ void te_fn_del(te_obj_st* pself)
 
 const char* te_fn_repr(te_obj_st* pself)
 {
-	static char prepr[64];
-
 	CHECK_TYPE;
+	static char prepr[64];
 	
 	// TODO: Implementation
+}
+
+bool te_fn_bool(te_obj_st* pself)
+{
+	CHECK_TYPE_RET(false);
+	if (self.pbody)
+		return true;
+	return false;
 }
 
 te_obj_st* te_fn_call(te_obj_st* pself, te_fnargs_st args)

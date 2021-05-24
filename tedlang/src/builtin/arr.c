@@ -5,9 +5,9 @@
 
 #include <tedlang/core/obj.h>
 #include <tedlang/core/eval.h>
-#include <tedlang/core/obj.h>
-#include <tedlang/builtin/arr.h>
+#include <tedlang/builtin/bool.h>
 #include <tedlang/builtin/int.h>
+#include <tedlang/builtin/arr.h>
 #include <tedlang/util/string.h>
 
 te_type_st _te_arr_ty = {
@@ -206,4 +206,73 @@ te_obj_st* te_arr_add(te_obj_st* pself, te_obj_st* prval)
 	}
 
 	return (te_obj_st*)nparr;
+}
+
+te_obj_st* te_arr_eq(te_obj_st* pself, te_obj_st* prval)
+{
+	CHECK_TYPE;
+	if (prval->ty != &_te_arr_ty)
+		return te_seterr("Unable to concatenate array with type %s", prval->ty->name);
+
+	te_bool_st* pbool = (te_bool_st*)te_bool_new();  // initializes to false
+	if (te_haserr())
+		return NULL;
+
+	if (pself == prval)
+	{
+		pbool->val = true;
+		return pbool;
+	}
+
+	if (self.length != rval.length)
+		return pbool;
+	for (size_t i = 0; i < self.length; i++)
+	{
+		te_obj_st* peq = self.ppelems[i]->ty->ty_eq(self.ppelems[i], rval.ppelems[i]);
+		if (te_haserr())
+		{
+			te_decref(pbool);
+			return NULL;
+		}
+
+		bool result = peq->ty->ty_bool(peq);
+		te_decref(peq);
+		if (!result)
+			return pbool;
+	}
+
+	pbool->val = true;
+	return pbool;
+}
+
+te_obj_st* te_arr_ne(te_obj_st* pself, te_obj_st* prval)
+{
+	CHECK_TYPE;
+
+	te_bool_st* pbool = (te_bool_st*)te_bool_new();  // initializes to false
+	if (te_haserr())
+		return NULL;
+	pbool->val = true;
+
+	if (prval->ty != &_te_arr_ty)
+		return pbool;
+	if (self.length != rval.length)
+		return pbool;
+	for (size_t i = 0; i < self.length; i++)
+	{
+		te_obj_st* pne = self.ppelems[i]->ty->ty_ne(self.ppelems[i], rval.ppelems[i]);
+		if (te_haserr())
+		{
+			te_decref(pbool);
+			return NULL;
+		}
+
+		bool result = pne->ty->ty_bool(pne);
+		te_decref(pne);
+		if (result)
+			return pbool;
+	}
+
+	pbool->val = false;
+	return pbool;
 }
