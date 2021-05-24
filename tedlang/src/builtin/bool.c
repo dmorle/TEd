@@ -1,6 +1,7 @@
 #define TEDLANG_SRC
 
 #include <tedlang/core/obj.h>
+#include <tedlang/core/eval.h>
 #include <tedlang/builtin/bool.h>
 #include <tedlang/util/string.h>
 

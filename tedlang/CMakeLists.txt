@@ -23,7 +23,9 @@ if (WIN32)
 
 		"src/builtin/null.c"
 		"src/builtin/bool.c"
+		"src/builtin/char.c"
 		"src/builtin/int.c"
+		"src/builtin/float.c"
 		"src/builtin/str.c"
 		"src/builtin/arr.c"
 		"src/builtin/fn.c"
@@ -39,7 +41,9 @@ if (WIN32)
 
 		"include/tedlang/builtin/null.h"
 		"include/tedlang/builtin/bool.h"
+		"include/tedlang/builtin/char.h"
 		"include/tedlang/builtin/int.h"
+		"include/tedlang/builtin/float.h"
 		"include/tedlang/builtin/str.h"
 		"include/tedlang/builtin/arr.h"
 		"include/tedlang/builtin/fn.h"

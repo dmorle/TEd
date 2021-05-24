@@ -1,6 +1,8 @@
 #ifndef TEDLANG_BOOL_H
 #define TEDLANG_BOOL_H
 
+#include <stdbool.h>
+
 #include <tedlang/tedl.h>
 #include <tedlang/core/obj.h>
 

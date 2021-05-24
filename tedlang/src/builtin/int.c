@@ -107,7 +107,7 @@ te_obj_st* te_int_iadd(te_obj_st** ppself, te_obj_st* prval)
 		(*(te_int_st**)ppself)->val += ((te_int_st*)prval)->val;
 		return *ppself;
 	}
-	return te_seterr("Invalid type '%s' for integer addition", prval->ty->name);
+	return te_seterr("Invalid type '%s' for numeric addition", prval->ty->name);
 }
 
 te_obj_st* te_int_isub(te_obj_st** ppself, te_obj_st* prval)
@@ -118,7 +118,7 @@ te_obj_st* te_int_isub(te_obj_st** ppself, te_obj_st* prval)
 		(*(te_int_st**)ppself)->val -= ((te_int_st*)prval)->val;
 		return *ppself;
 	}
-	return te_seterr("Invalid type '%s' for integer subtraction", prval->ty->name);
+	return te_seterr("Invalid type '%s' for numeric subtraction", prval->ty->name);
 }
 
 te_obj_st* te_int_imul(te_obj_st** ppself, te_obj_st* prval)
@@ -129,7 +129,7 @@ te_obj_st* te_int_imul(te_obj_st** ppself, te_obj_st* prval)
 		(*(te_int_st**)ppself)->val *= ((te_int_st*)prval)->val;
 		return *ppself;
 	}
-	return te_seterr("Invalid type '%s' for integer multiplication", prval->ty->name);
+	return te_seterr("Invalid type '%s' for numeric multiplication", prval->ty->name);
 }
 
 te_obj_st* te_int_idiv(te_obj_st** ppself, te_obj_st* prval)
@@ -140,7 +140,7 @@ te_obj_st* te_int_idiv(te_obj_st** ppself, te_obj_st* prval)
 		(*(te_int_st**)ppself)->val /= ((te_int_st*)prval)->val;
 		return *ppself;
 	}
-	return te_seterr("Invalid type '%s' for integer division", prval->ty->name);
+	return te_seterr("Invalid type '%s' for numeric division", prval->ty->name);
 }
 
 te_obj_st* te_int_imod(te_obj_st** ppself, te_obj_st* prval)
@@ -244,7 +244,7 @@ te_obj_st* te_int_iexp(te_obj_st** ppself, te_obj_st* prval)
 			(*(te_int_st**)ppself)->val = 0;
 		return *ppself;
 	}
-	return te_seterr("Invalid type '%s' for integer modulo", prval->ty->name);
+	return te_seterr("Invalid type '%s' for numeric exponentiation", prval->ty->name);
 }
 
 te_obj_st* te_int_add(te_obj_st* pself, te_obj_st* prval)
@@ -259,7 +259,7 @@ te_obj_st* te_int_add(te_obj_st* pself, te_obj_st* prval)
 		return pint;
 	}
 	// TODO: Implmement float builtin type
-	return te_seterr("Invalid type '%s' for integer addition", prval->ty->name);
+	return te_seterr("Invalid type '%s' for numeric addition", prval->ty->name);
 }
 
 te_obj_st* te_int_sub(te_obj_st* pself, te_obj_st* prval)
@@ -274,7 +274,7 @@ te_obj_st* te_int_sub(te_obj_st* pself, te_obj_st* prval)
 		return pint;
 	}
 	// TODO: Implmement float builtin type
-	return te_seterr("Invalid type '%s' for integer subtraction", prval->ty->name);
+	return te_seterr("Invalid type '%s' for numeric subtraction", prval->ty->name);
 }
 
 te_obj_st* te_int_mul(te_obj_st* pself, te_obj_st* prval)
@@ -289,7 +289,7 @@ te_obj_st* te_int_mul(te_obj_st* pself, te_obj_st* prval)
 		return pint;
 	}
 	// TODO: Implmement float builtin type
-	return te_seterr("Invalid type '%s' for integer multiplication", prval->ty->name);
+	return te_seterr("Invalid type '%s' for numeric multiplication", prval->ty->name);
 }
 
 te_obj_st* te_int_div(te_obj_st* pself, te_obj_st* prval)
@@ -304,7 +304,7 @@ te_obj_st* te_int_div(te_obj_st* pself, te_obj_st* prval)
 		return pint;
 	}
 	// TODO: Implmement float builtin type
-	return te_seterr("Invalid type '%s' for integer division", prval->ty->name);
+	return te_seterr("Invalid type '%s' for numeric division", prval->ty->name);
 }
 
 te_obj_st* te_int_mod(te_obj_st* pself, te_obj_st* prval)
@@ -336,7 +336,7 @@ te_obj_st* te_int_exp(te_obj_st* pself, te_obj_st* prval)
 		return pint;
 	}
 	// TODO: Implmement float builtin type
-	return te_seterr("Invalid type '%s' for integer exponentiation", prval->ty->name);
+	return te_seterr("Invalid type '%s' for numeric exponentiation", prval->ty->name);
 }
 
 te_obj_st* te_int_eq(te_obj_st* pself, te_obj_st* prval)
