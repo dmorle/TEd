@@ -38,13 +38,48 @@ void te_init()
 
 }
 
+bool te_haserr()
+{
+	return inerror;
+}
+
 void* te_seterr(const char* err, ...)
 {
+	inerror = true;
+	// temporary
+#include <stdarg.h>
+	va_list args;
+	va_start(args, err);
+	vprintf(err, args);
+	va_end(args);
+	return NULL;
+}
 
+te_obj_st** lval_var(te_scope_st* pscope, const te_ast_var_st* pvar)
+{
+	te_obj_st** ppobj = te_scope_get(pscope, pvar->name);
+	if (!ppobj)
+	{
+		if (!te_scope_set(pscope, pvar->name, NULL))
+			return te_seterr("Out of memory");
+		ppobj = te_scope_get(pscope, pvar->name);
+	}
+	return ppobj;
+}
+
+te_obj_st** lval_idx(te_scope_st* pscope, const te_ast_idx_st* pidx)
+{
+	// TODO: Implement lval_idx
+	return te_seterr("Not implemented");
 }
 
 te_obj_st** te_lval(te_scope_st* pscope, const te_ast_st* past)
 {
+	if (past->ast_ty == AST_VAR)
+		return lval_var(pscope, past);
+	if (past->ast_ty == AST_IDX)
+		return lval_idx(pscope, past);
+	return te_seterr("Invalid l-value expression");
 }
 
 te_obj_st* eval_empty(te_scope_st* pscope, const te_ast_noexpr_st* pempty)
@@ -388,7 +423,7 @@ te_obj_st* eval_##TY(te_scope_st* pscope, const te_ast_##TY##_st* piop)      \
 	te_obj_st** pplval = te_lval(pscope, piop->lval);					     \
 	if (te_haserr()) return NULL;											 \
 	assert(pplval && *pplval);												 \
-	te_obj_st* pret = te_assign(pplval, prval);								 \
+	te_obj_st* pret = te_##TY(pplval, prval);								 \
 	if (te_haserr()) {														 \
 		te_decref(pret);													 \
 		return NULL;}														 \

@@ -59,7 +59,7 @@ const char* te_fn_repr(te_obj_st* pself)
 	CHECK_TYPE;
 	static char prepr[64];
 	
-	// TODO: Implementation
+	// TODO: Implement repr for fns
 }
 
 bool te_fn_bool(te_obj_st* pself)

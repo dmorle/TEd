@@ -73,9 +73,9 @@ int64_t te_char_int(te_obj_st* pself)
 const char* te_char_repr(te_obj_st* pself)
 {
 	CHECK_TYPE;
-
-	// TODO: Implementation of float to string
-	return te_seterr("Not implmemented");
+	static char repr[2] = {0, 0};
+	repr[0] = self.ch;
+	return repr;
 }
 
 te_obj_st* te_char_iadd(te_obj_st** ppself, te_obj_st* prval)

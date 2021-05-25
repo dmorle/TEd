@@ -104,7 +104,6 @@ te_scope_st* te_scope_new(te_scope_st* pself, te_scope_st* pparent, size_t sz, f
 	pself->target_lf = lf;
 	pself->curr_lf = 0;
 	pself->n_buckets = sz;
-	te_scope_bkt_new(pself->pbuckets);
 }
 
 void te_scope_del(te_scope_st* pself)

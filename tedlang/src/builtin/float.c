@@ -66,7 +66,7 @@ const char* te_float_repr(te_obj_st* pself)
 {
 	CHECK_TYPE;
 
-	// TODO: float to string implementation
+	// TODO: Implement float to string
 }
 
 te_obj_st* te_float_iadd(te_obj_st** ppself, te_obj_st* prval)

@@ -258,7 +258,7 @@ te_obj_st* te_int_add(te_obj_st* pself, te_obj_st* prval)
 		pint->val = self.val + rval.val;
 		return pint;
 	}
-	// TODO: Implmement float builtin type
+	// TODO: Implement float builtin type
 	return te_seterr("Invalid type '%s' for numeric addition", prval->ty->name);
 }
 
@@ -273,7 +273,7 @@ te_obj_st* te_int_sub(te_obj_st* pself, te_obj_st* prval)
 		pint->val = self.val - rval.val;
 		return pint;
 	}
-	// TODO: Implmement float builtin type
+	// TODO: Implement float builtin type
 	return te_seterr("Invalid type '%s' for numeric subtraction", prval->ty->name);
 }
 
@@ -288,7 +288,7 @@ te_obj_st* te_int_mul(te_obj_st* pself, te_obj_st* prval)
 		pint->val = self.val * rval.val;
 		return pint;
 	}
-	// TODO: Implmement float builtin type
+	// TODO: Implement float builtin type
 	return te_seterr("Invalid type '%s' for numeric multiplication", prval->ty->name);
 }
 
@@ -303,7 +303,7 @@ te_obj_st* te_int_div(te_obj_st* pself, te_obj_st* prval)
 		pint->val = self.val / rval.val;
 		return pint;
 	}
-	// TODO: Implmement float builtin type
+	// TODO: Implement float builtin type
 	return te_seterr("Invalid type '%s' for numeric division", prval->ty->name);
 }
 
@@ -335,7 +335,7 @@ te_obj_st* te_int_exp(te_obj_st* pself, te_obj_st* prval)
 			pint->val = 0;
 		return pint;
 	}
-	// TODO: Implmement float builtin type
+	// TODO: Implement float builtin type
 	return te_seterr("Invalid type '%s' for numeric exponentiation", prval->ty->name);
 }
 
@@ -348,7 +348,7 @@ te_obj_st* te_int_eq(te_obj_st* pself, te_obj_st* prval)
 		pbool->val = self.val == rval.val;
 		return pbool;
 	}
-	// TODO: Implmement float builtin type
+	// TODO: Implement float builtin type
 	return te_seterr("Invalid type '%s' for numeric comparison", prval->ty->name);
 }
 
@@ -361,7 +361,7 @@ te_obj_st* te_int_ne(te_obj_st* pself, te_obj_st* prval)
 		pbool->val = self.val != rval.val;
 		return pbool;
 	}
-	// TODO: Implmement float builtin type
+	// TODO: Implement float builtin type
 	return te_seterr("Invalid type '%s' for numeric comparison", prval->ty->name);
 }
 
@@ -374,7 +374,7 @@ te_obj_st* te_int_lt(te_obj_st* pself, te_obj_st* prval)
 		pbool->val = self.val < rval.val;
 		return pbool;
 	}
-	// TODO: Implmement float builtin type
+	// TODO: Implement float builtin type
 	return te_seterr("Invalid type '%s' for numeric comparison", prval->ty->name);
 }
 
@@ -387,7 +387,7 @@ te_obj_st* te_int_gt(te_obj_st* pself, te_obj_st* prval)
 		pbool->val = self.val > rval.val;
 		return pbool;
 	}
-	// TODO: Implmement float builtin type
+	// TODO: Implement float builtin type
 	return te_seterr("Invalid type '%s' for numeric comparison", prval->ty->name);
 }
 
@@ -400,7 +400,7 @@ te_obj_st* te_int_le(te_obj_st* pself, te_obj_st* prval)
 		pbool->val = self.val <= rval.val;
 		return pbool;
 	}
-	// TODO: Implmement float builtin type
+	// TODO: Implement float builtin type
 	return te_seterr("Invalid type '%s' for numeric comparison", prval->ty->name);
 }
 
@@ -413,6 +413,6 @@ te_obj_st* te_int_ge(te_obj_st* pself, te_obj_st* prval)
 		pbool->val = self.val >= rval.val;
 		return pbool;
 	}
-	// TODO: Implmement float builtin type
+	// TODO: Implement float builtin type
 	return te_seterr("Invalid type '%s' for numeric comparison", prval->ty->name);
 }

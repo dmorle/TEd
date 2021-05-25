@@ -18,7 +18,7 @@ void __te_ast_ty_new(te_ast_st* pself, te_ast_et ty)
 
 void _te_ast_del(te_ast_st* pself)
 {
-	// TODO: Implementation
+	// TODO: Implementation for deleting ast nodes
 }
 
 void _te_ast_var_new(te_ast_var_st* pself)
@@ -1331,7 +1331,7 @@ int te_parse_expr(const te_tarr_st* ptarr, te_ast_st** ppexpr)
 		return ret;
 	}
 	default:
-		return parse_expr_p0(ptarr, ppexpr);
+		return parse_expr_prec(ptarr, ppexpr, 0);
 	}
 
 OUT_OF_MEMORY:

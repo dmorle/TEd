@@ -324,6 +324,12 @@ te_obj_st* te_ge(te_obj_st* plval, te_obj_st* prval)
 	return te_seterr("Unable to compare objects with type %s", plval->ty->name);
 }
 
+void te_obj_new(te_obj_st* pself, te_type_st* pty)
+{
+	pself->ty = pty;
+	pself->n_ref = 1;
+	pself->is_valid = true;
+}
 
 void te_incref(te_obj_st* pobj)
 {
@@ -335,7 +341,7 @@ void te_incref(te_obj_st* pobj)
 
 void te_decref(te_obj_st* pobj)
 {
-	if (!pobj)
+	if (!pobj || !pobj->is_valid)
 		return;
 
 	pobj->n_ref--;
