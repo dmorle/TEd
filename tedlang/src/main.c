@@ -2,8 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include <tedlang/parse/lexer.h>
-#include <tedlang/parse/parser.h>
+#include <tedlang/tedl.h>
 
 int main(int argc, char** argv)
 {
@@ -52,6 +51,13 @@ int main(int argc, char** argv)
 		fprintf(stderr, "Unable to parse %s\n", buf);
 		exit(1);
 	}
+	printf("Finished Parsing\n\n");
 
-	printf("Finished Parsing\n");
+	printf("Initializing the interpreter\n");
+	te_init();
+	printf("Finished initializing the interpreter\n");
+
+	printf("Running the script\n");
+	te_eval(&global_scope, past);
+	printf("Finished running the script\n");
 }

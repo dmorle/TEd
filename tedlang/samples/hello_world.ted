@@ -1,9 +1,9 @@
-import io;
+# import io;
 
 fn main()
 {
 	for (e : ["hello", " ", "world", "\n"])
-		print(e);
+		;# print(e);
 };
 
 main();

@@ -13,7 +13,7 @@
 inline uint64_t fnv_1a(char* s)
 {
 	uint64_t h = FNV_OFFSET_BASIS;
-	for (char* c = s; c; c++)
+	for (char* c = s; *c; c++)
 		h = (h * FNV_PRIME) ^ *c;
 	return h;
 }
@@ -97,7 +97,7 @@ te_scope_st* te_scope_new(te_scope_st* pself, te_scope_st* pparent, size_t sz, f
 #endif // _DEBUG
 		return NULL;
 	}
-	for (_te_scope_bkt_st* pbkt = pself->pbuckets; pbkt < pself->pbuckets + pself->n_buckets; pbkt++)
+	for (_te_scope_bkt_st* pbkt = pself->pbuckets; pbkt < pself->pbuckets + sz; pbkt++)
 		*pbkt = NULL;
 
 	pself->pparent = pparent;
@@ -175,6 +175,7 @@ te_scope_st* te_scope_set(te_scope_st* pself, char* name, te_obj_st* pobj)
 	memcpy(pnd->name, name, nmsz + 1);
 	te_incref(pobj);
 	pnd->pobj = pobj;
+	pnd->pnext = NULL;
 
 	pself->curr_lf = (pself->curr_lf * pself->n_buckets + 1) / pself->n_buckets;
 	if (pself->curr_lf > pself->target_lf)

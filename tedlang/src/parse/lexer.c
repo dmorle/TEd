@@ -291,6 +291,10 @@ int read_token(char* ptoken, size_t bufsz, te_tarr_st* ptarr)
 	case '\v':
 	case '\f':
 		return 1;
+	case '#':
+		while (ret < bufsz && ptoken[ret] != '\n')
+			ret++;
+		return ret;
 	case '{':
 		ntoken.t_id = TK_O_BRACE;
 		break;

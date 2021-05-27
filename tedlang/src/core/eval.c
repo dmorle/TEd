@@ -35,7 +35,11 @@ void te_init()
 	void* pret = te_scope_new(&global_scope, NULL, DEFAULT_SCOPESZ, DEFAULT_SCOPELF);
 	if (!pret)
 		te_seterr("Out of memory");
+}
 
+void te_shutdown()
+{
+	te_scope_del(&global_scope);
 }
 
 bool te_haserr()
@@ -139,7 +143,7 @@ te_obj_st* eval_arr(te_scope_st* pscope, const te_ast_arr_st* parr)
 	te_arr_st* nparr = te_arr_new();
 	RET_ON_ERR;
 	
-	assert(parr->length < parr->_mem_sz);
+	assert(parr->length <= parr->_mem_sz);
 
 	nparr->ppelems = (te_obj_st**)malloc(sizeof(te_obj_st*) * parr->_mem_sz);
 	if (!nparr->ppelems)

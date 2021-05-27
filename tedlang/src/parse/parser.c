@@ -323,6 +323,7 @@ int _te_ast_fn_new(te_ast_fn_st* pself, size_t sz)
 	pself->argc = 0;
 	pself->_mem_sz = sz;
 	pself->name = NULL;
+	return 0;
 }
 void _te_ast_fn_del(te_ast_fn_st* pself)
 {
@@ -632,6 +633,9 @@ int find_p0_op(const te_tarr_st* ptarr, int idx)
 // Parses comma seperated array elements.  ptarr must start after the '['
 int parse_expr_arr(const te_tarr_st* ptarr, te_ast_arr_st* parr)
 {
+	if (ptarr->_data[0].t_id == TK_C_SQUARE)
+		return 1;
+
 	te_ast_st* pelem;
 	te_tarr_st tk_slice;
 	size_t idx = 0;
@@ -669,6 +673,9 @@ int parse_expr_arr(const te_tarr_st* ptarr, te_ast_arr_st* parr)
 // Parses comma seperated function arguments.  ptarr must start after the '('
 int parse_expr_call(const te_tarr_st* ptarr, te_ast_call_st* parr)
 {
+	if (ptarr->_data[0].t_id == TK_C_ROUND)
+		return 1;
+
 	te_ast_st* pelem;
 	te_tarr_st tk_slice;
 	size_t idx = 0;
@@ -682,6 +689,8 @@ int parse_expr_call(const te_tarr_st* ptarr, te_ast_call_st* parr)
 			fprintf(stderr, "Invalid argument syntax on line %zu", ptarr->_data[idx].linenum);
 			return ret;
 		}
+		if (!ret)
+			return idx + 1;
 		_te_tarr_slice(ptarr, idx, ret, &tk_slice);
 		ret = te_parse_expr(&tk_slice, &pelem);
 		if (ret < 0)
@@ -1619,7 +1628,8 @@ int te_parse_block(const te_tarr_st* ptarr, te_ast_st** ppblock)
 
 	te_tarr_st tk_slice;
 	_te_tarr_slice(ptarr, 0, ret, &tk_slice);
-	return ret + 1;
+	ret = te_parse_expr(&tk_slice, ppblock);
+	return ret + (ret >= 0);  // If successful, add the ;
 
 OUT_OF_MEMORY:
 	fprintf(stderr, "Out of memory\n");
