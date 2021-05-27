@@ -1,17 +1,46 @@
 .code
 
+te_strlen proc
+
+		mov rdx, rcx
+		mov rax, rcx
+		mov ecx, 0
+		
+	STRLEN_LOOP:
+		mov cl, byte ptr [rax]
+		jecxz STRLEN_RET
+		inc rax
+		jmp STRLEN_LOOP
+
+	STRLEN_RET:
+		sub rax, rdx
+		ret
+
+te_strlen endp
+
 te_strncpy proc
+		
 		mov r9, rcx
 		mov r10, r8
 
 		; Checking if sz is 0
-		mov rcx, r8
-		jrcxz CPY_RET0
+		or r8, r8
+		jz CPY_RET0
 		mov ecx, 0
 
+		mov cl, byte ptr [rdx]
 	CPY_LOOP:
-		mov bl, byte ptr [rdx]
-		mov byte ptr [r9], bl
+		mov byte ptr [r9], cl
+		
+		dec r8
+		jz CPY_STOP
+
+		inc r9
+		inc rdx
+		mov cl, byte ptr [rdx]
+		jecxz CPY_STOP
+
+		mov byte ptr [r9], cl
 		
 		dec r8
 		jz CPY_STOP

@@ -123,7 +123,7 @@ te_obj_st* te_str_iadd(te_obj_st** ppself, te_obj_st* prval)
 		char* ptmp = (char*)realloc(this->val, sizeof(char) * (self_sz + rval_sz + 1));
 		if (!ptmp)
 			return te_seterr("Out of memory");
-		te_memcpy(ptmp + self_sz, rval.val, rval_sz);
+		memcpy(ptmp + self_sz, rval.val, rval_sz);
 		ptmp[self_sz + rval_sz] = '\0';
 		this->val = ptmp;
 		return this;
@@ -159,8 +159,8 @@ te_obj_st* te_str_add(te_obj_st* pself, te_obj_st* prval)
 			return te_seterr("Out of memory");
 		}
 
-		te_memcpy(pstr->val          , self.val, self_sz);
-		te_memcpy(pstr->val + self_sz, rval.val, rval_sz);
+		memcpy(pstr->val          , self.val, self_sz);
+		memcpy(pstr->val + self_sz, rval.val, rval_sz);
 		pstr->val[self_sz + rval_sz] = '\0';
 		return pstr;
 	}
@@ -178,7 +178,7 @@ te_obj_st* te_str_add(te_obj_st* pself, te_obj_st* prval)
 			return te_seterr("Out of memory");
 		}
 
-		te_memcpy(pstr->val, self.val, self_sz);
+		memcpy(pstr->val, self.val, self_sz);
 		*(uint16_t*)(pstr->val + self_sz) = (((te_char_st*)prval)->ch << 8);  // ("%c\0", ch)
 		return pstr;
 	}

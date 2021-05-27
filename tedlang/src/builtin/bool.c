@@ -43,8 +43,8 @@ const char* te_bool_repr(te_obj_st* pself)
 {
 	CHECK_TYPE;
 	static char reprbuf[6];
-	if (self.val) te_memcpy(reprbuf, "true" , sizeof("true" ));
-	else          te_memcpy(reprbuf, "false", sizeof("false"));
+	if (self.val) memcpy(reprbuf, "true" , sizeof("true" ));
+	else          memcpy(reprbuf, "false", sizeof("false"));
 	return reprbuf;
 }
 

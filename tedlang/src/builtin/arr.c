@@ -84,7 +84,7 @@ const char* te_arr_repr(te_obj_st* pself)
 
 	if (in_repr)
 	{
-		te_memcpy(pbuf + 1, "...]", sizeof("...]") / sizeof(char));
+		memcpy(pbuf + 1, "...]", sizeof("...]") / sizeof(char));
 		return pbuf;
 	}
 
@@ -112,7 +112,7 @@ const char* te_arr_repr(te_obj_st* pself)
 	const char* pelemret = self.ppelems[0]->ty->ty_repr(self.ppelems[0]);
 	size_t retsz = te_strlen(pelemret);
 	RESIZE_PBUF;
-	te_memcpy(pbuf + offset, pelemret, retsz);
+	memcpy(pbuf + offset, pelemret, retsz);
 	
 	for (size_t i = 1; i < self.length; i++)
 	{
@@ -125,13 +125,13 @@ const char* te_arr_repr(te_obj_st* pself)
 		offset += retsz;
 		retsz = te_strlen(pelemret);
 		RESIZE_PBUF;
-		te_memcpy(pbuf + offset, pelemret, retsz);
+		memcpy(pbuf + offset, pelemret, retsz);
 	}
 
 	offset += retsz;
 	retsz = 2;
 	RESIZE_PBUF;
-	te_memcpy(pbuf + offset, "]", 2);
+	memcpy(pbuf + offset, "]", 2);
 	in_repr = false;
 	return pbuf;
 

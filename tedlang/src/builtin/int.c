@@ -78,7 +78,7 @@ const char* te_int_repr(te_obj_st* pself)
 	CHECK_TYPE;
 	static char reprbuf[32]; // 32 digits is overkill for int64, no chance of overflow
 
-	return te_itoa(reprbuf, self.val, 10);
+	return itoa(self.val, reprbuf, 10);
 }
 
 te_obj_st* te_int_start(te_obj_st* pself)

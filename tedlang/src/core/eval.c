@@ -130,7 +130,7 @@ te_obj_st* eval_str(te_scope_st* pscope, te_ast_str_st* pstr)
 		te_decref(npstr);
 		return te_seterr("Out of memory");
 	}
-	te_memcpy(npstr->val, pstr->val, sz);
+	memcpy(npstr->val, pstr->val, sz);
 	return npstr;
 }
 

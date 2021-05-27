@@ -47,7 +47,7 @@ void te_init_impdirs()
 		return;
 	}
 
-	te_memcpy(impdir + offset, TEDLIB_FOLDER, sizeof(TEDLIB_FOLDER));
+	memcpy(impdir + offset, TEDLIB_FOLDER, sizeof(TEDLIB_FOLDER));
 	void* ret = te_add_impdir(impdir);
 
 	// giving the memory allocated in impdir to te_add_impdir
