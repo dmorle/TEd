@@ -776,7 +776,7 @@ int parse_expr_leaf(const te_tarr_st* ptarr, te_ast_st** ppexpr)
 			break;
 
 		default:
-			fprintf(stderr, "Unexpected token on line %zu", ptarr->_data[0].linenum);
+			fprintf(stderr, "Unexpected token on line %zu\n", ptarr->_data[0].linenum);
 			return -2;
 		}
 
@@ -1070,7 +1070,7 @@ int parse_expr_rtolprec(const te_tarr_st* ptarr, te_ast_st** ppexpr, int prec)
 	return ptarr->length;
 
 INVALID_TOKEN:
-	fprintf(stderr, "Unexpected token on line %zu", ptarr->_data[i].linenum);
+	fprintf(stderr, "Unexpected token on line %zu\n", ptarr->_data[i].linenum);
 	return -2;
 
 OUT_OF_MEMORY:
@@ -1754,7 +1754,6 @@ int te_parse_module(const te_tarr_st* ptarr, te_ast_st** ppast)
 			ret = te_parse_block(&tk_slice, &pelem);
 			if (ret < 0)
 				goto CLEANUP;
-			ret += 1;
 		}
 
 		// Updating the index and appending the new element

@@ -26,7 +26,9 @@
 #endif
 
 #ifndef TEDLANG_SRC
+#	define TEDLANG_MODINIT EXPORT
 #	include <tedlang/core/eval.h>
+#	include <tedlang/core/obj.h>
 #	include <tedlang/parse/parser.h>
 #	include <tedlang/parse/lexer.h>
 #else

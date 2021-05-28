@@ -35,11 +35,14 @@ void te_init()
 	void* pret = te_scope_new(&global_scope, NULL, DEFAULT_SCOPESZ, DEFAULT_SCOPELF);
 	if (!pret)
 		te_seterr("Out of memory");
+
+	te_init_imports();
 }
 
 void te_shutdown()
 {
 	te_scope_del(&global_scope);
+	te_free_imports();
 }
 
 bool te_haserr()
@@ -49,12 +52,15 @@ bool te_haserr()
 
 void* te_seterr(const char* err, ...)
 {
+	char errfmt[512];
+
 	inerror = true;
 	// temporary
 #include <stdarg.h>
 	va_list args;
 	va_start(args, err);
-	vprintf(err, args);
+	sprintf(errfmt, "%s\n", err);
+	vprintf(errfmt, args);
 	va_end(args);
 	return NULL;
 }

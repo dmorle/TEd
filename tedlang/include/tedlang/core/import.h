@@ -4,7 +4,9 @@
 #include <tedlang/core/scope.h>
 #include <tedlang/parse/parser.h>
 
-TEDLANG_API void te_init_impdirs();
+// Called by te_init()
+void te_init_imports();
+void te_free_imports();
 // returns impdir on success, NULL on failure
 TEDLANG_API char* te_add_impdir(char* impdir);
 // TODO: add a mechanism for adding/removing/listing import directories

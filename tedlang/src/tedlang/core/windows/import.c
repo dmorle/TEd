@@ -15,14 +15,18 @@
 #include <tedlang/util/string.h>
 
 #define MAX_IMPDIRS 1024
-#define TEDLIB_FOLDER "tedlib\\"
+#define TEDLIB_FOLDER "slib\\"
 
 char* pimpdirs[MAX_IMPDIRS] = { NULL };
 size_t nimpdirs = 0;
 
-void te_init_impdirs()
+static HMODULE* phdlls = NULL;
+static size_t phdlls_memsz = 0;
+static size_t nhdlls = 0;
+
+void te_init_imports()
 {
-	// Currently only adding the tedlib directory
+	// Currently only adding the tedslib directory
 
 	char* impdir = (char*)malloc(sizeof(char) * MAX_PATH);
 	if (!impdir)
@@ -43,7 +47,7 @@ void te_init_impdirs()
 	while (impdir[--offset] != '\\' && impdir[offset] != '/');
 	if (++offset + sizeof(TEDLIB_FOLDER) >= MAX_PATH)
 	{
-		te_seterr("tedlib path buffer overflow");
+		te_seterr("tedslib path buffer overflow");
 		return;
 	}
 
@@ -56,6 +60,42 @@ void te_init_impdirs()
 		free(impdir);
 		te_seterr("Unable to initialize standard import directories");
 	}
+
+	// HMODULE dll file handling
+
+	phdlls = (HMODULE*)malloc(sizeof(HMODULE*));
+	if (!phdlls)
+	{
+		// I think this is all I have to do
+		free(impdir);
+		te_seterr("Out of memory");
+	}
+	phdlls_memsz = 1;
+}
+
+void te_free_imports()
+{
+	if (phdlls)
+	{
+		for (size_t i = 0; i < nhdlls; i++)
+			FreeLibrary(phdlls[i]);
+		free(phdlls);
+	}
+}
+
+HMODULE register_dll(HMODULE hdll)
+{
+	if (nhdlls == phdlls_memsz)
+	{
+		size_t nsz = phdlls_memsz * 2;
+		HMODULE* ptmp = (HMODULE*)realloc(phdlls, sizeof(HMODULE) * nsz);
+		if (!ptmp)
+			return te_seterr("Out of memory");
+		phdlls = ptmp;
+		phdlls_memsz = nsz;
+	}
+
+	return phdlls[nhdlls++] = hdll;
 }
 
 char* te_add_impdir(char* impdir)
@@ -109,7 +149,7 @@ te_module_et imp_exists(const char* pth, const te_ast_imp_st* pimp)
 	fattrib = GetFileAttributes(imppth);
 	if (fattrib == INVALID_FILE_ATTRIBUTES)
 		goto INVALID_FILE;
-	if (fattrib & (FILE_ATTRIBUTE_READONLY | FILE_ATTRIBUTE_NORMAL))
+	if (fattrib & (FILE_ATTRIBUTE_ARCHIVE | FILE_ATTRIBUTE_READONLY))
 		return TE_MODULE_BIN;
 
 	memcpy(imppth + idx, tedext, EXT_SZ);
@@ -123,7 +163,7 @@ te_module_et imp_exists(const char* pth, const te_ast_imp_st* pimp)
 
 INVALID_FILE:
 	// TODO: better error message
-	te_seterr("Found invalid module on import\n");
+	te_seterr("Found invalid module on import");
 	return TE_MODULE_INV;
 }
 
@@ -131,14 +171,14 @@ te_module_st* load_script(te_module_st* pmodule)
 {
 	FILE* pf = fopen(imppth, "rb");
 	if (!pf)
-		return te_seterr("Unable to open file %s\n", imppth);
+		return te_seterr("Unable to open file: %s", imppth);
 
 	te_tarr_st tk_slice;
 	int ret = _te_tarr_new(&tk_slice, 128);
 	if (ret < 0)
 	{
 		fclose(pf);
-		return te_seterr("Out of memory\n");
+		return te_seterr("Out of memory");
 	}
 
 	ret = te_lex_f(pf, &tk_slice);
@@ -146,14 +186,14 @@ te_module_st* load_script(te_module_st* pmodule)
 	if (ret < 0)
 	{
 		_te_tarr_del(&tk_slice);
-		return te_seterr("Unable to lex %s\n", imppth);
+		return te_seterr("Unable to lex: %s", imppth);
 	}
 
 	te_ast_st* past;
 	ret = te_parse_module(&tk_slice, &past);
 	_te_tarr_del(&tk_slice);
 	if (ret < 0)
-		return te_seterr("Unable to parse %s\n", imppth);
+		return te_seterr("Unable to parse: %s", imppth);
 
 	pmodule->past = past;
 	return pmodule;
@@ -161,8 +201,25 @@ te_module_st* load_script(te_module_st* pmodule)
 
 te_module_st* load_bin(te_module_st* pmodule)
 {
-	// TODO: Determine a dynamic link library structure for tedlang extensions
-	return NULL;
+	HMODULE hdll = LoadLibrary(imppth);
+	if (!hdll)
+		return te_seterr("Unable to load extension: %s", imppth);
+
+	te_loadmod_t ploadmod = (te_loadmod_t)GetProcAddress(hdll, "te_mod_init");
+	if (!ploadmod)
+	{
+		FreeLibrary(hdll);
+		return te_seterr("Missing entry point in extension: %s", imppth);
+	}
+
+	pmodule->loadmod = ploadmod;
+	if (!register_dll(hdll))
+	{
+		FreeLibrary(hdll);
+		return NULL;
+	}
+
+	return pmodule;
 }
 
 te_module_st* module_load(te_module_st* pmodule, const te_ast_imp_st* pimp)
@@ -176,10 +233,11 @@ te_module_st* module_load(te_module_st* pmodule, const te_ast_imp_st* pimp)
 				break;
 		}
 	
+	pmodule->ty = ty;
 	switch (ty)
 	{
 	case TE_MODULE_NONE:
-		return te_seterr("Unable to find path for import %s", pimp->imp_pth[pimp->length - 1]);
+		return te_seterr("Unable to find path for import: %s", pimp->imp_pth[pimp->length - 1]);
 	case TE_MODULE_INV:
 		return NULL;
 	case TE_MODULE_SCRIPT:
@@ -216,8 +274,6 @@ te_scope_st* module_import(te_scope_st* pscope, const te_module_st* pmodule)
 
 void module_close(te_module_st* pmodule)
 {
-	// Currently only TE_MODULE_SCRIPT needs deallocation
-
 	if (pmodule->ty == TE_MODULE_SCRIPT)
 	{
 		_te_ast_del(pmodule->past);

@@ -13,22 +13,22 @@ if (WIN32)
 	add_library(
 		libtedl SHARED
 
-		"src/core/obj.c"
-		"src/core/eval.c"
-		"src/core/scope.c"
-		"src/parse/lexer.c"
-		"src/parse/parser.c"
-		"src/core/windows/import.c"
-		"src/util/string.asm"
+		"src/tedlang/core/obj.c"
+		"src/tedlang/core/eval.c"
+		"src/tedlang/core/scope.c"
+		"src/tedlang/parse/lexer.c"
+		"src/tedlang/parse/parser.c"
+		"src/tedlang/core/windows/import.c"
+		"src/tedlang/util/string.asm"
 
-		"src/builtin/null.c"
-		"src/builtin/bool.c"
-		"src/builtin/char.c"
-		"src/builtin/int.c"
-		"src/builtin/float.c"
-		"src/builtin/str.c"
-		"src/builtin/arr.c"
-		"src/builtin/fn.c"
+		"src/tedlang/builtin/null.c"
+		"src/tedlang/builtin/bool.c"
+		"src/tedlang/builtin/char.c"
+		"src/tedlang/builtin/int.c"
+		"src/tedlang/builtin/float.c"
+		"src/tedlang/builtin/str.c"
+		"src/tedlang/builtin/arr.c"
+		"src/tedlang/builtin/fn.c"
 
 		"include/tedlang/tedl.h"
 		"include/tedlang/core/obj.h"
@@ -54,6 +54,25 @@ if (WIN32)
 
 	set_property(TARGET libtedl PROPERTY C_STANDARD 11)
 
+	# tedlang standard library
+
+	add_library(
+		io SHARED
+
+		"src/tedslib/io/io.c"
+		"src/tedslib/io/print.c"
+		
+		"include/tedslib/io/io.h"
+	)
+
+	target_include_directories(io PRIVATE "include/tedslib")
+	target_link_libraries(io libtedl)
+
+	set_target_properties(io PROPERTIES
+		RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tedlang/slib"
+		C_STANDARD 11
+	)
+
 else()
 	message(FATAL_ERROR "tedlang currently only compiles for windows")
 endif(WIN32)
@@ -62,7 +81,7 @@ endif(WIN32)
 
 add_executable(
 	tedlang
-	"src/main.c"
+	"src/tedlang/main.c"
 	"include/tedlang/tedl.h"
 )
 target_link_libraries(tedlang libtedl)
