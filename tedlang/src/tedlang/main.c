@@ -53,11 +53,11 @@ int main(int argc, char** argv)
 	}
 	printf("Finished Parsing\n\n");
 
-	printf("Initializing the interpreter\n");
-	te_init();
-	printf("Finished initializing the interpreter\n");
+	te_scope_st* pscope = te_init();
+	if (te_haserr())
+		exit(1);
 
-	printf("Running the script\n");
-	te_eval(&global_scope, past);
-	printf("Finished running the script\n");
+	printf("\nRunning the script\n");
+	te_eval(pscope, past);
+	printf("\nFinished running the script\n");
 }

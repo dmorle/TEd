@@ -1,11 +1,11 @@
 #include <Windows.h>
 
-#include <tedwin/ted.hpp>
+#include <tedcore/backend/windows/ted.hpp>
 #include <tedcore/tedcore.hpp>
 
 LRESULT on_paint(WPARAM wparam, LPARAM lparam)
 {
-
+	return 0;
 }
 
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT umsg, WPARAM wparam, LPARAM lparam)

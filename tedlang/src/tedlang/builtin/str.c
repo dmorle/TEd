@@ -63,6 +63,7 @@ const char* te_str_repr(te_obj_st* pself)
 	CHECK_TYPE;
 	static const char* empty_str = "";
 
+	te_str_st* pstr = pself;
 	if (self.val)
 		return self.val;
 	return empty_str;

@@ -11,7 +11,7 @@ extern LPCWSTR win_name;
 extern ID2D1Factory* pDFactory;
 extern ID2D1HwndRenderTarget* pDRendTarget;
 
-struct
+extern struct
 {
 	ID2D1SolidColorBrush* back;
 	ID2D1SolidColorBrush* wall;

@@ -1,5 +1,5 @@
-#ifndef TE_TEDLANG_H
-#define TE_TEDLANG_H
+#ifndef TEDLANG_H
+#define TEDLANG_H
 
 #ifdef _MSC_VER
 //  Microsoft 
@@ -26,14 +26,21 @@
 #endif
 
 #ifndef TEDLANG_SRC
-#	define TEDLANG_MODINIT EXPORT
-#	include <tedlang/core/eval.h>
-#	include <tedlang/core/obj.h>
-#	include <tedlang/parse/parser.h>
-#	include <tedlang/parse/lexer.h>
+#define TEDLANG_MODINIT EXPORT
+#ifdef __cplusplus
+extern "C"
+{
+#endif
+#include <tedlang/core/eval.h>
+#include <tedlang/core/obj.h>
+#include <tedlang/parse/parser.h>
+#include <tedlang/parse/lexer.h>
+#ifdef __cplusplus
+}
+#endif
 #else
-#   define DEFAULT_SCOPESZ 64
-#   define DEFAULT_SCOPELF 0.75
+#define DEFAULT_SCOPESZ 64
+#define DEFAULT_SCOPELF 0.75
 #endif
 
 #endif

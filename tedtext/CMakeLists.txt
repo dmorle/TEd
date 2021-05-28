@@ -15,7 +15,7 @@ add_library(
 )
 
 target_link_libraries(libtedtext PRIVATE libtedcore)
-target_link_libraries(libtedtext PRIVATE libtedlang)
+target_link_libraries(libtedtext PRIVATE libtedl)
 
 # freetype (fonts library)
 find_package(freetype CONFIG REQUIRED)

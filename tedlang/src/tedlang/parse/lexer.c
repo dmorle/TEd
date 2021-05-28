@@ -379,8 +379,8 @@ int read_token(char* ptoken, size_t bufsz, te_tarr_st* ptarr)
 	default:
 		if (c0 == '"')
 		{
-			while (ptoken[ret] != '"')
-				if (++ret == bufsz)
+			while (ptoken[ret++] != '"')
+				if (ret == bufsz)
 				{
 					fprintf(stderr, "EOF reached before closeing \"\n");
 					return -2;
@@ -390,10 +390,10 @@ int read_token(char* ptoken, size_t bufsz, te_tarr_st* ptarr)
 			ntoken._data = malloc(sizeof(char) * ((size_t)ret - 1));
 			if (!ntoken._data)
 				return -1;
-			memcpy(ntoken._data, (void*)(ptoken + 1), (size_t)ret - 1);
-			((char*)ntoken._data)[ret - 1] = '\0';
+			memcpy(ntoken._data, (void*)(ptoken + 1), (size_t)ret - 2);
+			((char*)ntoken._data)[ret - 2] = '\0';
 			_te_tarr_append(ptarr, &ntoken);
-			return ret + 1;
+			return ret;
 		}
 		if (c0 == '-' || ('0' <= c0 && c0 <= '9'))
 		{

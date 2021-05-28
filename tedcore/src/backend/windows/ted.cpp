@@ -1,7 +1,7 @@
 #include <windows.h>
 #include <d2d1.h>
 
-#include <ted/ted.h>
+#include <tedcore/backend/windows/ted.hpp>
 
 HWND hwnd = NULL;
 LPCWSTR cls_name = L"TED";

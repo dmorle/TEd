@@ -2,7 +2,7 @@ import io;
 
 fn main()
 {
-	for (e : ["hello", " ", "world", "\n"])
+	for (e : ["hello", " ", "world", "!"])
 		print(e);
 };
 

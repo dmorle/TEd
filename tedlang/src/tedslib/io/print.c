@@ -26,7 +26,12 @@ bool te_print_bool(te_obj_st* pself)
 te_obj_st* te_print_call(te_obj_st* pself, const te_fnargs_st* pargs)
 {
 	for (size_t i = 0; i < pargs->argc; i++)
-		printf(te_repr(pargs->ppargs[i]));
+	{
+		const char* repr = te_repr(pargs->ppargs[i]);
+		if (te_haserr())
+			return NULL;
+		printf(repr);
+	}
 	fflush(stdout);
 	return NULL;
 }

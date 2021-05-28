@@ -30,13 +30,20 @@ te_scope_st global_scope = {
 	NULL
 };
 
-void te_init()
+te_scope_st* te_init()
 {
 	void* pret = te_scope_new(&global_scope, NULL, DEFAULT_SCOPESZ, DEFAULT_SCOPELF);
 	if (!pret)
-		te_seterr("Out of memory");
+		return te_seterr("Out of memory");
 
 	te_init_imports();
+	if (te_haserr())
+	{
+		te_scope_del(&global_scope);
+		return NULL;
+	}
+
+	return &global_scope;
 }
 
 void te_shutdown()
@@ -133,7 +140,7 @@ te_obj_st* eval_str(te_scope_st* pscope, te_ast_str_st* pstr)
 {
 	te_str_st* npstr = te_str_new();
 	RET_ON_ERR;
-	size_t sz = te_strlen(pstr->val);
+	size_t sz = te_strlen(pstr->val) + 1;  // include the null termiator
 	npstr->val = (char*)malloc(sizeof(char) * sz);
 	if (!npstr->val)
 	{

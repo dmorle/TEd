@@ -7,9 +7,9 @@
 #include <tedlang/core/scope.h>
 #include <tedlang/parse/parser.h>
 
-TEDLANG_API extern te_scope_st global_scope;
+extern te_scope_st global_scope;
 
-TEDLANG_API void te_init(); // initializes the interpreter
+TEDLANG_API te_scope_st* te_init(); // initializes the interpreter
 TEDLANG_API void te_shutdown();
 
 TEDLANG_API bool  te_haserr();
