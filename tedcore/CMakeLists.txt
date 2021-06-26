@@ -7,8 +7,10 @@ cmake_minimum_required (VERSION 3.8)
 add_library(
 	libtedcore STATIC
 	"src/tedcore.cpp"
-
+	"src/backend/impl.cpp"
+	
 	"include/tedcore/tedcore.hpp"
+	"include/tedcore/backend/impl.hpp"
 )
 
 set_property(TARGET libtedcore PROPERTY LINKER_LANGUAGE CXX)
