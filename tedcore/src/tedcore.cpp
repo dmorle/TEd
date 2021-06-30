@@ -7,7 +7,7 @@ namespace ted
 {
 	using namespace impl;
 
-	template<>
+	/*template<>
 	void regHandler<event::STARTUP>(std::function<void> handler)
 	{
 		startupHandlers.push_back(handler);
@@ -24,5 +24,5 @@ namespace ted
 	void regHandler<event::SHUTDOWN>(std::function<void> handler)
 	{
 
-	}
+	}*/
 }

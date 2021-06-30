@@ -1,6 +1,7 @@
 #ifndef TEDCORE_H
 #define TEDCORE_H
 
+#include <tuple>
 #include <string>
 #include <functional>
 #include <tedcore/backend/impl.hpp>
@@ -25,7 +26,17 @@ namespace ted
 		};
 
 		template<event E, class T>
-		void regHandler(T handler);
+		TEDCORE_API void regHandler(T handler);
+
+		struct point
+		{
+			size_t x;
+			size_t y;
+		};
+
+		TEDCORE_API point getMousePos();
+		TEDCORE_API bool getKeyState();
+		TEDCORE_API bool getMouseState();
 	}
 	
 	namespace graphics
@@ -37,7 +48,7 @@ namespace ted
 			uint8_t b;
 		};
 
-		class Typeface
+		class TEDCORE_API Typeface
 		{
 			friend class Bitmap;
 
@@ -50,28 +61,28 @@ namespace ted
 		// Renderable types
 		//
 
-		class Line
+		class TEDCORE_API Line
 		{
 			impl::RBHead<Rect> head{};
 
 		public:
 		};
 
-		class Poly
+		class TEDCORE_API Poly
 		{
 			impl::RBHead<Rect> head{};
 
 		public:
 		};
 
-		class Rect
+		class TEDCORE_API Rect
 		{
 			impl::RBHead<Rect> head{};
 
 		public:
 		};
 
-		class Bitmap
+		class TEDCORE_API Bitmap
 		{
 			impl::RBHead<Bitmap> head{};
 
@@ -89,6 +100,11 @@ namespace ted
 			size_t getWidth() const;
 			size_t getHeight() const;
 		};
+
+		template<typename T>
+		using addElem = impl::render_buf::addElem<T>;
+		template<typename T>
+		using delElem = impl::render_buf::delElem<T>;
 	}
 }
 

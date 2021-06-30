@@ -5,7 +5,7 @@ cmake_minimum_required (VERSION 3.8)
 
 
 add_library(
-	libtedcore STATIC
+	libtedc SHARED
 	"src/tedcore.cpp"
 	"src/backend/impl.cpp"
 	
@@ -13,13 +13,13 @@ add_library(
 	"include/tedcore/backend/impl.hpp"
 )
 
-set_property(TARGET libtedcore PROPERTY LINKER_LANGUAGE CXX)
-set_property(TARGET libtedcore PROPERTY CXX_STANDARD 17)
+set_property(TARGET libtedc PROPERTY LINKER_LANGUAGE CXX)
+set_property(TARGET libtedc PROPERTY CXX_STANDARD 17)
 
-target_include_directories(libtedcore PRIVATE "include")
-target_include_directories(libtedcore PRIVATE "${PROJECT_SOURCE_DIR}/tedlang/include")
+target_include_directories(libtedc PRIVATE "include")
+target_include_directories(libtedc PRIVATE "${PROJECT_SOURCE_DIR}/tedlang/include")
 
-target_link_libraries(libtedcore PRIVATE libtedl)
+target_link_libraries(libtedc PRIVATE libtedl)
 
 # linking the backend function implementations
 if(WIN32)
@@ -27,17 +27,11 @@ if(WIN32)
 	add_executable(
 		ted WIN32
 		"src/backend/windows/main.cpp"
-		"src/backend/windows/ted.cpp"
-
-		"include/tedcore/backend/windows/ted.hpp"
 	)
-
-	set_property(TARGET libtedcore PROPERTY LINKER_LANGUAGE CXX)
+	
 	set_property(TARGET ted PROPERTY CXX_STANDARD 17)
-
 	target_include_directories(ted PRIVATE "include")
-
-	target_link_libraries(ted PRIVATE libtedcore)
+	target_link_libraries(ted PRIVATE libtedc)
 
 else()
 	message(FATAL_ERROR "TEd currently only supports windows")

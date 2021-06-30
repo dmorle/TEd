@@ -2,24 +2,61 @@
 #define TEDCORE_IMPL_H
 
 #include <vector>
-#include <tedcore/tedcore.hpp>
+
+#ifdef _MSC_VER
+//  Microsoft 
+#	define EXPORT __declspec(dllexport)
+#	define IMPORT __declspec(dllimport)
+#elif defined(__GNUC__)
+//  GCC
+#	define EXPORT __attribute__((visibility("default")))
+#	define IMPORT
+#else
+//  do nothing and hope for the best?
+#	define EXPORT
+#	define IMPORT
+#	pragma warning Unknown dynamic link import/export semantics.
+#endif
+
+
+#ifndef TEDCORE_API
+#	ifdef TEDCORE_SRC
+#		define TEDCORE_API EXPORT
+#	else
+#		define TEDCORE_API IMPORT
+#	endif
+#endif
 
 namespace ted
 {
+	class TEDCORE_API Line;
+	class TEDCORE_API Poly;
+	class TEDCORE_API Rect;
+	class TEDCORE_API Bitmap;
+
+	namespace events
+	{
+		using key = uint8_t;
+
+		TEDCORE_API extern std::vector<void(*)()> startupHandlers;
+		TEDCORE_API extern std::vector<void(*)()> shutdownHandlers;
+		TEDCORE_API extern std::vector<void(*)()> minimizeHandlers;
+		TEDCORE_API extern std::vector<void(*)()> maximizeHandlers;
+		TEDCORE_API extern std::vector<void(*)()> winSizeHandlers;
+		TEDCORE_API extern std::vector<void(*)()> winMoveHandlers;
+		TEDCORE_API extern std::vector<void(*)(key)> keyDownHandlers;
+		TEDCORE_API extern std::vector<void(*)(key)> keyUpHandlers;
+		TEDCORE_API extern std::vector<void(*)()> mouseLDownHandlers;
+		TEDCORE_API extern std::vector<void(*)()> mouseLUpHandlers;
+		TEDCORE_API extern std::vector<void(*)()> mouseMDownHandlers;
+		TEDCORE_API extern std::vector<void(*)()> mouseMUpHandlers;
+		TEDCORE_API extern std::vector<void(*)()> mouseRDownHandlers;
+		TEDCORE_API extern std::vector<void(*)()> mouseRUpHandlers;
+		TEDCORE_API extern std::vector<void(*)()> mouseMoveHandlers;
+	}
+
 	namespace impl
 	{
-		inline std::vector<std::function<void>> startupHandlers;
-		inline std::vector<std::function<void>> shutdownHandlers;
-		inline std::vector<std::function<void>> minimizeHandlers;
-		inline std::vector<std::function<void>> maximizeHandlers;
-		inline std::vector<std::function<void>> wSizeHandlers;
-		inline std::vector<std::function<void>> wMoveHandlers;
-		inline std::vector<std::function<void>> keyDownHandlers;
-		inline std::vector<std::function<void>> keyUpHandlers;
-		inline std::vector<std::function<void>> mouseDownHandlers;
-		inline std::vector<std::function<void>> mouseUpHandlers;
-		inline std::vector<std::function<void>> mouseMoveHandlers;
-
 		// Initializes tedlang, and starts any extensions
 		void init();
 
@@ -75,20 +112,20 @@ namespace ted
 
 			// returns NULL on error
 			template<typename T>
-			const T* addElem(const T& e, float depth);
+			TEDCORE_API const T* addElem(const T& e, float depth);
 
 			template<typename T>
-			void delElem(const T* e);
+			TEDCORE_API void delElem(const T* e);
 		}
 
 		template<class T>
 		class RBHead
 		{
 			template<class U>
-			friend const U* addElem(const U& e, float depth);
+			friend const U* render_buf::addElem(const U& e, float depth);
 
 			template<class U>
-			friend void delElem(const T* e);
+			friend void render_buf::delElem(const U* e);
 
 			render_buf::type_id id;
 		public:
