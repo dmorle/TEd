@@ -72,6 +72,8 @@ LRESULT on_paint(WPARAM wparam, LPARAM lparam)
 
 LRESULT on_create(WPARAM wparam, LPARAM lparam)
 {
+	ted::messageBox = ted::windows::messageBox;
+
 	init();
 	for (auto& e : startupHandlers)
 		e();

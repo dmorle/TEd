@@ -93,9 +93,9 @@ te_obj_st** lval_idx(te_scope_st* pscope, const te_ast_idx_st* pidx)
 te_obj_st** te_lval(te_scope_st* pscope, const te_ast_st* past)
 {
 	if (past->ast_ty == AST_VAR)
-		return lval_var(pscope, past);
+		return lval_var(pscope, (te_ast_var_st*)past);
 	if (past->ast_ty == AST_IDX)
-		return lval_idx(pscope, past);
+		return lval_idx(pscope, (te_ast_idx_st*)past);
 	return te_seterr("Invalid l-value expression");
 }
 
@@ -122,7 +122,7 @@ te_obj_st* eval_null(te_scope_st* pscope, te_ast_null_st* pnull)
 
 te_obj_st* eval_bool(te_scope_st* pscope, te_ast_bool_st* pbool)
 {
-	te_bool_st* npbool = te_bool_new();
+	te_bool_st* npbool = (te_bool_st*)te_bool_new();
 	RET_ON_ERR;
 	npbool->val = pbool->val;
 	return npbool;
@@ -130,7 +130,7 @@ te_obj_st* eval_bool(te_scope_st* pscope, te_ast_bool_st* pbool)
 
 te_obj_st* eval_int(te_scope_st* pscope, te_ast_int_st* pint)
 {
-	te_int_st* npint = te_int_new();
+	te_int_st* npint = (te_int_st*)te_int_new();
 	RET_ON_ERR;
 	npint->val = pint->val;
 	return npint;
@@ -138,7 +138,7 @@ te_obj_st* eval_int(te_scope_st* pscope, te_ast_int_st* pint)
 
 te_obj_st* eval_str(te_scope_st* pscope, te_ast_str_st* pstr)
 {
-	te_str_st* npstr = te_str_new();
+	te_str_st* npstr = (te_str_st*)te_str_new();
 	RET_ON_ERR;
 	size_t sz = te_strlen(pstr->val) + 1;  // include the null termiator
 	npstr->val = (char*)malloc(sizeof(char) * sz);
@@ -153,7 +153,7 @@ te_obj_st* eval_str(te_scope_st* pscope, te_ast_str_st* pstr)
 
 te_obj_st* eval_arr(te_scope_st* pscope, const te_ast_arr_st* parr)
 {
-	te_arr_st* nparr = te_arr_new();
+	te_arr_st* nparr = (te_arr_st*)te_arr_new();
 	RET_ON_ERR;
 	
 	assert(parr->length <= parr->_mem_sz);
@@ -267,7 +267,7 @@ te_obj_st* eval_while(te_scope_st* pscope, const te_ast_while_st* pwhile)
 		if (!te_bool(pcond))
 		{
 			te_decref(pcond);
-			break;
+			return NULL;
 		}
 		te_decref(pcond);
 		te_decref_s(te_eval(pscope, pwhile->body));
@@ -277,7 +277,7 @@ te_obj_st* eval_while(te_scope_st* pscope, const te_ast_while_st* pwhile)
 		if (inbreak)
 		{
 			inbreak = false;
-			break;
+			return NULL;
 		}
 		if (incontinue)
 		{
@@ -347,11 +347,14 @@ te_obj_st* eval_call(te_scope_st* pscope, const te_ast_call_st* pcall)
 		return te_seterr("Invalid value for function call");
 	te_fnargs_st fnargs;
 	fnargs.argc = pcall->argc;
-	fnargs.ppargs = (te_obj_st**)malloc(sizeof(te_obj_st*) * fnargs.argc);
-	if (!fnargs.ppargs)
+	if (fnargs.argc)
 	{
-		te_decref(pfn);
-		return te_seterr("Out of memory");
+		fnargs.ppargs = (te_obj_st**)malloc(sizeof(te_obj_st*) * fnargs.argc);
+		if (!fnargs.ppargs)
+		{
+			te_decref(pfn);
+			return te_seterr("Out of memory");
+		}
 	}
 	for (size_t i = 0; i < fnargs.argc; i++)
 	{
@@ -376,7 +379,8 @@ te_obj_st* eval_call(te_scope_st* pscope, const te_ast_call_st* pcall)
 	// Cleanup - this stuff needs to run even if te_call failed
 	for (size_t i = 0; i < fnargs.argc; i++)
 		te_decref(fnargs.ppargs[i]);
-	free(fnargs.ppargs);
+	if (fnargs.argc)
+		free(fnargs.ppargs);
 	te_decref(pfn);
 
 	// if theres an error, it'll automatically propagate

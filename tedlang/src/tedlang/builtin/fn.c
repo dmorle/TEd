@@ -12,11 +12,11 @@
 te_type_st _te_fn_ty = {
 	.name = "fn",
 	.objsize = sizeof(te_fn_st),
-	.ty_new = te_fn_new,
-	.ty_del = te_fn_del,
-	.ty_repr = te_fn_repr,
-	.ty_bool = te_fn_bool,
-	.ty_call = te_fn_call
+	.ty_new = &te_fn_new,
+	.ty_del = &te_fn_del,
+	.ty_repr = &te_fn_repr,
+	.ty_bool = &te_fn_bool,
+	.ty_call = &te_fn_call
 };
 
 #define self (*(te_fn_st*)pself)
@@ -70,7 +70,7 @@ bool te_fn_bool(te_obj_st* pself)
 	return false;
 }
 
-te_obj_st* te_fn_call(te_obj_st* pself, te_fnargs_st* pargs)
+te_obj_st* te_fn_call(te_obj_st* pself, const te_fnargs_st* pargs)
 {
 	CHECK_TYPE;
 

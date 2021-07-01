@@ -55,20 +55,23 @@ namespace ted
 				fs::path ext = p.path().extension();
 				te_module_st mod;
 				te_module_st* pret;
+
+				std::string extstr = p.path().string();
+				const char* extcstr = extstr.c_str();
 				if (ext == ".ted")
-					pret = module_load_script(&mod, ext.string().c_str());
+					pret = module_load_script(&mod, extcstr);
 				else if (ext == ".dll")
-					pret = module_load_bin(&mod, ext.string().c_str());
+					pret = module_load_bin(&mod, extcstr);
 				else
 					continue;
 				if (!pret)
 				{
-					messageBox("Error loading module: " + ext.string());
+					messageBox("Error loading module: " + extstr);
 					exit(1);
 				}
 				if (!module_import(pscope, &mod))
 				{
-					messageBox("Error importing module: " + ext.string());
+					messageBox("Error importing module: " + extstr);
 					exit(1);
 				}
 				module_close(&mod);

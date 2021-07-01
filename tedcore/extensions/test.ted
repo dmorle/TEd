@@ -1,0 +1,13 @@
+import io;
+
+fn startup_test()
+{
+	message_box("Startup from startup_test");
+};
+
+fn main()
+{
+	reg_startup(startup_test);
+};
+
+main();

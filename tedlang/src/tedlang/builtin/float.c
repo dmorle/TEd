@@ -14,25 +14,25 @@
 te_type_st _te_float_ty = {
 	.name = "float",
 	.objsize = sizeof(te_float_st),
-	.ty_new = te_float_new,
-	.ty_del = te_float_del,
-	.ty_repr = te_float_repr,
-	.ty_iadd = te_float_iadd,
-	.ty_isub = te_float_isub,
-	.ty_imul = te_float_imul,
-	.ty_idiv = te_float_idiv,
-	.ty_iexp = te_float_iexp,
-	.ty_add = te_float_add,
-	.ty_sub = te_float_sub,
-	.ty_mul = te_float_mul,
-	.ty_div = te_float_div,
-	.ty_exp = te_float_exp,
-	.ty_eq = te_float_eq,
-	.ty_ne = te_float_ne,
-	.ty_lt = te_float_lt,
-	.ty_gt = te_float_gt,
-	.ty_le = te_float_le,
-	.ty_ge = te_float_ge
+	.ty_new = &te_float_new,
+	.ty_del = &te_float_del,
+	.ty_repr = &te_float_repr,
+	.ty_iadd = &te_float_iadd,
+	.ty_isub = &te_float_isub,
+	.ty_imul = &te_float_imul,
+	.ty_idiv = &te_float_idiv,
+	.ty_iexp = &te_float_iexp,
+	.ty_add = &te_float_add,
+	.ty_sub = &te_float_sub,
+	.ty_mul = &te_float_mul,
+	.ty_div = &te_float_div,
+	.ty_exp = &te_float_exp,
+	.ty_eq = &te_float_eq,
+	.ty_ne = &te_float_ne,
+	.ty_lt = &te_float_lt,
+	.ty_gt = &te_float_gt,
+	.ty_le = &te_float_le,
+	.ty_ge = &te_float_ge
 };
 
 #define self (*(te_float_st*)pself)
@@ -67,6 +67,7 @@ const char* te_float_repr(te_obj_st* pself)
 	CHECK_TYPE;
 
 	// TODO: Implement float to string
+	return te_seterr("Not implemented");
 }
 
 te_obj_st* te_float_iadd(te_obj_st** ppself, te_obj_st* prval)

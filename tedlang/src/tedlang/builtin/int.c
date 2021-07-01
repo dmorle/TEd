@@ -8,33 +8,37 @@
 #include <tedlang/builtin/bool.h>
 #include <tedlang/util/string.h>
 
+#ifdef _MSC_VER
+#define itoa _itoa
+#endif
+
 te_type_st _te_int_ty = {
 	.name = "int",
 	.objsize = sizeof(te_int_st),
-	.ty_new = te_int_new,
-	.ty_del = te_int_del,
-	.ty_repr = te_int_repr,
-	.ty_bool = te_int_bool,
-	.ty_start = te_int_start,
-	.ty_next = te_int_next,
-	.ty_iadd = te_int_iadd,
-	.ty_isub = te_int_isub,
-	.ty_imul = te_int_imul,
-	.ty_idiv = te_int_idiv,
-	.ty_imod = te_int_imod,
-	.ty_iexp = te_int_iexp,
-	.ty_add = te_int_add,
-	.ty_sub = te_int_sub,
-	.ty_mul = te_int_mul,
-	.ty_div = te_int_div,
-	.ty_mod = te_int_mod,
-	.ty_exp = te_int_exp,
-	.ty_eq = te_int_eq,
-	.ty_ne = te_int_ne,
-	.ty_lt = te_int_lt,
-	.ty_gt = te_int_gt,
-	.ty_le = te_int_le,
-	.ty_ge = te_int_ge
+	.ty_new = &te_int_new,
+	.ty_del = &te_int_del,
+	.ty_repr = &te_int_repr,
+	.ty_bool = &te_int_bool,
+	.ty_start = &te_int_start,
+	.ty_next = &te_int_next,
+	.ty_iadd = &te_int_iadd,
+	.ty_isub = &te_int_isub,
+	.ty_imul = &te_int_imul,
+	.ty_idiv = &te_int_idiv,
+	.ty_imod = &te_int_imod,
+	.ty_iexp = &te_int_iexp,
+	.ty_add = &te_int_add,
+	.ty_sub = &te_int_sub,
+	.ty_mul = &te_int_mul,
+	.ty_div = &te_int_div,
+	.ty_mod = &te_int_mod,
+	.ty_exp = &te_int_exp,
+	.ty_eq = &te_int_eq,
+	.ty_ne = &te_int_ne,
+	.ty_lt = &te_int_lt,
+	.ty_gt = &te_int_gt,
+	.ty_le = &te_int_le,
+	.ty_ge = &te_int_ge
 };
 
 #define self (*(te_int_st*)pself)
@@ -78,7 +82,7 @@ const char* te_int_repr(te_obj_st* pself)
 	CHECK_TYPE;
 	static char reprbuf[32]; // 32 digits is overkill for int64, no chance of overflow
 
-	return itoa(self.val, reprbuf, 10);
+	return itoa((int)self.val, reprbuf, 10);
 }
 
 te_obj_st* te_int_start(te_obj_st* pself)

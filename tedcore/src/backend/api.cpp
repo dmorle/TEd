@@ -46,6 +46,18 @@ void tedl_shutdown_dispatch()
 	}
 }
 
+static te_obj_st* message_box_call(te_obj_st* pself, const te_fnargs_st* pargs)
+{
+	if (pargs->argc != 1)
+		return (te_obj_st*)te_seterr("Invalid argument number to message_box");
+
+	if (strcmp(pargs->ppargs[0]->ty->name, "str"))
+		return (te_obj_st*)te_seterr("Invalid argument type to message_box");
+
+	ted::messageBox(((te_str_st*)pargs->ppargs[0])->val);
+	return te_null_new();
+}
+
 static te_obj_st* reg_startup_call(te_obj_st* pself, const te_fnargs_st* pargs)
 {
 	static bool tedl_dispatch = false;
@@ -53,7 +65,7 @@ static te_obj_st* reg_startup_call(te_obj_st* pself, const te_fnargs_st* pargs)
 	if (pargs->argc != 1)
 		return (te_obj_st*)te_seterr("Invalid argument number to reg_startup");
 	
-	if (pargs->ppargs[0]->ty->name == "fn")
+	if (!strcmp(pargs->ppargs[0]->ty->name, "fn"))
 	{
 		if (!tedl_dispatch)
 			ted::events::startupHandlers.push_back(&tedl_startup_dispatch);
@@ -138,6 +150,7 @@ static te_obj_st* reg_mmove_call(te_obj_st* pself, const te_fnargs_st* pargs)
 	return te_null_new();
 }
 
+static te_type_st message_box_ty  = { .name = "message_box_fn",  .objsize = sizeof(te_obj_st), .ty_call = &message_box_call };
 static te_type_st reg_startup_ty  = { .name = "reg_startup_fn",  .objsize = sizeof(te_obj_st), .ty_call = &reg_startup_call };
 static te_type_st reg_shutdown_ty = { .name = "reg_shutdown_fn", .objsize = sizeof(te_obj_st), .ty_call = &reg_shutdown_call };
 static te_type_st reg_maximize_ty = { .name = "reg_maximize_fn", .objsize = sizeof(te_obj_st), .ty_call = &reg_maximize_call };
@@ -154,6 +167,7 @@ static te_type_st reg_rdown_ty    = { .name = "reg_rdown_fn",    .objsize = size
 static te_type_st reg_rup_ty      = { .name = "reg_rup_fn",      .objsize = sizeof(te_obj_st), .ty_call = &reg_rup_call };
 static te_type_st reg_mmove_ty    = { .name = "reg_mmove_fn",    .objsize = sizeof(te_obj_st), .ty_call = &reg_mmove_call };
 
+static te_obj_st message_box_fn  = { .ty = &message_box_ty,  .n_ref = 1, .is_valid = true };
 static te_obj_st reg_startup_fn  = { .ty = &reg_startup_ty,  .n_ref = 1, .is_valid = true };
 static te_obj_st reg_shutdown_fn = { .ty = &reg_shutdown_ty, .n_ref = 1, .is_valid = true };
 static te_obj_st reg_maximize_fn = { .ty = &reg_maximize_ty, .n_ref = 1, .is_valid = true };
@@ -172,6 +186,7 @@ static te_obj_st reg_mmove_fn    = { .ty = &reg_mmove_ty,    .n_ref = 1, .is_val
 
 void ted::impl::buildApi(te_scope_st* pscope)
 {
+	if (!te_scope_set(pscope, "message_box",  &message_box_fn))  goto MEM_ERR;
 	if (!te_scope_set(pscope, "reg_startup",  &reg_startup_fn))  goto MEM_ERR;
 	if (!te_scope_set(pscope, "reg_shutdown", &reg_shutdown_fn)) goto MEM_ERR;
 	if (!te_scope_set(pscope, "reg_maximize", &reg_maximize_fn)) goto MEM_ERR;
@@ -187,6 +202,7 @@ void ted::impl::buildApi(te_scope_st* pscope)
 	if (!te_scope_set(pscope, "reg_rdown",    &reg_rdown_fn))    goto MEM_ERR;
 	if (!te_scope_set(pscope, "reg_rup",      &reg_rup_fn))      goto MEM_ERR;
 	if (!te_scope_set(pscope, "reg_mmove",    &reg_mmove_fn))    goto MEM_ERR;
+	return;
 
 MEM_ERR:
 	// TODO: clean shutdown

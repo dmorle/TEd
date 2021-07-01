@@ -53,7 +53,7 @@ int _te_op_prec(te_token_et t)
 
 const int MAX_PREC = 6;
 
-void _te_token_print(te_token_st* pt)
+void _te_token_print(const te_token_st* pt)
 {
 	switch (pt->t_id)
 	{
@@ -103,7 +103,7 @@ void _te_token_print(te_token_st* pt)
 		printf(" /= ");
 		break;
 	case TK_OP_IMOD:
-		printf(" %= ");
+		printf(" %%= ");
 		break;
 	case TK_OP_IEXP:
 		printf(" ^= ");
@@ -148,7 +148,7 @@ void _te_token_print(te_token_st* pt)
 		printf(" / ");
 		break;
 	case TK_OP_MOD:
-		printf(" % ");
+		printf(" %% ");
 		break;
 	case TK_OP_EXP:
 		printf(" ^ ");
@@ -257,7 +257,7 @@ int _te_tarr_append(te_tarr_st* pself, te_token_st* ptoken)
 	return 0;
 }
 
-void _te_tarr_slice(te_tarr_st* pself, size_t start, size_t end, te_tarr_st* pout)
+void _te_tarr_slice(const te_tarr_st* pself, size_t start, size_t end, te_tarr_st* pout)
 {
 	// Note: slices of slices are allowed
 	assert(end >= start);
@@ -268,7 +268,7 @@ void _te_tarr_slice(te_tarr_st* pself, size_t start, size_t end, te_tarr_st* pou
 	pout->_mem_sz = 0;  // identifies pout as a slice
 }
 
-void _te_tarr_print(te_tarr_st* pself)
+void _te_tarr_print(const te_tarr_st* pself)
 {
 	for (size_t i = 0; i < pself->length; i++)
 		_te_token_print(pself->_data + i);
@@ -411,7 +411,7 @@ int read_token(char* ptoken, size_t bufsz, te_tarr_st* ptarr)
 			if (c0 == '-')
 				val *= -1;
 			ntoken.t_id = TK_INT_LIT;
-			ntoken._data = (int64_t)val;
+			ntoken._data = (void*)(int64_t)val;
 			_te_tarr_append(ptarr, &ntoken);
 			return ret;
 		}

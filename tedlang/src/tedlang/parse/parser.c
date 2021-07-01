@@ -1366,7 +1366,7 @@ int parse_branch(const te_tarr_st* ptarr, te_ast_branch_st* pbranch)
 	te_tarr_st tk_slice;
 
 	size_t start;
-	size_t end;
+	size_t end = 0;
 	int ret;
 
 	if (ptarr->_data[1].t_id != TK_O_ROUND)
@@ -1499,6 +1499,7 @@ int parse_while(const te_tarr_st* ptarr, te_ast_while_st* pwhile)
 	}
 
 	// TODO: Finish while loop parsing
+	return -1;
 }
 
 // Parses a block containing a sequence of blocks, ie. {...; ...; ...};

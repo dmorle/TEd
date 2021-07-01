@@ -2,7 +2,8 @@
 #define TEDLANG_H
 
 #ifdef _MSC_VER
-//  Microsoft 
+//  Microsoft
+#	pragma warning( disable : 4133 4244 4267 )
 #	define EXPORT __declspec(dllexport)
 #	define IMPORT __declspec(dllimport)
 #elif defined(__GNUC__)

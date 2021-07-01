@@ -107,7 +107,7 @@ namespace ted
 		constexpr void(*delElem)(const T*) = impl::render_buf::delElem<T>;
 	}
 
-	void messageBox(const std::string& msg);
+	TEDCORE_API extern void(*messageBox)(const std::string& msg);
 }
 
 #endif

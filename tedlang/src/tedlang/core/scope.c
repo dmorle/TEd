@@ -13,7 +13,7 @@
 inline uint64_t fnv_1a(const char* s)
 {
 	uint64_t h = FNV_OFFSET_BASIS;
-	for (char* c = s; *c; c++)
+	for (const char* c = s; *c; c++)
 		h = (h * FNV_PRIME) ^ *c;
 	return h;
 }
@@ -104,6 +104,7 @@ te_scope_st* te_scope_new(te_scope_st* pself, te_scope_st* pparent, size_t sz, f
 	pself->target_lf = lf;
 	pself->curr_lf = 0;
 	pself->n_buckets = sz;
+	return pself;
 }
 
 void te_scope_del(te_scope_st* pself)

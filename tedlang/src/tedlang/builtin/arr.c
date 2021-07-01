@@ -13,16 +13,16 @@
 te_type_st _te_arr_ty = {
 	.name = "array",
 	.objsize = sizeof(te_arr_st),
-	.ty_new = te_arr_new,
-	.ty_del = te_arr_del,
-	.ty_bool = te_arr_bool,
-	.ty_repr = te_arr_repr,
-	.ty_start = te_arr_start,
-	.ty_next = te_arr_next,
-	.ty_iadd = te_arr_iadd,
-	.ty_add = te_arr_add,
-	.ty_eq = te_arr_eq,
-	.ty_ne = te_arr_ne
+	.ty_new = &te_arr_new,
+	.ty_del = &te_arr_del,
+	.ty_bool = &te_arr_bool,
+	.ty_repr = &te_arr_repr,
+	.ty_start = &te_arr_start,
+	.ty_next = &te_arr_next,
+	.ty_iadd = &te_arr_iadd,
+	.ty_add = &te_arr_add,
+	.ty_eq = &te_arr_eq,
+	.ty_ne = &te_arr_ne
 };
 
 #define self (*(te_arr_st*)pself)
@@ -62,7 +62,7 @@ void te_arr_del(te_obj_st* pself)
 
 bool te_arr_bool(te_obj_st* pself)
 {
-	CHECK_TYPE;
+	CHECK_TYPE_RET(false);
 	return self.length;
 }
 

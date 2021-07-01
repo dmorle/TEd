@@ -2,6 +2,7 @@
 # tedcore
 
 cmake_minimum_required (VERSION 3.8)
+include("${PROJECT_SOURCE_DIR}/utils.cmake")
 
 include_directories("include")
 
@@ -15,7 +16,6 @@ add_library(
 	
 	"include/tedcore/tedcore.hpp"
 	"include/tedcore/backend/impl.hpp"
-	
 )
 
 set_property(TARGET libtedc PROPERTY LINKER_LANGUAGE CXX)
@@ -24,6 +24,22 @@ set_property(TARGET libtedc PROPERTY CXX_STANDARD 20)
 target_include_directories(libtedc PUBLIC "${PROJECT_SOURCE_DIR}/tedlang/include")
 
 target_link_libraries(libtedc libtedl)
+add_custom_command(
+	TARGET libtedc
+	COMMAND "${CMAKE_COMMAND}"
+	ARGS "-E" "copy" "${CMAKE_BINARY_DIR}/tedlang/libtedl.dll" "${CMAKE_CURRENT_BINARY_DIR}"
+	DEPENDS libtedl
+)
+add_custom_command(
+	TARGET libtedc
+	COMMAND "${CMAKE_COMMAND}"
+	ARGS "-E" "copy_directory" "${CMAKE_BINARY_DIR}/tedlang/slib/" "${CMAKE_CURRENT_BINARY_DIR}/slib/"
+	DEPENDS libtedl io
+)
+
+# Copying test extensions
+file(MAKE_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/extensions")
+merge_dir("${CMAKE_CURRENT_BINARY_DIR}/extensions" "${PROJECT_SOURCE_DIR}/tedcore/extensions")
 
 # linking the backend function implementations
 if(WIN32)

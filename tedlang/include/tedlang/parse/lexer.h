@@ -99,7 +99,7 @@ TEDLANG_API void _te_tarr_del(te_tarr_st* pself);
 // ptoken->_data must be heap allocated, but the struct can be stack allocated
 TEDLANG_API int _te_tarr_append(te_tarr_st* pself, te_token_st* ptoken);
 
-TEDLANG_API void _te_tarr_slice(te_tarr_st* pself, size_t start, size_t end, te_tarr_st* pout);
+TEDLANG_API void _te_tarr_slice(const te_tarr_st* pself, size_t start, size_t end, te_tarr_st* pout);
 
 TEDLANG_API void _te_tarr_print(te_tarr_st* pself);
 

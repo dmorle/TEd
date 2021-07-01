@@ -7,6 +7,10 @@
 
 #include <tedlang/tedl.h>
 
+#ifdef _MSC_VER
+#include <windows.h>
+#endif
+
 namespace ted
 {
 	using namespace impl;
@@ -30,9 +34,5 @@ namespace ted
 
 	}*/
 
-	void messageBox(const std::string& msg)
-	{
-		// TODO: Actually make a message box
-		std::cerr << msg << std::endl;
-	}
+	TEDCORE_API void(*messageBox)(const std::string& msg) = NULL;
 }

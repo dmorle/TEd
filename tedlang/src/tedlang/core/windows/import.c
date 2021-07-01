@@ -114,6 +114,7 @@ bool file_exists(LPCTSTR szPath)
 	return (
 		dw_attrib != INVALID_FILE_ATTRIBUTES && (
 			dw_attrib & (
+				FILE_ATTRIBUTE_ARCHIVE |
 				FILE_ATTRIBUTE_HIDDEN |
 				FILE_ATTRIBUTE_NORMAL |
 				FILE_ATTRIBUTE_READONLY
@@ -229,6 +230,7 @@ te_module_st* module_load_script(te_module_st* pmodule, const char* pth)
 
 	size_t pthlen = te_strlen(pth);
 	memcpy(imppth, pth, pthlen + 1);
+	pmodule->ty = TE_MODULE_SCRIPT;
 	return load_script(pmodule);
 }
 
@@ -239,6 +241,7 @@ te_module_st* module_load_bin(te_module_st* pmodule, const char* pth)
 
 	size_t pthlen = te_strlen(pth);
 	memcpy(imppth, pth, pthlen + 1);
+	pmodule->ty = TE_MODULE_BIN;
 	return load_bin(pmodule);
 }
 
@@ -255,11 +258,13 @@ te_module_st* module_load_pth(te_module_st* pmodule, const char* pth)
 		if (strcmp(pthext, "ted"))
 			break;
 		memcpy(imppth, pth, pthlen + 1);
+		pmodule->ty = TE_MODULE_SCRIPT;
 		return load_script(pmodule);
 	case 'd':
 		if (strcmp(pthext, "dll"))
 			break;
 		memcpy(imppth, pth, pthlen + 1);
+		pmodule->ty = TE_MODULE_BIN;
 		return load_bin(pmodule);
 	}
 

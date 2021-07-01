@@ -3,9 +3,9 @@
 
 #include <stdint.h>
 
-extern size_t __cdecl te_strlen(char* str);
+extern size_t __cdecl te_strlen(const char* str);
 
 // Does not copy null termination character
-extern uint32_t __cdecl te_strncpy(char* dst, char* src, uint32_t sz);
+extern uint32_t __cdecl te_strncpy(char* dst, const char* src, uint32_t sz);
 
 #endif

@@ -14,21 +14,21 @@
 te_type_st _te_char_ty = {
 	.name = "char",
 	.objsize = sizeof(te_char_st),
-	.ty_new = te_char_new,
-	.ty_del = te_char_del,
-	.ty_bool = te_char_bool,
-	.ty_int = te_char_int,
-	.ty_repr = te_char_repr,
-	.ty_iadd = te_char_iadd,
-	.ty_isub = te_char_isub,
-	.ty_add = te_char_add,
-	.ty_sub = te_char_sub,
-	.ty_eq = te_char_eq,
-	.ty_ne = te_char_ne,
-	.ty_lt = te_char_lt,
-	.ty_gt = te_char_gt,
-	.ty_le = te_char_le,
-	.ty_ge = te_char_ge
+	.ty_new = &te_char_new,
+	.ty_del = &te_char_del,
+	.ty_bool = &te_char_bool,
+	.ty_int = &te_char_int,
+	.ty_repr = &te_char_repr,
+	.ty_iadd = &te_char_iadd,
+	.ty_isub = &te_char_isub,
+	.ty_add = &te_char_add,
+	.ty_sub = &te_char_sub,
+	.ty_eq = &te_char_eq,
+	.ty_ne = &te_char_ne,
+	.ty_lt = &te_char_lt,
+	.ty_gt = &te_char_gt,
+	.ty_le = &te_char_le,
+	.ty_ge = &te_char_ge
 };
 
 #define self (*(te_char_st*)pself)
