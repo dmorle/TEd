@@ -2,6 +2,7 @@
 #define TEDCORE_IMPL_H
 
 #include <vector>
+#include <tedlang/tedl.h>
 
 #ifdef _MSC_VER
 //  Microsoft 
@@ -58,7 +59,8 @@ namespace ted
 	namespace impl
 	{
 		// Initializes tedlang, and starts any extensions
-		void init();
+		TEDCORE_API void init();
+		void buildApi(te_scope_st* pscope);
 
 		// singleton class
 		namespace render_buf
@@ -129,7 +131,7 @@ namespace ted
 
 			render_buf::type_id id;
 		public:
-			RBHead() : id(type_id_map::get_id<T>()) {}
+			RBHead() : id(render_buf::type_id_map::get_id<T>()) {}
 		};
 	}
 }

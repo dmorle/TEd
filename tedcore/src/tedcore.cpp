@@ -1,3 +1,7 @@
+#define TEDCORE_SRC
+
+#include <iostream>
+
 #include <tedcore/tedcore.hpp>
 #include <tedcore/backend/impl.hpp>
 
@@ -25,4 +29,10 @@ namespace ted
 	{
 
 	}*/
+
+	void messageBox(const std::string& msg)
+	{
+		// TODO: Actually make a message box
+		std::cerr << msg << std::endl;
+	}
 }

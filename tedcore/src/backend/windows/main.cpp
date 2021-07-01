@@ -1,10 +1,10 @@
-#include <Windows.h>
-
 #include <tedcore/backend/windows/ted.hpp>
 #include <tedcore/tedcore.hpp>
 
-using namespace ted::impl;
-using namespace ted::events;
+using namespace ted;
+using namespace windows;
+using namespace impl;
+using namespace events;
 
 LRESULT on_ldown(WPARAM wparam, LPARAM lparam)
 {

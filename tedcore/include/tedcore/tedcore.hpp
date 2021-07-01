@@ -102,10 +102,12 @@ namespace ted
 		};
 
 		template<typename T>
-		using addElem = impl::render_buf::addElem<T>;
+		constexpr const T*(*addElem)(const T&, float) = impl::render_buf::addElem<T>;
 		template<typename T>
-		using delElem = impl::render_buf::delElem<T>;
+		constexpr void(*delElem)(const T*) = impl::render_buf::delElem<T>;
 	}
+
+	void messageBox(const std::string& msg);
 }
 
 #endif

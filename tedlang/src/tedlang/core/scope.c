@@ -10,7 +10,7 @@
 #define FNV_PRIME 0x00000100000001B3ULL
 #define FNV_OFFSET_BASIS 0XCBF29CE484222325ULL
 
-inline uint64_t fnv_1a(char* s)
+inline uint64_t fnv_1a(const char* s)
 {
 	uint64_t h = FNV_OFFSET_BASIS;
 	for (char* c = s; *c; c++)
@@ -113,7 +113,7 @@ void te_scope_del(te_scope_st* pself)
 	free(pself->pbuckets);
 }
 
-inline te_obj_st** scope_get(te_scope_st* pself, char* name, uint64_t h)
+inline te_obj_st** scope_get(te_scope_st* pself, const char* name, uint64_t h)
 {
 	if (!pself)
 		return NULL;
@@ -125,12 +125,12 @@ inline te_obj_st** scope_get(te_scope_st* pself, char* name, uint64_t h)
 	return scope_get(pself->pparent, name, h);
 }
 
-te_obj_st** te_scope_get(te_scope_st* pself, char* name)
+te_obj_st** te_scope_get(te_scope_st* pself, const char* name)
 {
 	return scope_get(pself, name, fnv_1a(name) % pself->n_buckets);
 }
 
-inline te_scope_st* scope_set(te_scope_st* pself, char* name, te_obj_st* pobj, uint64_t h)
+inline te_scope_st* scope_set(te_scope_st* pself, const char* name, te_obj_st* pobj, uint64_t h)
 {
 	if (!pself)
 		return NULL;
@@ -147,7 +147,7 @@ inline te_scope_st* scope_set(te_scope_st* pself, char* name, te_obj_st* pobj, u
 	return scope_set(pself->pparent, name, pobj, h);
 }
 
-te_scope_st* te_scope_set(te_scope_st* pself, char* name, te_obj_st* pobj)
+te_scope_st* te_scope_set(te_scope_st* pself, const char* name, te_obj_st* pobj)
 {
 	uint64_t h = fnv_1a(name) % pself->n_buckets;
 
@@ -184,7 +184,7 @@ te_scope_st* te_scope_set(te_scope_st* pself, char* name, te_obj_st* pobj)
 	return pself;
 }
 
-inline void scope_rm(te_scope_st* pself, char* name, uint64_t h)
+inline void scope_rm(te_scope_st* pself, const char* name, uint64_t h)
 {
 	if (!pself)
 		return;
@@ -214,7 +214,7 @@ inline void scope_rm(te_scope_st* pself, char* name, uint64_t h)
 	scope_rm(pself->pparent, name, h);
 }
 
-void te_scope_rm(te_scope_st* pself, char* name)
+void te_scope_rm(te_scope_st* pself, const char* name)
 {
 	scope_rm(pself, name, fnv_1a(name));
 }

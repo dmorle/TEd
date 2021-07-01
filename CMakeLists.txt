@@ -8,5 +8,5 @@ project ("ted" C CXX)
 # Include sub-projects.
 add_subdirectory ("tedlang")
 add_subdirectory ("tedcore")
-add_subdirectory ("tedui"  )
-add_subdirectory ("tedtext")
+# add_subdirectory ("tedui"  )
+# add_subdirectory ("tedtext")

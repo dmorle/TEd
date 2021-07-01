@@ -26,21 +26,25 @@
 #endif
 
 #ifndef TEDLANG_SRC
-#define TEDLANG_MODINIT EXPORT
-#ifdef __cplusplus
+#	ifdef __cplusplus
+#		define TEDLANG_MODINIT extern "C" EXPORT
 extern "C"
 {
-#endif
-#include <tedlang/core/eval.h>
-#include <tedlang/core/obj.h>
-#include <tedlang/parse/parser.h>
-#include <tedlang/parse/lexer.h>
-#ifdef __cplusplus
+#	else
+#		define TEDLANG_MODINIT EXPORT
+#	endif
+
+#	include <tedlang/core/eval.h>
+#	include <tedlang/core/obj.h>
+#	include <tedlang/parse/parser.h>
+#	include <tedlang/parse/lexer.h>
+
+#	ifdef __cplusplus
 }
-#endif
+#	endif
 #else
-#define DEFAULT_SCOPESZ 64
-#define DEFAULT_SCOPELF 0.75
+#	define DEFAULT_SCOPESZ 64
+#	define DEFAULT_SCOPELF 0.75
 #endif
 
 #endif
