@@ -222,6 +222,50 @@ te_module_st* load_bin(te_module_st* pmodule)
 	return pmodule;
 }
 
+te_module_st* module_load_script(te_module_st* pmodule, const char* pth)
+{
+	if (!file_exists(pth))
+		return te_seterr("Unable to find scipt file at %s", pth);
+
+	size_t pthlen = te_strlen(pth);
+	memcpy(imppth, pth, pthlen + 1);
+	return load_script(pmodule);
+}
+
+te_module_st* module_load_bin(te_module_st* pmodule, const char* pth)
+{
+	if (!file_exists(pth))
+		return te_seterr("Unable to find extension file at %s", pth);
+
+	size_t pthlen = te_strlen(pth);
+	memcpy(imppth, pth, pthlen + 1);
+	return load_bin(pmodule);
+}
+
+te_module_st* module_load_pth(te_module_st* pmodule, const char* pth)
+{
+	if (!file_exists(pth))
+		return te_seterr("Unable to find module file at %s", pth);
+
+	size_t pthlen = te_strlen(pth);
+	const char* pthext = pth - 3 + pthlen;
+	switch (pthext[0])
+	{
+	case 't':
+		if (strcmp(pthext, "ted"))
+			break;
+		memcpy(imppth, pth, pthlen + 1);
+		return load_script(pmodule);
+	case 'd':
+		if (strcmp(pthext, "dll"))
+			break;
+		memcpy(imppth, pth, pthlen + 1);
+		return load_bin(pmodule);
+	}
+
+	return te_seterr("Invalid file extension for tedlang module: %s", pthext);
+}
+
 te_module_st* module_load(te_module_st* pmodule, const te_ast_imp_st* pimp)
 {
 	te_module_et ty = TE_MODULE_NONE;

@@ -32,16 +32,23 @@ typedef struct
 }
 te_module_st;
 
-#ifdef TEDLANG_SRC
-// finds and opens a tedlang module or extension
+// loads a tedlang script from its path
+TEDLANG_API te_module_st* module_load_script(te_module_st* pmodule, const char* pth);
+
+// loads a tedlang extension from its path
+TEDLANG_API te_module_st* module_load_bin(te_module_st* pmodule, const char* pth);
+
+// loads a tedlang module from a file path
+TEDLANG_API te_module_st* module_load_pth(te_module_st* pmodule, const char* pth);
+
+// finds and opens a tedlang script or extension
 // for use by te_eval_imp
-te_module_st* module_load(te_module_st* pmodule, const te_ast_imp_st* pimp);
+TEDLANG_API te_module_st* module_load(te_module_st* pmodule, const te_ast_imp_st* pimp);
 
 // imports an opened module into a given scope
-te_scope_st* module_import(te_scope_st* pscope, const te_module_st* pmodule);
+TEDLANG_API te_scope_st* module_import(te_scope_st* pscope, const te_module_st* pmodule);
 
 // releases the resources allocated by module_load
-void module_close(te_module_st* pmodule);
-#endif
+TEDLANG_API void module_close(te_module_st* pmodule);
 
 #endif

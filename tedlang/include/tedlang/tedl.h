@@ -36,8 +36,19 @@ extern "C"
 
 #	include <tedlang/core/eval.h>
 #	include <tedlang/core/obj.h>
+#	include <tedlang/core/scope.h>
+#	include <tedlang/core/import.h>
 #	include <tedlang/parse/parser.h>
 #	include <tedlang/parse/lexer.h>
+
+#	include <tedlang/builtin/null.h>
+#	include <tedlang/builtin/bool.h>
+#	include <tedlang/builtin/char.h>
+#	include <tedlang/builtin/int.h>
+#	include <tedlang/builtin/float.h>
+#	include <tedlang/builtin/str.h>
+#	include <tedlang/builtin/arr.h>
+#	include <tedlang/builtin/fn.h>
 
 #	ifdef __cplusplus
 }
