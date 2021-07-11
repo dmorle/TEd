@@ -8,6 +8,7 @@ include_directories("include")
 
 # libtedc
 
+add_compile_definitions(TEDC_DIRECT2D)
 add_library(
 	libtedc SHARED
 	"src/tedcore.cpp"

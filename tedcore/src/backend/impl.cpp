@@ -1,5 +1,6 @@
 #define TEDCORE_SRC
 
+#include <mutex>
 #include <filesystem>
 
 #include <tedlang/tedl.h>
@@ -33,6 +34,12 @@ namespace ted
 		TEDCORE_API void init()
 		{
 			namespace fs = std::filesystem;
+
+			if (!render_buf::rb_buf)
+			{
+				messageBox("Out of memory");
+				exit(1);
+			}
 
 			// constructing the api
 			pscope = te_init();
@@ -80,11 +87,50 @@ namespace ted
 
 		namespace render_buf
 		{
-			static float rbuf_lf = 1.0;
-			static size_t buf_idx = 0;
-			static size_t mem_sz = 256;
-			void* buf = malloc(mem_sz);
+			static size_t rb_end = 0;
+			static size_t rb_memsz = 256;
+			static uint8_t* rb_buf = (uint8_t*)malloc(rb_memsz);
+			static std::mutex rb_mtx;
 
+			TEDCORE_API void* rb_malloc(float depth, size_t sz)
+			{
+				while (sz >= rb_memsz - rb_end)
+				{
+					size_t nsz = rb_memsz + rb_memsz;
+					void* nrb_buf = std::realloc(rb_buf, nsz);
+					if (!nrb_buf)
+						throw std::bad_alloc();
+					rb_buf = (uint8_t*)nrb_buf;
+					rb_memsz = nsz;
+				}
+
+				uint8_t* prb = rb_buf;
+				while (depth > ((RBEHead*)prb)->depth)
+					prb += ((RBEHead*)prb)->elemsz;
+
+				// making room at prb
+				std::memmove(prb + sz, prb, rb_end - (prb - rb_buf));
+				rb_end += sz;
+				return prb;
+			}
+
+			TEDCORE_API void rb_free(rb_handle handle)
+			{
+				uint8_t* prb = rb_buf;
+				while (((RBEHead*)prb)->handle != handle)
+					prb += ((RBEHead*)prb)->elemsz;
+				((RBEHead*)prb)->id = type_id_map::get_id<Empty>();
+			}
+
+			TEDCORE_API void* rb_ptr()
+			{
+				return rb_buf;
+			}
+
+			TEDCORE_API void rb_pack()
+			{
+				// TODO: Implement a packing algorithm
+			}
 		}
 	}
 }

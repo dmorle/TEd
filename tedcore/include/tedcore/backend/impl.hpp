@@ -28,12 +28,22 @@
 #	endif
 #endif
 
+#if defined(TEDC_DIRECT2D)
+#ifndef _MSC_VER
+#error Direct2d is only supported on windows
+#endif
+#include <d2d1.h>
+#elif defined(TEDC_OPENGL)
+#error The OpenGL backend for tedcore has not been implemented
+#else
+#error Unable to determine a graphics backend
+#endif
+
 namespace ted
 {
+	class TEDCORE_API Empty;
 	class TEDCORE_API Line;
-	class TEDCORE_API Poly;
 	class TEDCORE_API Rect;
-	class TEDCORE_API Bitmap;
 
 	namespace events
 	{
@@ -66,6 +76,8 @@ namespace ted
 		namespace render_buf
 		{
 			using type_id = uint32_t;
+			using rb_handle = uint64_t;
+			constexpr uint32_t invalid_id = -1;
 
 			template<class... _tys>
 			struct _type_id_map;
@@ -106,33 +118,55 @@ namespace ted
 			
 			using type_id_map = _type_id_map
 			<
+				Empty,
 				Line,
-				Rect,
-				Poly,
-				Bitmap
+				Rect
 			>;
 
-			// returns NULL on error
-			template<typename T>
-			TEDCORE_API const T* addElem(const T& e, float depth);
+			class RBEHead
+			{
+				inline static rb_handle _rbe_id = 0;
 
-			template<typename T>
-			TEDCORE_API void delElem(const T* e);
+			public:
+				float depth;
+				render_buf::type_id id;
+				uint32_t elemsz;
+				rb_handle handle;
+
+				template<class T>
+				RBEHead(T*, float depth) :
+					depth(depth),
+					id(render_buf::type_id_map::get_id<T>()),
+					elemsz(sizeof(T)),
+					handle(_rbe_id++)
+				{}
+			};
+
+			TEDCORE_API void* rb_malloc(float depth, size_t sz);
+			TEDCORE_API void rb_free(rb_handle handle);
+
+			TEDCORE_API void* rb_ptr();
+			TEDCORE_API void rb_pack();
+
+#ifdef TEDC_DIRECT2D
+			struct LineDef
+			{
+				RBEHead head;
+				D2D1_POINT_2F p1;
+				D2D1_POINT_2F p2;
+				ID2D1Brush* brush;
+				FLOAT width;
+				ID2D1StrokeStyle* stroke;
+			};
+
+			struct RectDef
+			{
+				RBEHead head;
+				D2D1_RECT_F rect;
+				ID2D1Brush* brush;
+			};
+#endif
 		}
-
-		template<class T>
-		class RBHead
-		{
-			template<class U>
-			friend const U* render_buf::addElem(const U& e, float depth);
-
-			template<class U>
-			friend void render_buf::delElem(const U* e);
-
-			render_buf::type_id id;
-		public:
-			RBHead() : id(render_buf::type_id_map::get_id<T>()) {}
-		};
 	}
 }
 

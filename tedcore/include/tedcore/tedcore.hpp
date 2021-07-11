@@ -8,6 +8,14 @@
 
 namespace ted
 {
+	TEDCORE_API extern void(*messageBox)(const std::string& msg);
+
+	struct Point
+	{
+		float x;
+		float y;
+	};
+
 	namespace events
 	{
 		enum class event
@@ -28,13 +36,7 @@ namespace ted
 		template<event E, class T>
 		TEDCORE_API void regHandler(T handler);
 
-		struct point
-		{
-			size_t x;
-			size_t y;
-		};
-
-		TEDCORE_API point getMousePos();
+		TEDCORE_API Point getMousePos();
 		TEDCORE_API bool getKeyState();
 		TEDCORE_API bool getMouseState();
 	}
@@ -58,56 +60,46 @@ namespace ted
 		};
 
 		//
+		// Brush system
+		//
+
+		// TODO: make the brush system
+
+		//
 		// Renderable types
 		//
 
-		class TEDCORE_API Line
+		struct TEDCORE_API Renderable
 		{
-			impl::RBHead<Rect> head{};
+			impl::render_buf::rb_handle handle;
+			impl::render_buf::RBEHead* pdef;
 
-		public:
+			void findDef();
 		};
 
-		class TEDCORE_API Poly
+		class TEDCORE_API Line :
+			public Renderable
 		{
-			impl::RBHead<Rect> head{};
+			friend TEDCORE_API Line makeLine(float depth, Point p1, Point p2, float width);
+			Line(impl::render_buf::LineDef* pdef);
 
 		public:
+			// TODO: create helper methods for transforming the line
 		};
 
-		class TEDCORE_API Rect
+		class TEDCORE_API Rect :
+			public Renderable
 		{
-			impl::RBHead<Rect> head{};
+			friend TEDCORE_API Rect makeRect(float depth, float left, float right, float top, float bottom);
+			Rect(impl::render_buf::RectDef* pdef);
 
 		public:
+			// TODO: create helper methods for transforming the rect
 		};
 
-		class TEDCORE_API Bitmap
-		{
-			impl::RBHead<Bitmap> head{};
-
-		public:
-			Bitmap(size_t width, size_t height, const Color& c);
-			Bitmap(const std::string& fname);
-			Bitmap(const Typeface& tf, const std::string& text);
-
-			Bitmap(const Bitmap& bm);
-			Bitmap(Bitmap&& bm);
-			Bitmap& operator=(const Bitmap& bm);
-			Bitmap& operator=(Bitmap&& bm);
-			~Bitmap();
-
-			size_t getWidth() const;
-			size_t getHeight() const;
-		};
-
-		template<typename T>
-		constexpr const T*(*addElem)(const T&, float) = impl::render_buf::addElem<T>;
-		template<typename T>
-		constexpr void(*delElem)(const T*) = impl::render_buf::delElem<T>;
+		TEDCORE_API Line makeLine(float depth, Point p1, Point p2, float width);
+		TEDCORE_API Rect makeRect(float depth, float left, float right, float top, float bottom);
 	}
-
-	TEDCORE_API extern void(*messageBox)(const std::string& msg);
 }
 
 #endif
