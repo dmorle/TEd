@@ -35,7 +35,7 @@ namespace ted
 		{
 			namespace fs = std::filesystem;
 
-			if (!render_buf::rb_buf)
+			if (!render_buf::rb_ptr())
 			{
 				messageBox("Out of memory");
 				exit(1);
@@ -87,8 +87,11 @@ namespace ted
 
 		namespace render_buf
 		{
+			TEDCORE_API ID2D1HwndRenderTarget* pRenderTarget = NULL;
+
 			static size_t rb_end = 0;
 			static size_t rb_memsz = 256;
+			static size_t rb_elemnum = 0;
 			static uint8_t* rb_buf = (uint8_t*)malloc(rb_memsz);
 			static std::mutex rb_mtx;
 
@@ -111,6 +114,7 @@ namespace ted
 				// making room at prb
 				std::memmove(prb + sz, prb, rb_end - (prb - rb_buf));
 				rb_end += sz;
+				rb_elemnum++;
 				return prb;
 			}
 
@@ -125,6 +129,11 @@ namespace ted
 			TEDCORE_API void* rb_ptr()
 			{
 				return rb_buf;
+			}
+
+			TEDCORE_API size_t rb_count()
+			{
+				return rb_elemnum;
 			}
 
 			TEDCORE_API void rb_pack()

@@ -21,6 +21,21 @@ namespace ted
 	{
 		using namespace render_buf;
 
+		Brush::Brush(const Color& c) :
+			def(NULL)
+		{
+			pRenderTarget->CreateSolidColorBrush(
+				D2D1_COLOR_F{ c.r, c.g, c.b },
+				(ID2D1SolidColorBrush**)&this->def
+			);
+		}
+
+		void Brush::release()
+		{
+			if (this->def)
+				this->def->Release();
+		}
+
 		void Renderable::findDef()
 		{
 			this->pdef = (RBEHead*)rb_ptr();

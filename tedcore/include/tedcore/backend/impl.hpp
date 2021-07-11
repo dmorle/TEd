@@ -136,7 +136,7 @@ namespace ted
 				template<class T>
 				RBEHead(T*, float depth) :
 					depth(depth),
-					id(render_buf::type_id_map::get_id<T>()),
+					id(type_id_map::get_id<T>()),
 					elemsz(sizeof(T)),
 					handle(_rbe_id++)
 				{}
@@ -146,9 +146,14 @@ namespace ted
 			TEDCORE_API void rb_free(rb_handle handle);
 
 			TEDCORE_API void* rb_ptr();
+			TEDCORE_API size_t rb_count();
 			TEDCORE_API void rb_pack();
 
 #ifdef TEDC_DIRECT2D
+			TEDCORE_API extern ID2D1HwndRenderTarget* pRenderTarget;
+
+			using BrushDef = ID2D1Brush;
+
 			struct LineDef
 			{
 				RBEHead head;

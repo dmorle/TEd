@@ -45,9 +45,9 @@ namespace ted
 	{
 		struct Color
 		{
-			uint8_t r;
-			uint8_t g;
-			uint8_t b;
+			float r;
+			float g;
+			float b;
 		};
 
 		class TEDCORE_API Typeface
@@ -63,7 +63,14 @@ namespace ted
 		// Brush system
 		//
 
-		// TODO: make the brush system
+		class TEDCORE_API Brush
+		{
+			impl::render_buf::BrushDef* def;
+
+		public:
+			Brush(const Color& c);
+			void release();
+		};
 
 		//
 		// Renderable types

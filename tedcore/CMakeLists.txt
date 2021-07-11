@@ -14,9 +14,15 @@ add_library(
 	"src/tedcore.cpp"
 	"src/backend/impl.cpp"
 	"src/backend/api.cpp"
+	"src/backend/tedlapi/brush.cpp"
+	"src/backend/tedlapi/rect.cpp"
+	"src/backend/tedlapi/line.cpp"
 	
 	"include/tedcore/tedcore.hpp"
 	"include/tedcore/backend/impl.hpp"
+	"include/tedcore/backend/tedlapi/brush.hpp"
+	"include/tedcore/backend/tedlapi/rect.hpp"
+	"include/tedcore/backend/tedlapi/line.hpp"
 )
 
 set_property(TARGET libtedc PROPERTY LINKER_LANGUAGE CXX)
@@ -25,6 +31,8 @@ set_property(TARGET libtedc PROPERTY CXX_STANDARD 20)
 target_include_directories(libtedc PUBLIC "${PROJECT_SOURCE_DIR}/tedlang/include")
 
 target_link_libraries(libtedc libtedl)
+target_link_libraries(libtedc D2d1)
+
 add_custom_command(
 	TARGET libtedc
 	COMMAND "${CMAKE_COMMAND}"
@@ -40,7 +48,12 @@ add_custom_command(
 
 # Copying test extensions
 file(MAKE_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/extensions")
-merge_dir("${CMAKE_CURRENT_BINARY_DIR}/extensions" "${PROJECT_SOURCE_DIR}/tedcore/extensions")
+# merge_dir("${CMAKE_CURRENT_BINARY_DIR}/extensions" "${PROJECT_SOURCE_DIR}/tedcore/extensions")
+add_custom_command(
+	TARGET libtedc
+	COMMAND "${CMAKE_COMMAND}"
+	ARGS "-E" "copy_directory" "${CMAKE_CURRENT_SOURCE_DIR}/extensions" "${CMAKE_CURRENT_BINARY_DIR}/extensions"
+)
 
 # linking the backend function implementations
 if(WIN32)
@@ -50,7 +63,9 @@ if(WIN32)
 		"src/backend/windows/ted.cpp"
 		"include/tedcore/backend/windows/ted.hpp"
 	)
+
 	target_link_libraries(ted libtedc)
+	target_link_libraries(libtedc D2d1)
 	
 	set_property(TARGET ted PROPERTY LINKER_LANGUAGE CXX)
 	set_property(TARGET ted PROPERTY CXX_STANDARD 20)

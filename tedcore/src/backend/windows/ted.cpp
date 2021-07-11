@@ -5,8 +5,9 @@ namespace ted
 	namespace windows
 	{
 		HWND hwnd = NULL;
-		LPCWSTR cls_name = L"TEd";
-		LPCWSTR win_name = L"";
+		LPCSTR cls_name = "TEd";
+		LPCSTR win_name = "";
+		ID2D1Factory* pFactory = NULL;
 
 		void messageBox(const std::string& msg)
 		{

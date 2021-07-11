@@ -67,11 +67,59 @@ LRESULT on_size(WPARAM wparam, LPARAM lparam)
 
 LRESULT on_paint(WPARAM wparam, LPARAM lparam)
 {
+	PAINTSTRUCT ps;
+	BeginPaint(hwnd, &ps);
+	render_buf::pRenderTarget->BeginDraw();
+
+	uint8_t* prb = (uint8_t*)render_buf::rb_ptr();
+	size_t n = render_buf::rb_count();
+	for (size_t i = 0; i < n; i++)
+	{
+		switch (((render_buf::RBEHead*)prb)->id)
+		{
+		case render_buf::type_id_map::get_id<Line>() :
+			render_buf::pRenderTarget->DrawLine(
+				((render_buf::LineDef*)prb)->p1,
+				((render_buf::LineDef*)prb)->p2,
+				((render_buf::LineDef*)prb)->brush,
+				((render_buf::LineDef*)prb)->width,
+				((render_buf::LineDef*)prb)->stroke
+			);
+			break;
+		case render_buf::type_id_map::get_id<Rect>() :
+			render_buf::pRenderTarget->FillRectangle(
+				((render_buf::RectDef*)prb)->rect,
+				((render_buf::RectDef*)prb)->brush
+			);
+			break;
+		}
+		prb += ((render_buf::RBEHead*)prb)->elemsz;
+	}
+
+	render_buf::pRenderTarget->EndDraw();  // TODO: error checking
+	EndPaint(hwnd, &ps);
 	return 0;
 }
 
-LRESULT on_create(WPARAM wparam, LPARAM lparam)
+LRESULT on_init()
 {
+#if defined(TEDC_DIRECT2D)
+	if (FAILED(D2D1CreateFactory(D2D1_FACTORY_TYPE_MULTI_THREADED, &pFactory)))
+		return -1;
+
+	D2D1_RECT_L rc;
+	if (!GetClientRect(hwnd, &rc))
+		return -1;
+	D2D1_SIZE_U size = D2D1::SizeU(rc.right, rc.bottom);
+	if (FAILED(pFactory->CreateHwndRenderTarget(
+		D2D1::RenderTargetProperties(),
+		D2D1::HwndRenderTargetProperties(hwnd, size),
+		&render_buf::pRenderTarget
+	)))
+		return -1;
+#elif defined(TEDC_OPENGL)
+#endif
+
 	ted::messageBox = ted::windows::messageBox;
 
 	init();
@@ -120,9 +168,6 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT umsg, WPARAM wparam, LPARAM lparam)
 	case WM_PAINT:
 		return on_paint(wparam, lparam);
 
-	case WM_CREATE:
-		return on_create(wparam, lparam);
-
 	case WM_DESTROY:
 		PostQuitMessage(0);
 		return 0;
@@ -130,7 +175,12 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT umsg, WPARAM wparam, LPARAM lparam)
 	return DefWindowProc(hwnd, umsg, wparam, lparam);
 }
 
-int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR pCmdLine, int nCmdShow)
+int WINAPI WinMain(
+	_In_     HINSTANCE hInstance,
+	_In_opt_ HINSTANCE hPrevInstance,
+	_In_     LPSTR pCmdLine,
+	_In_     int nCmdShow
+)
 {
 	WNDCLASS wc = { NULL };
 
@@ -142,13 +192,13 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR pCmdLine,
 
 	hwnd = CreateWindowEx(
 		0,
-		"ted",
-		"ted",
-		0,
-		CW_USEDEFAULT,
-		CW_USEDEFAULT,
-		CW_USEDEFAULT,
-		CW_USEDEFAULT,
+		cls_name,
+		win_name,
+		WS_POPUP,
+		100,
+		100,
+		680,
+		420,
 		NULL,
 		NULL,
 		hInstance,
@@ -159,6 +209,9 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR pCmdLine,
 		return 0;
 
 	ShowWindow(hwnd, nCmdShow);
+
+	if (on_init() < 0)
+		return -1;
 
 	MSG msg = { NULL };
 	while (GetMessage(&msg, NULL, 0, 0))

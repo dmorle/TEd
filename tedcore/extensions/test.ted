@@ -1,8 +1,12 @@
 import io;
 
+test_rect = null;
+test_brush = null;
+
 fn startup_test()
 {
 	message_box("Startup from startup_test");
+	test_brush = create_brush(100, 100, 100);
 };
 
 fn main()
