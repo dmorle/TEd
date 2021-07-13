@@ -50,6 +50,7 @@ typedef enum
 	TK_TRUE,        // true
 	TK_FALSE,       // false
 	TK_INT_LIT,     // 1234
+	TK_FLOAT_LIT,   // 1.3e5
 	TK_STR_LIT,     // "hello world"
 	TK_IDN,         // identifier
 

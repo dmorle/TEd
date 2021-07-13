@@ -24,3 +24,4 @@ fn chg_refs()
 
 chg_refs();
 main();
+print(0.1);

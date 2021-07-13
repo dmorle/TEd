@@ -9,6 +9,7 @@
 namespace ted
 {
 	TEDCORE_API extern void(*messageBox)(const std::string& msg);
+	TEDCORE_API extern void(*repaint)();
 
 	struct Point
 	{
@@ -43,6 +44,16 @@ namespace ted
 	
 	namespace graphics
 	{
+		// forward declarations
+
+		class TEDCORE_API Brush;
+
+		class TEDCORE_API Line;
+		class TEDCORE_API Rect;
+
+		TEDCORE_API ted::graphics::Line createLine(float depth, Brush* brush, Point p1, Point p2, float width);
+		TEDCORE_API ted::graphics::Rect createRect(float depth, Brush* brush, float left, float top, float right, float bottom);
+
 		struct Color
 		{
 			float r;
@@ -65,6 +76,9 @@ namespace ted
 
 		class TEDCORE_API Brush
 		{
+			friend TEDCORE_API ted::graphics::Line ted::graphics::createLine(float, Brush*, Point, Point, float);
+			friend TEDCORE_API ted::graphics::Rect ted::graphics::createRect(float, Brush*, float, float, float, float);
+
 			impl::render_buf::BrushDef* def;
 
 		public:
@@ -76,36 +90,40 @@ namespace ted
 		// Renderable types
 		//
 
-		struct TEDCORE_API Renderable
+		class TEDCORE_API Renderable
 		{
+		protected:
 			impl::render_buf::rb_handle handle;
 			impl::render_buf::RBEHead* pdef;
 
+		public:
 			void findDef();
+			void release();
 		};
 
 		class TEDCORE_API Line :
 			public Renderable
 		{
-			friend TEDCORE_API Line makeLine(float depth, Point p1, Point p2, float width);
+			friend ted::graphics::Line ted::graphics::createLine(float, Brush*, Point, Point, float);
 			Line(impl::render_buf::LineDef* pdef);
 
 		public:
+			void release();
+
 			// TODO: create helper methods for transforming the line
 		};
 
 		class TEDCORE_API Rect :
 			public Renderable
 		{
-			friend TEDCORE_API Rect makeRect(float depth, float left, float right, float top, float bottom);
+			friend ted::graphics::Rect ted::graphics::createRect(float, Brush*, float, float, float, float);
 			Rect(impl::render_buf::RectDef* pdef);
 
 		public:
+			void release();
+
 			// TODO: create helper methods for transforming the rect
 		};
-
-		TEDCORE_API Line makeLine(float depth, Point p1, Point p2, float width);
-		TEDCORE_API Rect makeRect(float depth, float left, float right, float top, float bottom);
 	}
 }
 

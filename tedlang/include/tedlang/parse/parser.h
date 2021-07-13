@@ -16,6 +16,7 @@ typedef enum
 	AST_NULL,
 	AST_BOOL,
 	AST_INT,
+	AST_FLOAT,
 	AST_STR,
 	AST_ARR,
 
@@ -139,6 +140,18 @@ te_ast_int_st;
 
 TEDLANG_API void _te_ast_int_new(te_ast_int_st* pself);
 #define _te_ast_int_del(pself)
+
+// contains a float
+// returns te_float_st* on eval
+typedef struct
+{
+	te_ast_st super;
+	double val;
+}
+te_ast_float_st;
+
+TEDLANG_API void _te_ast_float_new(te_ast_float_st* pself);
+#define _te_ast_float_del(pself)
 
 // contains a NULL terminated string
 // returns te_str_st* on eval

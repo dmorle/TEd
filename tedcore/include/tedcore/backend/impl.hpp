@@ -41,10 +41,6 @@
 
 namespace ted
 {
-	class TEDCORE_API Empty;
-	class TEDCORE_API Line;
-	class TEDCORE_API Rect;
-
 	namespace events
 	{
 		using key = uint8_t;
@@ -75,6 +71,10 @@ namespace ted
 		// singleton class
 		namespace render_buf
 		{
+			struct EmptyDef;
+			struct LineDef;
+			struct RectDef;
+
 			using type_id = uint32_t;
 			using rb_handle = uint64_t;
 			constexpr uint32_t invalid_id = -1;
@@ -118,9 +118,9 @@ namespace ted
 			
 			using type_id_map = _type_id_map
 			<
-				Empty,
-				Line,
-				Rect
+				EmptyDef,
+				LineDef,
+				RectDef
 			>;
 
 			class RBEHead

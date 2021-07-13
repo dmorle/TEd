@@ -6,8 +6,14 @@
 #include <stdlib.h>
 #include <ctype.h>
 #include <string.h>
+#include <math.h>
 #include <assert.h>
 #include <inttypes.h>
+
+static inline bool is_numeric(char c)
+{
+	return '0' <= c && c <= '9';
+}
 
 bool _te_is_op(te_token_et t)
 {
@@ -233,6 +239,11 @@ void _te_tarr_del(te_tarr_st* pself)
 	for (te_token_st* pta = pself->_data; pta < pself->_data + pself->length; pta++)
 		_te_token_del(pta);
 	free(pself->_data);
+
+#ifdef _DEBUG
+	pself->_mem_sz = 0;
+	pself->_data = NULL;
+#endif
 }
 
 int _te_tarr_append(te_tarr_st* pself, te_token_st* ptoken)
@@ -272,6 +283,111 @@ void _te_tarr_print(const te_tarr_st* pself)
 {
 	for (size_t i = 0; i < pself->length; i++)
 		_te_token_print(pself->_data + i);
+}
+
+int lex_neg_num(char* buf, size_t bufsz, te_tarr_st* ptarr, te_token_st* ptoken)
+{
+	bool neg_val = false;
+	bool use_float = false;
+	size_t i = 0;
+
+	if (buf[i] == '-')
+	{
+		i = 1;
+		if (bufsz >= 2 && buf[1] == '=')
+		{
+			ptoken->t_id = TK_OP_ISUB;
+			_te_tarr_append(ptarr, ptoken);
+			return 2;
+		}
+		if (bufsz == 1 || (!is_numeric(buf[1]) && buf[1] != '.'))  // not a number
+		{
+			ptoken->t_id = TK_OP_SUB;
+			_te_tarr_append(ptarr, ptoken);
+			return 1;
+		}
+		neg_val = true;
+		if (buf[1] == '.')
+		{
+			use_float = true;
+			i = 2;
+		}
+	}
+	if (i >= bufsz)
+	{
+		fprintf(stderr, "Unexpected EOF while lexing integral type");
+		return -2;
+	}
+	if (is_numeric(buf[i]))
+	{
+		int64_t ival = 0;
+		if (!use_float)
+		{
+			while (i < bufsz && is_numeric(buf[i]))
+			{
+				ival *= 10;
+				ival += buf[i] - '0';
+				i += 1;
+			}
+			if (i < bufsz && buf[i] == '.')
+			{
+				use_float = true;
+				i += 1;
+			}
+			else if (i < bufsz && (buf[i] == 'e' || buf[i] == 'E'))
+			{
+				use_float = true;
+			}
+			else
+			{
+				if (neg_val)
+					ival = -ival;
+				ptoken->t_id = TK_INT_LIT;
+				ptoken->_data = (void*)ival;
+				_te_tarr_append(ptarr, ptoken);
+				return i;
+			}
+		}
+
+		// use ival as the >1 portion of the float, and find the <1 portion
+		double multiplier = 0.1;
+		double fval = ival;
+		while (i < bufsz && is_numeric(buf[i]))
+		{
+			fval += multiplier * (buf[i] - '0');
+			multiplier /= 10;
+			i += 1;
+		}
+
+		if (i < bufsz && (buf[i] == 'e' || buf[i] == 'E'))
+		{
+			i += 1;
+			// lex the float point exponent as a signed int
+			bool negexp = false;
+			if (buf[i] == '-')
+			{
+				negexp = true;
+				i += 1;
+			}
+			int exp = 0;
+			while (is_numeric(buf[i]))
+			{
+				exp *= 10;
+				exp += buf[i] - '0';
+				i += 1;
+			}
+			if (negexp)
+				exp = -exp;
+			fval = pow(fval, (double)exp);
+		}
+
+		if (neg_val)
+			fval = -fval;
+		ptoken->t_id = TK_FLOAT_LIT;
+		ptoken->_data = *(void**)&fval;
+		_te_tarr_append(ptarr, ptoken);
+		return i;
+	}
 }
 
 // reads a token from a buffer
@@ -346,8 +462,6 @@ int read_token(char* ptoken, size_t bufsz, te_tarr_st* ptarr)
 #define LEX_BIN_IOP(op) LEX_BIN_OP(I##op, op)
 	case '+':
 		LEX_BIN_IOP(ADD);
-	case '-':
-		LEX_BIN_IOP(SUB);
 	case '*':
 		LEX_BIN_IOP(MUL);
 	case '/':
@@ -396,25 +510,7 @@ int read_token(char* ptoken, size_t bufsz, te_tarr_st* ptarr)
 			return ret;
 		}
 		if (c0 == '-' || ('0' <= c0 && c0 <= '9'))
-		{
-			// int literal
-			int val = ('0' <= c0 && c0 <= '9') * (c0 - '0');
-			while (ret < bufsz)
-			{
-				if (ptoken[ret] <'0' || '9' < ptoken[ret])
-					break;
-
-				val *= 10;
-				val += ptoken[ret] - '0';
-				ret += 1;
-			}
-			if (c0 == '-')
-				val *= -1;
-			ntoken.t_id = TK_INT_LIT;
-			ntoken._data = (void*)(int64_t)val;
-			_te_tarr_append(ptarr, &ntoken);
-			return ret;
-		}
+			return lex_neg_num(ptoken, bufsz, ptarr, &ntoken);
 		if (c0 == '_' || ('a' <= c0 && c0 <= 'z') || ('A' <= c0 && c0 <= 'Z'))
 		{
 			while (
@@ -504,29 +600,26 @@ int te_lex_f(FILE* pf, te_tarr_st* ptarr)
 
 int te_lex_buf(char* pbuf, size_t bufsz, te_tarr_st* ptarr)
 {
-	if (bufsz == 0)
-	{
-		fprintf(stderr, "Empty files are not allowed\n");
-		return -2;
-	}
-
 	size_t offset = 0;
 	size_t lcount = 1;
+	size_t prev_length = 0;
 	int ret;
 	
 	while (offset < bufsz)
 	{
+
 		ret = read_token(pbuf + offset, bufsz - offset, ptarr);
 		if (ret < 0)
 		{
-			fprintf(stderr, "Error parsing tish script:\n");
+			fprintf(stderr, "Error parsing tedlang script:\n");
 			if (ret == -1)
 				fprintf(stderr, "Out of memory\n");
 			else
 				fprintf(stderr, "Syntax error on line %zu\n", lcount);
 			return ret;
 		}
-		ptarr->_data[ptarr->length - 1].linenum = lcount;
+		if (ptarr->length != prev_length)
+			ptarr->_data[ptarr->length - 1].linenum = lcount;
 		while (ret)
 		{
 			lcount += pbuf[offset++] == '\n';

@@ -5,8 +5,9 @@ test_brush = null;
 
 fn startup_test()
 {
-	message_box("Startup from startup_test");
-	test_brush = create_brush(100, 100, 100);
+	# message_box("Startup from startup_test");
+	test_brush = create_brush(255, 255, 255);
+	test_rect = create_rect(1.0, test_brush, 100, 100, 200, 200);
 };
 
 fn main()

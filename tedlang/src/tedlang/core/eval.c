@@ -10,6 +10,7 @@
 #include <tedlang/builtin/null.h>
 #include <tedlang/builtin/bool.h>
 #include <tedlang/builtin/int.h>
+#include <tedlang/builtin/float.h>
 #include <tedlang/builtin/str.h>
 #include <tedlang/builtin/arr.h>
 #include <tedlang/builtin/fn.h>
@@ -134,6 +135,14 @@ te_obj_st* eval_int(te_scope_st* pscope, te_ast_int_st* pint)
 	RET_ON_ERR;
 	npint->val = pint->val;
 	return npint;
+}
+
+te_obj_st* eval_float(te_scope_st* pscopt, te_ast_float_st* pfloat)
+{
+	te_float_st* npfloat = (te_float_st*)te_float_new();
+	RET_ON_ERR;
+	npfloat->val = pfloat->val;
+	return npfloat;
 }
 
 te_obj_st* eval_str(te_scope_st* pscope, te_ast_str_st* pstr)
@@ -549,6 +558,7 @@ te_obj_st* te_eval(te_scope_st* pscope, te_ast_st* past)
 	case AST_NULL:      return eval_null     (pscope, past);
 	case AST_BOOL:      return eval_bool     (pscope, past);
 	case AST_INT:       return eval_int      (pscope, past);
+	case AST_FLOAT:     return eval_float    (pscope, past);
 	case AST_STR:       return eval_str      (pscope, past);
 	case AST_ARR:       return eval_arr      (pscope, past);
 	case AST_SEQ:       return eval_seq      (pscope, past);

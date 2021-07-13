@@ -20,6 +20,7 @@ namespace ted
 		extern ID2D1Factory* pFactory;
 
 		void messageBox(const std::string& msg);
+		void repaint();
 	}
 }
 

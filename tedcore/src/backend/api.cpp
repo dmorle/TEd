@@ -6,6 +6,8 @@
 #include <tedcore/tedcore.hpp>
 
 #include <tedcore/backend/tedlapi/brush.hpp>
+#include <tedcore/backend/tedlapi/line.hpp>
+#include <tedcore/backend/tedlapi/rect.hpp>
 
 //
 // Runtime tedl event dispatchers
@@ -165,21 +167,86 @@ static te_obj_st* create_brush_call(te_obj_st* pself, const te_fnargs_st* pargs)
 	if (pargs->argc != 3)
 		return (te_obj_st*)te_seterr("Function argument mismatch: expected 3, recieved %zu", pargs->argc);
 
-	ted::graphics::Color c;
 	for (int i = 0; i < 3; i++)
 		if (strcmp(pargs->ppargs[i]->ty->name, "int"))
 			return (te_obj_st*)te_seterr("Invalid argument type, expected int");
 
+	ted::graphics::Color c;
 	c.r = (float)((te_int_st*)pargs->ppargs[0])->val / 255;
 	c.g = (float)((te_int_st*)pargs->ppargs[1])->val / 255;
 	c.b = (float)((te_int_st*)pargs->ppargs[2])->val / 255;
 
-	tedl::brush* pbrush = (tedl::brush*)tedl::brush_new();
+	ted::tedl::brush* pbrush = (ted::tedl::brush*)ted::tedl::brush_new();
 	if (te_haserr())
 		return NULL;
 
 	pbrush->brush = ted::graphics::Brush(c);
 	return (te_obj_st*)pbrush;
+}
+
+static te_obj_st* create_line_call(te_obj_st* pself, const te_fnargs_st* pargs)
+{
+	if (pargs->argc != 7)
+		return (te_obj_st*)te_seterr("Function argument mismatch: expected 7, recieved %zu", pargs->argc);
+
+	if (strcmp(pargs->ppargs[0]->ty->name, "float")) return (te_obj_st*)te_seterr("Invalid argument type, expected float");
+	if (strcmp(pargs->ppargs[1]->ty->name, "brush")) return (te_obj_st*)te_seterr("Invalid argument type, expected brush");
+	if (strcmp(pargs->ppargs[2]->ty->name, "int"))   return (te_obj_st*)te_seterr("Invalid argument type, expected int"  );
+	if (strcmp(pargs->ppargs[3]->ty->name, "int"))   return (te_obj_st*)te_seterr("Invalid argument type, expected int"  );
+	if (strcmp(pargs->ppargs[4]->ty->name, "int"))   return (te_obj_st*)te_seterr("Invalid argument type, expected int"  );
+	if (strcmp(pargs->ppargs[5]->ty->name, "int"))   return (te_obj_st*)te_seterr("Invalid argument type, expected int"  );
+	if (strcmp(pargs->ppargs[5]->ty->name, "float")) return (te_obj_st*)te_seterr("Invalid argument type, expected float");
+
+	ted::tedl::line* pline = (ted::tedl::line*)ted::tedl::line_new();
+	if (te_haserr())
+		return NULL;
+
+	ted::Point p1 = {
+		(float)((te_int_st*)pargs->ppargs[2])->val,
+		(float)((te_int_st*)pargs->ppargs[3])->val
+	};
+
+	ted::Point p2 = {
+		(float)((te_int_st*)pargs->ppargs[5])->val,
+		(float)((te_int_st*)pargs->ppargs[6])->val
+	};
+
+	pline->line = ted::graphics::createLine(
+		((te_float_st*)pargs->ppargs[0])->val,
+		&((ted::tedl::brush*)pargs->ppargs[1])->brush,
+		p1, p2,
+		((te_float_st*)pargs->ppargs[6])->val
+	);
+
+	return (te_obj_st*)pline;
+}
+
+static te_obj_st* create_rect_call(te_obj_st* pself, const te_fnargs_st* pargs)
+{
+	if (pargs->argc != 6)
+		return (te_obj_st*)te_seterr("Function argument mismatch: expected 6, recieved %zu", pargs->argc);
+
+	if (strcmp(pargs->ppargs[0]->ty->name, "float")) return (te_obj_st*)te_seterr("Invalid argument type, expected float");
+	if (strcmp(pargs->ppargs[1]->ty->name, "brush")) return (te_obj_st*)te_seterr("Invalid argument type, expected brush");
+	if (strcmp(pargs->ppargs[2]->ty->name, "int"))   return (te_obj_st*)te_seterr("Invalid argument type, expected int"  );
+	if (strcmp(pargs->ppargs[3]->ty->name, "int"))   return (te_obj_st*)te_seterr("Invalid argument type, expected int"  );
+	if (strcmp(pargs->ppargs[4]->ty->name, "int"))   return (te_obj_st*)te_seterr("Invalid argument type, expected int"  );
+	if (strcmp(pargs->ppargs[5]->ty->name, "int"))   return (te_obj_st*)te_seterr("Invalid argument type, expected int"  );
+
+	ted::tedl::rect* prect = (ted::tedl::rect*)ted::tedl::rect_new();
+	if (te_haserr())
+		return NULL;
+
+	prect->rect = ted::graphics::createRect(
+		((te_float_st*)pargs->ppargs[0])->val,
+		&((ted::tedl::brush*)pargs->ppargs[1])->brush,
+		(float)((te_int_st*)pargs->ppargs[2])->val,
+		(float)((te_int_st*)pargs->ppargs[3])->val,
+		(float)((te_int_st*)pargs->ppargs[4])->val,
+		(float)((te_int_st*)pargs->ppargs[5])->val
+	);
+
+	return (te_obj_st*)prect;
 }
 
 //
@@ -205,6 +272,8 @@ static te_type_st reg_rup_ty      = { .name = "reg_rup_fn",      .objsize = size
 static te_type_st reg_mmove_ty    = { .name = "reg_mmove_fn",    .objsize = sizeof(te_obj_st), .ty_call = &reg_mmove_call    };
 
 static te_type_st create_brush_ty = { .name = "create_brush_fn", .objsize = sizeof(te_obj_st), .ty_call = &create_brush_call };
+static te_type_st create_line_ty  = { .name = "create_line_fn",  .objsize = sizeof(te_obj_st), .ty_call = &create_line_call  };
+static te_type_st create_rect_ty  = { .name = "create_rect_fn",  .objsize = sizeof(te_obj_st), .ty_call = &create_rect_call  };
 
 //
 // tedl api objects
@@ -229,6 +298,8 @@ static te_obj_st reg_rup_fn      = { .ty = &reg_rup_ty,      .n_ref = 1, .is_val
 static te_obj_st reg_mmove_fn    = { .ty = &reg_mmove_ty,    .n_ref = 1, .is_valid = true };
 
 static te_obj_st create_brush_fn = { .ty = &create_brush_ty, .n_ref = 1, .is_valid = true };
+static te_obj_st create_rect_fn  = { .ty = &create_rect_ty,  .n_ref = 1, .is_valid = true };
+static te_obj_st create_line_fn  = { .ty = &create_line_ty,  .n_ref = 1, .is_valid = true };
 
 void ted::impl::buildApi(te_scope_st* pscope)
 {
@@ -251,6 +322,8 @@ void ted::impl::buildApi(te_scope_st* pscope)
 	if (!te_scope_set(pscope, "reg_mmove",    &reg_mmove_fn))    goto MEM_ERR;
 
 	if (!te_scope_set(pscope, "create_brush", &create_brush_fn)) goto MEM_ERR;
+	if (!te_scope_set(pscope, "create_rect",  &create_rect_fn))  goto MEM_ERR;
+	if (!te_scope_set(pscope, "create_line",  &create_line_fn))  goto MEM_ERR;
 
 	return;
 

@@ -75,9 +75,11 @@ LRESULT on_paint(WPARAM wparam, LPARAM lparam)
 	size_t n = render_buf::rb_count();
 	for (size_t i = 0; i < n; i++)
 	{
+		render_buf::RectDef* rectdef = ((render_buf::RectDef*)prb);
+
 		switch (((render_buf::RBEHead*)prb)->id)
 		{
-		case render_buf::type_id_map::get_id<Line>() :
+		case render_buf::type_id_map::get_id<render_buf::LineDef>() :
 			render_buf::pRenderTarget->DrawLine(
 				((render_buf::LineDef*)prb)->p1,
 				((render_buf::LineDef*)prb)->p2,
@@ -86,7 +88,7 @@ LRESULT on_paint(WPARAM wparam, LPARAM lparam)
 				((render_buf::LineDef*)prb)->stroke
 			);
 			break;
-		case render_buf::type_id_map::get_id<Rect>() :
+		case render_buf::type_id_map::get_id<render_buf::RectDef>() :
 			render_buf::pRenderTarget->FillRectangle(
 				((render_buf::RectDef*)prb)->rect,
 				((render_buf::RectDef*)prb)->brush
@@ -121,6 +123,7 @@ LRESULT on_init()
 #endif
 
 	ted::messageBox = ted::windows::messageBox;
+	ted::repaint = ted::windows::repaint;
 
 	init();
 	for (auto& e : startupHandlers)

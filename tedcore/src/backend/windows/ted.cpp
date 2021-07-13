@@ -13,5 +13,10 @@ namespace ted
 		{
 			MessageBox(hwnd, msg.c_str(), "", MB_OK);
 		}
+
+		void repaint()
+		{
+			InvalidateRect(hwnd, NULL, FALSE);
+		}
 	}
 }

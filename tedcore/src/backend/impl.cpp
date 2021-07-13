@@ -108,11 +108,13 @@ namespace ted
 				}
 
 				uint8_t* prb = rb_buf;
-				while (depth > ((RBEHead*)prb)->depth)
+				size_t idx = 0;
+				while (idx < rb_elemnum && depth > ((RBEHead*)prb)->depth)
 					prb += ((RBEHead*)prb)->elemsz;
 
-				// making room at prb
-				std::memmove(prb + sz, prb, rb_end - (prb - rb_buf));
+				if (idx < rb_elemnum)
+					// making room at prb
+					std::memmove(prb + sz, prb, rb_end - (prb - rb_buf));
 				rb_end += sz;
 				rb_elemnum++;
 				return prb;
@@ -123,7 +125,7 @@ namespace ted
 				uint8_t* prb = rb_buf;
 				while (((RBEHead*)prb)->handle != handle)
 					prb += ((RBEHead*)prb)->elemsz;
-				((RBEHead*)prb)->id = type_id_map::get_id<Empty>();
+				((RBEHead*)prb)->id = type_id_map::get_id<EmptyDef>();
 			}
 
 			TEDCORE_API void* rb_ptr()

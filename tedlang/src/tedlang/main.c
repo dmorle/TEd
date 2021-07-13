@@ -6,7 +6,7 @@
 
 int main(int argc, char** argv)
 {
-	te_tarr_st tk_slice;
+	te_tarr_st tarr;
 	te_ast_st* past;
 	int ret;
 
@@ -26,14 +26,14 @@ int main(int argc, char** argv)
 		exit(1);
 	}
 	
-	ret = _te_tarr_new(&tk_slice, 128);
+	ret = _te_tarr_new(&tarr, 128);
 	if (ret < 0)
 	{
 		fprintf(stderr, "Out of memory\n");
 		exit(1);
 	}
 
-	ret = te_lex_f(pf, &tk_slice);
+	ret = te_lex_f(pf, &tarr);
 	fclose(pf);
 	if (ret < 0)
 	{
@@ -42,21 +42,22 @@ int main(int argc, char** argv)
 	}
 
 	printf("Finished Lexing...\nTokens:\n\n");
-	_te_tarr_print(&tk_slice);
+	_te_tarr_print(&tarr);
 	printf("\n\n");
 
-	ret = te_parse_module(&tk_slice, &past);
+	ret = te_parse_module(&tarr, &past);
+	_te_tarr_del(&tarr);
 	if (ret < 0)
 	{
 		fprintf(stderr, "Unable to parse %s\n", buf);
 		exit(1);
 	}
 	printf("Finished Parsing\n\n");
-
+	
 	te_scope_st* pscope = te_init();
 	if (te_haserr())
 		exit(1);
-
+	
 	printf("\nRunning the script\n");
 	te_eval(pscope, past);
 	printf("\nFinished running the script\n");

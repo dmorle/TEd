@@ -4,20 +4,23 @@
 #include <tedcore/tedcore.hpp>
 #include <tedlang/tedl.h>
 
-namespace tedl
+namespace ted
 {
-	te_obj_st* rect_new();
-	void rect_del(te_obj_st* pself);
-
-	bool rect_bool(te_obj_st* pself);
-
-	extern te_type_st rect_ty;
-
-	struct rect
+	namespace tedl
 	{
-		te_obj_st super;
-		ted::graphics::Rect rect;
-	};
+		te_obj_st* rect_new();
+		void rect_del(te_obj_st* pself);
+
+		bool rect_bool(te_obj_st* pself);
+
+		extern te_type_st rect_ty;
+
+		struct rect
+		{
+			te_obj_st super;
+			ted::graphics::Rect rect;
+		};
+	}
 }
 
 #endif

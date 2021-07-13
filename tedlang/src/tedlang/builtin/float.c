@@ -65,9 +65,9 @@ void te_float_del(te_obj_st* pself)
 const char* te_float_repr(te_obj_st* pself)
 {
 	CHECK_TYPE;
-
-	// TODO: Implement float to string
-	return te_seterr("Not implemented");
+	static char buf[14];
+	sprintf(buf, "%e", self.val);
+	return buf;
 }
 
 te_obj_st* te_float_iadd(te_obj_st** ppself, te_obj_st* prval)

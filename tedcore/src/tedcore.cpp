@@ -16,6 +16,7 @@ namespace ted
 	using namespace impl;
 
 	TEDCORE_API void(*messageBox)(const std::string& msg) = NULL;
+	TEDCORE_API void(*repaint)() = NULL;
 
 	namespace graphics
 	{
@@ -25,7 +26,7 @@ namespace ted
 			def(NULL)
 		{
 			pRenderTarget->CreateSolidColorBrush(
-				D2D1_COLOR_F{ c.r, c.g, c.b },
+				D2D1_COLOR_F{ c.r, c.g, c.b, 1.0f },
 				(ID2D1SolidColorBrush**)&this->def
 			);
 		}
@@ -49,33 +50,47 @@ namespace ted
 			this->handle = pdef->head.handle;
 		}
 
+		void Line::release()
+		{
+			rb_free(this->handle);
+		}
+
 		Rect::Rect(RectDef* pdef)
 		{
 			this->pdef = (RBEHead*)pdef;
 			this->handle = pdef->head.handle;
 		}
 
-		TEDCORE_API Line makeLine(float depth, Point p1, Point p2, float width)
+		void Rect::release()
+		{
+			rb_free(this->handle);
+		}
+
+#ifdef TEDC_DIRECT2D
+		TEDCORE_API Line createLine(float depth, Brush* brush, Point p1, Point p2, float width)
 		{
 			LineDef* pldef = (LineDef*)rb_malloc(depth, sizeof(LineDef));
 			pldef->head = RBEHead(pldef, depth);
 			pldef->p1 = { p1.x, p1.y };
 			pldef->p2 = { p2.x, p2.y };
-			pldef->brush = NULL;  // tmp
+			pldef->brush = brush->def;  // tmp
 			pldef->width = width;
 			pldef->stroke = NULL;
+			repaint();
 
 			return pldef;
 		}
 
-		TEDCORE_API Rect makeRect(float depth, float left, float right, float top, float bottom)
+		TEDCORE_API Rect createRect(float depth, Brush* brush, float left, float top, float right, float bottom)
 		{
 			RectDef* prdef = (RectDef*)rb_malloc(depth, sizeof(RectDef));
 			prdef->head = RBEHead(prdef, depth);
 			prdef->rect = { left, top, right, bottom };
-			prdef->brush = NULL;  // tmp
+			prdef->brush = brush->def;  // tmp
+			repaint();
 			
 			return prdef;
 		}
+#endif
 	}
 }

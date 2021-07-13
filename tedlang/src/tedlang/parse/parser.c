@@ -46,6 +46,12 @@ void _te_ast_int_new(te_ast_int_st* pself)
 	pself->val = 0;
 }
 
+void _te_ast_float_new(te_ast_float_st* pself)
+{
+	pself->super.ast_ty = AST_FLOAT;
+	pself->val = 1.0;
+}
+
 void _te_ast_str_new(te_ast_str_st* pself)
 {
 	pself->super.ast_ty = AST_STR;
@@ -933,6 +939,16 @@ int parse_expr_leaf(const te_tarr_st* ptarr, te_ast_st** ppexpr)
 		_te_ast_int_new(pint);
 		pint->val = (int64_t)(ptarr->_data[0]._data);
 		*ppexpr = pint;
+		return 1;
+	}
+	case TK_FLOAT_LIT:
+	{
+		te_ast_float_st* pfloat = (te_ast_float_st*)malloc(sizeof(te_ast_float_st));
+		if (!pfloat)
+			goto OUT_OF_MEMORY;
+		_te_ast_float_new(pfloat);
+		pfloat->val = *(double*)(&ptarr->_data[0]._data);
+		*ppexpr = pfloat;
 		return 1;
 	}
 	case TK_STR_LIT:
