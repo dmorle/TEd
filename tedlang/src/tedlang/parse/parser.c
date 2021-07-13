@@ -559,7 +559,7 @@ int find_block_end(const te_tarr_st* ptarr, size_t start)
 			break;
 		case TK_ENDL:
 			if (!bnum)
-				return i;
+				return i + 1;
 			break;
 		}
 	}
@@ -567,7 +567,7 @@ int find_block_end(const te_tarr_st* ptarr, size_t start)
 	return -2;
 }
 
-// Looks through the token array until a top level ',' or closing bracket is found
+// Looks through the token array until a top level ',' or ptarr->length
 int find_elem_end(const te_tarr_st* ptarr, size_t idx, te_token_et tk_open, te_token_et tk_close)
 {
 	// token values could be passed at compile time, but idk if its worth it
@@ -581,7 +581,7 @@ int find_elem_end(const te_tarr_st* ptarr, size_t idx, te_token_et tk_open, te_t
 		else if (brac == -1)
 			return idx;
 	}
-	return -2;
+	return ptarr->length;
 }
 
 // finds a p0 op (if one exists) starting from the right
@@ -633,8 +633,8 @@ int find_p0_op(const te_tarr_st* ptarr, int idx)
 // Parses comma seperated array elements.  ptarr must start after the '['
 int parse_expr_arr(const te_tarr_st* ptarr, te_ast_arr_st* parr)
 {
-	if (ptarr->_data[0].t_id == TK_C_SQUARE)
-		return 1;
+	if (ptarr->length == 0)
+		return 0;
 
 	te_ast_st* pelem;
 	te_tarr_st tk_slice;
@@ -673,8 +673,8 @@ int parse_expr_arr(const te_tarr_st* ptarr, te_ast_arr_st* parr)
 // Parses comma seperated function arguments.  ptarr must start after the '('
 int parse_expr_call(const te_tarr_st* ptarr, te_ast_call_st* parr)
 {
-	if (ptarr->_data[0].t_id == TK_C_ROUND)
-		return 1;
+	if (ptarr->length == 0)
+		return 0;
 
 	te_ast_st* pelem;
 	te_tarr_st tk_slice;
@@ -743,7 +743,14 @@ int parse_expr_leaf(const te_tarr_st* ptarr, te_ast_st** ppexpr)
 				free(pexpr);
 				goto OUT_OF_MEMORY;
 			}
-			_te_tarr_slice(ptarr, 1, ptarr->length, &tk_slice);
+			ret = find_brac_end(ptarr, 1, TK_O_SQUARE, TK_C_SQUARE);
+			if (ret < 0)
+			{
+				_te_ast_arr_del((te_ast_arr_st*)pexpr);
+				free(pexpr);
+				return ret;
+			}
+			_te_tarr_slice(ptarr, 1, ret, &tk_slice);
 			ret = parse_expr_arr(&tk_slice, (te_ast_arr_st*)pexpr);
 			if (ret < 0)
 			{
@@ -795,6 +802,14 @@ int parse_expr_leaf(const te_tarr_st* ptarr, te_ast_st** ppexpr)
 			{
 				// function call
 
+				if (ptarr->_data[ptarr->length - 1].t_id != TK_C_ROUND)
+				{
+					fprintf(stderr, "Missing closing ')' on line %zu\n", ptarr->_data[i].linenum);
+					_te_ast_del(pexpr);
+					free(pexpr);
+					return -2;
+				}
+
 				// allocating the call node
 				te_ast_call_st* pcall = (te_ast_call_st*)malloc(sizeof(te_ast_call_st));
 				if (!pcall)
@@ -815,7 +830,7 @@ int parse_expr_leaf(const te_tarr_st* ptarr, te_ast_st** ppexpr)
 				pexpr = pcall;
 
 				// parsing the arguments
-				_te_tarr_slice(ptarr, (size_t)++i, ptarr->length, &tk_slice);
+				_te_tarr_slice(ptarr, (size_t)++i, ptarr->length - 1, &tk_slice);
 				ret = parse_expr_call(&tk_slice, pcall);
 				if (ret < 0)
 				{
@@ -825,7 +840,7 @@ int parse_expr_leaf(const te_tarr_st* ptarr, te_ast_st** ppexpr)
 				}
 
 				// fast foward by ret
-				i += ret;
+				i += ret + 1;
 				break;
 			}
 			case TK_O_BRACE:
@@ -1406,7 +1421,7 @@ int parse_branch(const te_tarr_st* ptarr, te_ast_branch_st* pbranch)
 	pbranch->if_body = past;
 
 	// parsing the (optional) else block
-	start = (size_t)ret + 1;
+	start = end;
 	if (start < ptarr->length && ptarr->_data[start].t_id == TK_ELSE)
 	{
 		// Allow for chaining via else if
@@ -1415,11 +1430,12 @@ int parse_branch(const te_tarr_st* ptarr, te_ast_branch_st* pbranch)
 		if (ret < 0)
 			return ret;
 		pbranch->else_body = past;
+		end += ret;
 	}
 	else
 		pbranch->else_body = NULL;
 
-	return ret + 1;
+	return end;
 }
 
 // Parses a for loop, ie. for (... : ...) ...;

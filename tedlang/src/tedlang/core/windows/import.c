@@ -174,25 +174,25 @@ te_module_st* load_script(te_module_st* pmodule)
 	if (!pf)
 		return te_seterr("Unable to open file: %s", imppth);
 
-	te_tarr_st tk_slice;
-	int ret = _te_tarr_new(&tk_slice, 128);
+	te_tarr_st tarr;
+	int ret = _te_tarr_new(&tarr, 128);
 	if (ret < 0)
 	{
 		fclose(pf);
 		return te_seterr("Out of memory");
 	}
 
-	ret = te_lex_f(pf, &tk_slice);
+	ret = te_lex_f(pf, &tarr);
 	fclose(pf);
 	if (ret < 0)
 	{
-		_te_tarr_del(&tk_slice);
+		_te_tarr_del(&tarr);
 		return te_seterr("Unable to lex: %s", imppth);
 	}
 
 	te_ast_st* past;
-	ret = te_parse_module(&tk_slice, &past);
-	_te_tarr_del(&tk_slice);
+	ret = te_parse_module(&tarr, &past);
+	_te_tarr_del(&tarr);
 	if (ret < 0)
 		return te_seterr("Unable to parse: %s", imppth);
 

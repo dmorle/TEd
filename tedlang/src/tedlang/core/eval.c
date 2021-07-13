@@ -375,6 +375,12 @@ te_obj_st* eval_call(te_scope_st* pscope, const te_ast_call_st* pcall)
 
 	// Calling the function
 	te_obj_st* pret = te_call(pfn, &fnargs);
+	if (plastret)
+	{
+		te_decref_s(pret);
+		pret = plastret;
+		plastret = NULL;
+	}
 
 	// Cleanup - this stuff needs to run even if te_call failed
 	for (size_t i = 0; i < fnargs.argc; i++)
@@ -435,6 +441,27 @@ te_obj_st* eval_module(te_scope_st* pscope, const te_ast_module_st* pmodule)
 	return NULL;
 }
 
+te_obj_st* eval_assign(te_scope_st* pscope, const te_ast_assign_st* passign)
+{
+	te_obj_st* prval = te_eval(pscope, passign->rval);
+	RET_ON_ERR;
+	if (!prval)
+		return te_seterr("Invalid r-value for assignment");
+	te_obj_st** pplval = te_lval(pscope, passign->lval);
+	if (te_haserr())
+		return NULL;
+	assert(pplval);
+	te_obj_st* pret = te_assign(pplval, prval);
+	if (te_haserr())
+	{
+		te_decref_s(pret);
+		return NULL;
+	}
+	te_incref_s(pret);
+	te_decref(prval);
+	return pret;
+}
+
 #define fn_eval_iop(TY)                                                      \
 te_obj_st* eval_##TY(te_scope_st* pscope, const te_ast_##TY##_st* piop)      \
 {																			 \
@@ -453,7 +480,6 @@ te_obj_st* eval_##TY(te_scope_st* pscope, const te_ast_##TY##_st* piop)      \
 	return pret;															 \
 }
 
-fn_eval_iop(assign)
 fn_eval_iop(iadd)
 fn_eval_iop(isub)
 fn_eval_iop(imul)

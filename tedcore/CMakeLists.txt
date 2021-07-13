@@ -39,6 +39,15 @@ add_custom_command(
 	ARGS "-E" "copy" "${CMAKE_BINARY_DIR}/tedlang/libtedl.dll" "${CMAKE_CURRENT_BINARY_DIR}"
 	DEPENDS libtedl
 )
+string(COMPARE EQUAL "${CMAKE_BUILD_TYPE}" "Debug" DBG_BUILD)
+if ("${DBG_BUILD}")
+	add_custom_command(
+		TARGET libtedc
+		COMMAND "${CMAKE_COMMAND}"
+		ARGS "-E" "copy" "${CMAKE_BINARY_DIR}/tedlang/libtedl.pdb" "${CMAKE_CURRENT_BINARY_DIR}"
+		DEPENDS libtedl
+	)
+endif ()
 add_custom_command(
 	TARGET libtedc
 	COMMAND "${CMAKE_COMMAND}"

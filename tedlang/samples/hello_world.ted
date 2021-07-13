@@ -1,9 +1,26 @@
 import io;
 
+fn factorial_impl(n)
+{
+	if (n == 0)
+		return 1;
+	return n * factorial(n - 1);
+};
+
+factorial = null;
+
 fn main()
 {
 	for (e : ["hello", " ", "world", "!"])
 		print(e);
+
+	print(factorial(6));
 };
 
+fn chg_refs()
+{
+	factorial = factorial_impl;
+};
+
+chg_refs();
 main();
