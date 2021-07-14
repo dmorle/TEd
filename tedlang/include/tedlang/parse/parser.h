@@ -366,12 +366,19 @@ typedef te_ast_bin_st
         te_ast_imod_st,
         te_ast_iexp_st,
 #define _te_ast_assign_new( pself ) _te_ast_bin_new( pself, AST_ASSIGN )
+#define _te_ast_assign_del( pself ) _te_ast_bin_del( pself, AST_ASSIGN )
 #define   _te_ast_iadd_new( pself ) _te_ast_bin_new( pself, AST_IADD   )
+#define   _te_ast_iadd_del( pself ) _te_ast_bin_del( pself, AST_IADD   )
 #define   _te_ast_isub_new( pself ) _te_ast_bin_new( pself, AST_ISUB   )
+#define   _te_ast_isub_del( pself ) _te_ast_bin_del( pself, AST_ISUB   )
 #define   _te_ast_imul_new( pself ) _te_ast_bin_new( pself, AST_IMUL   )
+#define   _te_ast_imul_del( pself ) _te_ast_bin_del( pself, AST_IMUL   )
 #define   _te_ast_idiv_new( pself ) _te_ast_bin_new( pself, AST_IDIV   )
+#define   _te_ast_idiv_del( pself ) _te_ast_bin_del( pself, AST_IDIV   )
 #define   _te_ast_imod_new( pself ) _te_ast_bin_new( pself, AST_IMOD   )
+#define   _te_ast_imod_del( pself ) _te_ast_bin_del( pself, AST_IMOD   )
 #define   _te_ast_iexp_new( pself ) _te_ast_bin_new( pself, AST_IEXP   )
+#define   _te_ast_iexp_del( pself ) _te_ast_bin_del( pself, AST_IEXP   )
 
         te_ast_eq_st,
         te_ast_ne_st,
@@ -380,16 +387,24 @@ typedef te_ast_bin_st
         te_ast_le_st,
         te_ast_ge_st,
 #define _te_ast_eq_new( pself ) _te_ast_bin_new( pself, AST_EQ )
+#define _te_ast_eq_del( pself ) _te_ast_bin_del( pself, AST_EQ )
 #define _te_ast_ne_new( pself ) _te_ast_bin_new( pself, AST_NE )
+#define _te_ast_ne_del( pself ) _te_ast_bin_del( pself, AST_NE )
 #define _te_ast_lt_new( pself ) _te_ast_bin_new( pself, AST_LT )
+#define _te_ast_lt_del( pself ) _te_ast_bin_del( pself, AST_LT )
 #define _te_ast_gt_new( pself ) _te_ast_bin_new( pself, AST_GT )
+#define _te_ast_gt_del( pself ) _te_ast_bin_del( pself, AST_GT )
 #define _te_ast_le_new( pself ) _te_ast_bin_new( pself, AST_LE )
+#define _te_ast_le_del( pself ) _te_ast_bin_del( pself, AST_LE )
 #define _te_ast_ge_new( pself ) _te_ast_bin_new( pself, AST_GE )
+#define _te_ast_ge_del( pself ) _te_ast_bin_del( pself, AST_GE )
 
         te_ast_and_st,
         te_ast_or_st,
 #define  _te_ast_and_new( pself ) _te_ast_bin_new( pself, AST_AND )
+#define  _te_ast_and_del( pself ) _te_ast_bin_del( pself, AST_AND )
 #define   _te_ast_or_new( pself ) _te_ast_bin_new( pself, AST_OR  )
+#define   _te_ast_or_del( pself ) _te_ast_bin_del( pself, AST_OR  )
 
         te_ast_add_st,
         te_ast_sub_st,
@@ -399,12 +414,19 @@ typedef te_ast_bin_st
         te_ast_exp_st,
         te_ast_idx_st;
 #define _te_ast_add_new( pself ) _te_ast_bin_new( pself, AST_ADD )
+#define _te_ast_add_del( pself ) _te_ast_bin_del( pself, AST_ADD )
 #define _te_ast_sub_new( pself ) _te_ast_bin_new( pself, AST_SUB )
+#define _te_ast_sub_del( pself ) _te_ast_bin_del( pself, AST_SUB )
 #define _te_ast_mul_new( pself ) _te_ast_bin_new( pself, AST_MUL )
+#define _te_ast_mul_del( pself ) _te_ast_bin_del( pself, AST_MUL )
 #define _te_ast_div_new( pself ) _te_ast_bin_new( pself, AST_DIV )
+#define _te_ast_div_del( pself ) _te_ast_bin_del( pself, AST_DIV )
 #define _te_ast_mod_new( pself ) _te_ast_bin_new( pself, AST_MOD )
+#define _te_ast_mod_del( pself ) _te_ast_bin_del( pself, AST_MOD )
 #define _te_ast_exp_new( pself ) _te_ast_bin_new( pself, AST_EXP )
+#define _te_ast_exp_del( pself ) _te_ast_bin_del( pself, AST_EXP )
 #define _te_ast_idx_new( pself ) _te_ast_bin_new( pself, AST_IDX )
+#define _te_ast_idx_del( pself ) _te_ast_bin_del( pself, AST_IDX )
 
 TEDLANG_API int te_parse_expr   (const te_tarr_st* ptarr, te_ast_st** ppast);
 TEDLANG_API int te_parse_block  (const te_tarr_st* ptarr, te_ast_st** ppast);

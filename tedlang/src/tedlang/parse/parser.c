@@ -18,7 +18,135 @@ void __te_ast_ty_new(te_ast_st* pself, te_ast_et ty)
 
 void _te_ast_del(te_ast_st* pself)
 {
-	// TODO: Implementation for deleting ast nodes
+	switch (pself->ast_ty)
+	{
+	case AST_EMPTY:     
+		break;
+	case AST_VAR:
+		_te_ast_var_del(pself);
+		break;
+	case AST_NULL:
+		_te_ast_null_del(pself);
+		break;
+	case AST_BOOL:
+		_te_ast_bool_del(pself);
+		break;
+	case AST_INT:
+		_te_ast_int_del(pself);
+		break;
+	case AST_FLOAT:
+		_te_ast_float_del(pself);
+		break;
+	case AST_STR:
+		_te_ast_str_del(pself);
+		break;
+	case AST_ARR:
+		_te_ast_arr_del(pself);
+		break;
+	case AST_SEQ:
+		_te_ast_seq_del(pself);
+		break;
+	case AST_FOR:
+		_te_ast_for_del(pself);
+		break;
+	case AST_WHILE:
+		_te_ast_while_del(pself);
+		break;
+	case AST_BREAK:
+		_te_ast_break_del(pself);
+		break;
+	case AST_CONTINUE:
+
+		_te_ast_continue_del(pself);
+		break;
+	case AST_BRANCH:
+		_te_ast_branch_del(pself);
+		break;
+	case AST_RETURN:
+		_te_ast_return_del(pself);
+		break;
+	case AST_CALL:
+		_te_ast_call_del(pself);
+		break;
+	case AST_FN:
+		_te_ast_fn_del(pself);
+		break;
+	case AST_IMP:
+		_te_ast_imp_del(pself);
+		break;
+	case AST_MODULE:
+		_te_ast_module_del(pself);
+		break;
+	case AST_ASSIGN:
+		_te_ast_assign_del(pself);
+		break;
+	case AST_IADD:
+		_te_ast_iadd_del(pself);
+		break;
+	case AST_ISUB:
+		_te_ast_isub_del(pself);
+		break;
+	case AST_IMUL:
+		_te_ast_imul_del(pself);
+		break;
+	case AST_IDIV:
+		_te_ast_idiv_del(pself);
+		break;
+	case AST_IMOD:
+		_te_ast_imod_del(pself);
+		break;
+	case AST_IEXP:
+		_te_ast_iexp_del(pself);
+		break;
+	case AST_EQ:
+		_te_ast_eq_del(pself);
+		break;
+	case AST_NE:
+		_te_ast_ne_del(pself);
+		break;
+	case AST_LT:
+		_te_ast_lt_del(pself);
+		break;
+	case AST_GT:
+		_te_ast_gt_del(pself);
+		break;
+	case AST_LE:
+		_te_ast_le_del(pself);
+		break;
+	case AST_GE:
+		_te_ast_ge_del(pself);
+		break;
+	case AST_AND:
+		_te_ast_and_del(pself);
+		break;
+	case AST_OR:
+		_te_ast_or_del(pself);
+		break;
+	case AST_ADD:
+		_te_ast_add_del(pself);
+		break;
+	case AST_SUB:
+		_te_ast_sub_del(pself);
+		break;
+	case AST_MUL:
+		_te_ast_mul_del(pself);
+		break;
+	case AST_DIV:
+		_te_ast_div_del(pself);
+		break;
+	case AST_MOD:
+		_te_ast_mod_del(pself);
+		break;
+	case AST_EXP:
+		_te_ast_exp_del(pself);
+		break;
+	case AST_IDX:
+		_te_ast_idx_del(pself);
+		break;
+	default:
+		assert(false);
+		return te_seterr("Invalid AST Node");  // tmp
+	}
 }
 
 void _te_ast_var_new(te_ast_var_st* pself)
@@ -336,9 +464,13 @@ void _te_ast_fn_del(te_ast_fn_st* pself)
 	assert(pself->super.ast_ty == AST_FN);
 	assert(pself->_mem_sz);
 
-	for (char** pe = pself->ppargv; pe < pself->ppargv + pself->argc; pe++)
-		free(*pe);
-	free(pself->ppargv);
+	if (pself->ppargv)
+	{
+		for (char** pe = pself->ppargv; pe < pself->ppargv + pself->argc; pe++)
+			if (*pe)
+				free(*pe);
+		free(pself->ppargv);
+	}
 	if (pself->pbody)
 	{
 		_te_ast_del(pself->pbody);

@@ -61,4 +61,7 @@ int main(int argc, char** argv)
 	printf("\nRunning the script\n");
 	te_eval(pscope, past);
 	printf("\nFinished running the script\n");
+
+	_te_ast_del(past);
+	free(past);
 }
