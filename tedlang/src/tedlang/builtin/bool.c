@@ -7,7 +7,7 @@
 #include <tedlang/builtin/bool.h>
 #include <tedlang/util/string.h>
 
-te_type_st _te_bool_ty = {
+const te_type_st _te_bool_ty = {
 	.name = "bool",
 	.objsize = sizeof(te_bool_st),
 	.ty_new = &te_bool_new,

@@ -12,13 +12,14 @@
 #define itoa _itoa
 #endif
 
-te_type_st _te_int_ty = {
+const te_type_st _te_int_ty = {
 	.name = "int",
 	.objsize = sizeof(te_int_st),
 	.ty_new = &te_int_new,
 	.ty_del = &te_int_del,
-	.ty_repr = &te_int_repr,
 	.ty_bool = &te_int_bool,
+	.ty_int = &te_int_int,
+	.ty_repr = &te_int_repr,
 	.ty_start = &te_int_start,
 	.ty_next = &te_int_next,
 	.ty_iadd = &te_int_iadd,

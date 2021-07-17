@@ -11,7 +11,7 @@
 #include <tedlang/builtin/float.h>
 #include <tedlang/util/string.h>
 
-te_type_st _te_char_ty = {
+const te_type_st _te_char_ty = {
 	.name = "char",
 	.objsize = sizeof(te_char_st),
 	.ty_new = &te_char_new,

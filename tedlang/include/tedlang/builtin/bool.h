@@ -12,7 +12,7 @@ TEDLANG_API void te_bool_del(te_obj_st* pself);
 TEDLANG_API const char* te_bool_repr(te_obj_st* pself);
 TEDLANG_API bool te_bool_bool(te_obj_st* pself);
 
-extern te_type_st _te_bool_ty;
+TEDLANG_API const extern te_type_st _te_bool_ty;
 
 typedef struct
 {

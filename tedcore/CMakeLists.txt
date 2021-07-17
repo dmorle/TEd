@@ -32,6 +32,7 @@ target_include_directories(libtedc PUBLIC "${PROJECT_SOURCE_DIR}/tedlang/include
 
 target_link_libraries(libtedc libtedl)
 target_link_libraries(libtedc D2d1)
+add_dependencies(libtedc tedl_slib)
 
 add_custom_command(
 	TARGET libtedc

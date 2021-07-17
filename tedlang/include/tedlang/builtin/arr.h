@@ -19,7 +19,7 @@ TEDLANG_API te_obj_st* te_arr_add(te_obj_st* pself, te_obj_st* prval);
 TEDLANG_API te_obj_st* te_arr_eq(te_obj_st* pself, te_obj_st* prval);
 TEDLANG_API te_obj_st* te_arr_ne(te_obj_st* pself, te_obj_st* prval);
 
-extern te_type_st _te_arr_ty;
+TEDLANG_API const extern te_type_st _te_arr_ty;
 
 typedef struct
 {

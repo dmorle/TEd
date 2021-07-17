@@ -128,7 +128,7 @@ bool file_exists(LPCTSTR szPath)
 te_module_et imp_exists(const char* pth, const te_ast_imp_st* pimp)
 {
 	static char tedext[EXT_SZ] = ".ted";
-	static char dllext[EXT_SZ] = ".dll";
+	static char dllext[EXT_SZ] = ".tedext";
 
 	memset(imppth, 0, MAX_PATH);
 
@@ -261,7 +261,7 @@ te_module_st* module_load_pth(te_module_st* pmodule, const char* pth)
 		pmodule->ty = TE_MODULE_SCRIPT;
 		return load_script(pmodule);
 	case 'd':
-		if (strcmp(pthext, "dll"))
+		if (strcmp(pthext, "tedext"))
 			break;
 		memcpy(imppth, pth, pthlen + 1);
 		pmodule->ty = TE_MODULE_BIN;

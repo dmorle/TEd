@@ -12,7 +12,7 @@ TEDLANG_API const char* te_fn_repr(te_obj_st* pself);
 TEDLANG_API bool te_fn_bool(te_obj_st* pself);
 TEDLANG_API te_obj_st* te_fn_call(te_obj_st* pself, const te_fnargs_st* pargs);
 
-extern te_type_st _te_fn_ty;
+TEDLANG_API const extern te_type_st _te_fn_ty;
 
 typedef struct
 {

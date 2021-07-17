@@ -32,7 +32,7 @@
 extern "C"
 {
 #	else
-#		define TEDLANG_MODINIT EXPORT
+#       define TEDLANG_MODINIT EXPORT
 #	endif
 
 #	include <tedlang/core/eval.h>

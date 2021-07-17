@@ -26,7 +26,7 @@ TEDLANG_API te_obj_st* te_float_gt(te_obj_st* pself, te_obj_st* prval);
 TEDLANG_API te_obj_st* te_float_le(te_obj_st* pself, te_obj_st* prval);
 TEDLANG_API te_obj_st* te_float_ge(te_obj_st* pself, te_obj_st* prval);
 
-extern te_type_st _te_float_ty;
+TEDLANG_API const extern te_type_st _te_float_ty;
 
 typedef struct
 {

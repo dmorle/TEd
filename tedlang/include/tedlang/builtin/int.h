@@ -34,7 +34,7 @@ TEDLANG_API te_obj_st* te_int_gt(te_obj_st* pself, te_obj_st* prval);
 TEDLANG_API te_obj_st* te_int_le(te_obj_st* pself, te_obj_st* prval);
 TEDLANG_API te_obj_st* te_int_ge(te_obj_st* pself, te_obj_st* prval);
 
-extern te_type_st _te_int_ty;
+TEDLANG_API const extern te_type_st _te_int_ty;
 
 typedef struct
 {

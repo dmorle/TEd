@@ -69,6 +69,32 @@ if (WIN32)
 	target_link_libraries(io libtedl)
 
 	set_target_properties(io PROPERTIES
+		SUFFIX ".tedext"
+		RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tedlang/slib"
+		C_STANDARD 11
+	)
+
+	add_library(
+		os SHARED
+
+		"src/tedslib/os/os.c"
+		"src/tedslib/os/cptr.c"
+
+		"src/tedslib/os/open_lib.c"
+		"src/tedslib/os/close_lib.c"
+		"src/tedslib/os/load_proc.c"
+		
+		"include/tedslib/os/os.h"
+		"include/tedslib/os/cptr.h"
+	)
+
+	target_include_directories(os PRIVATE "include/tedslib")
+	target_link_libraries(os libtedl)
+	target_link_libraries(os user32.lib)
+	target_link_libraries(os kernel32.lib)
+
+	set_target_properties(os PROPERTIES
+		SUFFIX ".tedext"
 		RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tedlang/slib"
 		C_STANDARD 11
 	)
@@ -76,6 +102,9 @@ if (WIN32)
 else()
 	message(FATAL_ERROR "tedlang currently only compiles for windows")
 endif(WIN32)
+
+# custom target for the entire standard library
+add_custom_target(tedl_slib DEPENDS io os)
 
 # tedlang
 
@@ -85,6 +114,7 @@ add_executable(
 	"include/tedlang/tedl.h"
 )
 target_link_libraries(tedlang libtedl)
+add_dependencies(tedlang tedl_slib)
 
 set_property(TARGET tedlang PROPERTY LINKER_LANGUAGE C)
 set_property(TARGET tedlang PROPERTY C_STANDARD 11)

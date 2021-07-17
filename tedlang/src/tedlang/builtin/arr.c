@@ -10,7 +10,7 @@
 #include <tedlang/builtin/arr.h>
 #include <tedlang/util/string.h>
 
-te_type_st _te_arr_ty = {
+const te_type_st _te_arr_ty = {
 	.name = "array",
 	.objsize = sizeof(te_arr_st),
 	.ty_new = &te_arr_new,

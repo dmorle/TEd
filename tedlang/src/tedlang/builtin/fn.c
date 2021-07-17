@@ -9,7 +9,7 @@
 #include <tedlang/core/scope.h>
 #include <tedlang/builtin/fn.h>
 
-te_type_st _te_fn_ty = {
+const te_type_st _te_fn_ty = {
 	.name = "fn",
 	.objsize = sizeof(te_fn_st),
 	.ty_new = &te_fn_new,

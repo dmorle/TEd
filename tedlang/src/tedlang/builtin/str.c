@@ -12,7 +12,7 @@
 #include <tedlang/builtin/str.h>
 #include <tedlang/util/string.h>
 
-te_type_st _te_str_ty = {
+const te_type_st _te_str_ty = {
 	.name = "str",
 	.objsize = sizeof(te_str_st),
 	.ty_new = &te_str_new,
