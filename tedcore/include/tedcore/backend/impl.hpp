@@ -45,21 +45,28 @@ namespace ted
 	{
 		using key = uint8_t;
 
-		TEDCORE_API extern std::vector<void(*)()> startupHandlers;
-		TEDCORE_API extern std::vector<void(*)()> shutdownHandlers;
-		TEDCORE_API extern std::vector<void(*)()> minimizeHandlers;
-		TEDCORE_API extern std::vector<void(*)()> maximizeHandlers;
-		TEDCORE_API extern std::vector<void(*)()> winSizeHandlers;
-		TEDCORE_API extern std::vector<void(*)()> winMoveHandlers;
-		TEDCORE_API extern std::vector<void(*)(key)> keyDownHandlers;
-		TEDCORE_API extern std::vector<void(*)(key)> keyUpHandlers;
-		TEDCORE_API extern std::vector<void(*)()> mouseLDownHandlers;
-		TEDCORE_API extern std::vector<void(*)()> mouseLUpHandlers;
-		TEDCORE_API extern std::vector<void(*)()> mouseMDownHandlers;
-		TEDCORE_API extern std::vector<void(*)()> mouseMUpHandlers;
-		TEDCORE_API extern std::vector<void(*)()> mouseRDownHandlers;
-		TEDCORE_API extern std::vector<void(*)()> mouseRUpHandlers;
-		TEDCORE_API extern std::vector<void(*)()> mouseMoveHandlers;
+		using basicHandler = void(*)();
+		using sizeHandler  = void(*)(uint16_t, uint16_t);
+		using keyHandler   = void(*)(key);
+		using posHandler   = void(*)(uint16_t, uint16_t);
+		using wheelHandler = void(*)(int16_t);
+
+		TEDCORE_API extern std::vector<basicHandler> startupHandlers;
+		TEDCORE_API extern std::vector<basicHandler> shutdownHandlers;
+		TEDCORE_API extern std::vector<basicHandler> minimizeHandlers;
+		TEDCORE_API extern std::vector<sizeHandler > maximizeHandlers;
+		TEDCORE_API extern std::vector<sizeHandler > winSizeHandlers;
+		TEDCORE_API extern std::vector<posHandler  > winMoveHandlers;
+		TEDCORE_API extern std::vector<keyHandler  > keyDownHandlers;
+		TEDCORE_API extern std::vector<keyHandler  > keyUpHandlers;
+		TEDCORE_API extern std::vector<posHandler  > mouseLDownHandlers;
+		TEDCORE_API extern std::vector<posHandler  > mouseLUpHandlers;
+		TEDCORE_API extern std::vector<posHandler  > mouseMDownHandlers;
+		TEDCORE_API extern std::vector<posHandler  > mouseMUpHandlers;
+		TEDCORE_API extern std::vector<posHandler  > mouseRDownHandlers;
+		TEDCORE_API extern std::vector<posHandler  > mouseRUpHandlers;
+		TEDCORE_API extern std::vector<posHandler  > mouseMoveHandlers;
+		TEDCORE_API extern std::vector<wheelHandler> mouseWheelHandlers;
 	}
 
 	namespace impl

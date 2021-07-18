@@ -8,41 +8,72 @@ using namespace events;
 
 LRESULT on_ldown(WPARAM wparam, LPARAM lparam)
 {
+	UINT x = LOWORD(lparam);
+	UINT y = HIWORD(lparam);
+	for (auto e : mouseLDownHandlers)
+		e(x, y);
 	return 0;
 }
 
 LRESULT on_lup(WPARAM wparam, LPARAM lparam)
 {
+	UINT x = LOWORD(lparam);
+	UINT y = HIWORD(lparam);
+	for (auto e : mouseLUpHandlers)
+		e(x, y);
 	return 0;
 }
 
 LRESULT on_mdown(WPARAM wparam, LPARAM lparam)
 {
+	UINT x = LOWORD(lparam);
+	UINT y = HIWORD(lparam);
+	for (auto e : mouseMDownHandlers)
+		e(x, y);
 	return 0;
 }
 
 LRESULT on_mup(WPARAM wparam, LPARAM lparam)
 {
+	UINT x = LOWORD(lparam);
+	UINT y = HIWORD(lparam);
+	for (auto e : mouseMUpHandlers)
+		e(x, y);
 	return 0;
 }
 
 LRESULT on_rdown(WPARAM wparam, LPARAM lparam)
 {
+	UINT x = LOWORD(lparam);
+	UINT y = HIWORD(lparam);
+	for (auto e : mouseRDownHandlers)
+		e(x, y);
 	return 0;
 }
 
 LRESULT on_rup(WPARAM wparam, LPARAM lparam)
 {
+	UINT x = LOWORD(lparam);
+	UINT y = HIWORD(lparam);
+	for (auto e : mouseRUpHandlers)
+		e(x, y);
 	return 0;
 }
 
 LRESULT on_mmove(WPARAM wparam, LPARAM lparam)
 {
+	UINT x = LOWORD(lparam);
+	UINT y = HIWORD(lparam);
+	for (auto e : mouseMoveHandlers)
+		e(x, y);
 	return 0;
 }
 
 LRESULT on_mwheel(WPARAM wparam, LPARAM lparam)
 {
+	int16_t delta = HIWORD(wparam);
+	for (auto e : mouseWheelHandlers)
+		e(delta);
 	return 0;
 }
 
@@ -62,6 +93,23 @@ LRESULT on_keyup(WPARAM wparam, LPARAM lparam)
 
 LRESULT on_size(WPARAM wparam, LPARAM lparam)
 {
+	UINT width = LOWORD(lparam);
+	UINT height = HIWORD(lparam);
+	switch (wparam)
+	{
+	case SIZE_RESTORED:
+		for (auto e : winSizeHandlers)
+			e(width, height);
+		return 0;
+	case SIZE_MINIMIZED:
+		for (auto e : minimizeHandlers)
+			e();
+		return 0;
+	case SIZE_MAXIMIZED:
+		for (auto e : maximizeHandlers)
+			e(width, height);
+		return 0;
+	}
 	return 0;
 }
 
