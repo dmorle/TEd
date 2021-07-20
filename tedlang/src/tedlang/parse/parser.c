@@ -1,6 +1,7 @@
 #define TEDLANG_SRC
 
 #include <tedlang/parse/parser.h>
+#include <tedlang/core/eval.h>
 
 #include <stdlib.h>
 #include <stdbool.h>
@@ -784,8 +785,13 @@ int parse_expr_arr(const te_tarr_st* ptarr, te_ast_arr_st* parr)
 		ret = find_elem_end(ptarr, idx, TK_O_SQUARE, TK_C_SQUARE);
 		if (ret < 0)
 		{
-			fprintf(stderr, "Invalid array element on line %zu", ptarr->_data[idx].linenum);
+			te_seterr("Invalid array element on line %zu", ptarr->_data[idx].linenum);
 			return ret;
+		}
+		if (ret == idx)
+		{
+			te_seterr("Incomplete array element on line %zu", ptarr->_data[idx].linenum);
+			return -2;
 		}
 		_te_tarr_slice(ptarr, idx, ret, &tk_slice);
 		ret = te_parse_expr(&tk_slice, &pelem);
@@ -796,16 +802,13 @@ int parse_expr_arr(const te_tarr_st* ptarr, te_ast_arr_st* parr)
 		if (ret < 0)
 		{
 			_te_ast_del(pelem);
+			te_seterr("Out of memory");
 			return ret;
 		}
 	}
 
 	// exit condition
-	if (ptarr->_data[idx - 1].t_id == TK_C_SQUARE)
-		return idx + 1;
-
-	fprintf(stderr, "Invalid array definition on line %zu", ptarr->_data[0].linenum);
-	return -2;
+	return idx - 1;
 }
 
 // Parses comma seperated function arguments.  ptarr must start after the '('
@@ -816,7 +819,7 @@ int parse_expr_call(const te_tarr_st* ptarr, te_ast_call_st* parr)
 
 	te_ast_st* pelem;
 	te_tarr_st tk_slice;
-	size_t idx = 0;
+	int idx = 0;
 	int ret;
 
 	while (idx < ptarr->length)
@@ -824,29 +827,28 @@ int parse_expr_call(const te_tarr_st* ptarr, te_ast_call_st* parr)
 		ret = find_elem_end(ptarr, idx, TK_O_ROUND, TK_C_ROUND);
 		if (ret < 0)
 		{
-			fprintf(stderr, "Invalid argument syntax on line %zu", ptarr->_data[idx].linenum);
+			te_seterr("Invalid argument syntax on line %zu", ptarr->_data[idx].linenum);
 			return ret;
 		}
-		if (!ret)
-			return idx + 1;
+		if (ret == idx)
+		{
+			te_seterr("Incomplete call argument on line %zu", ptarr->_data[idx].linenum);
+			return -2;
+		}
 		_te_tarr_slice(ptarr, idx, ret, &tk_slice);
 		ret = te_parse_expr(&tk_slice, &pelem);
 		if (ret < 0)
 			return ret;
-		idx += (size_t)ret + 1;
+		idx += ret + 1;
 		ret = _te_ast_call_append(parr, pelem);
 		if (ret < 0)
 		{
 			_te_ast_del(pelem);
+			te_seterr("Out of memory");
 			return ret;
 		}
-		if (ptarr->_data[idx].t_id == TK_C_ROUND)
-			return ret;
 	}
-	return idx;
-
-	fprintf(stderr, "Invalid function call on line %zu", ptarr->_data[0].linenum);
-	return -2;
+	return idx - 1;
 }
 
 // Parses a leaf node for an expression

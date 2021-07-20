@@ -1,0 +1,22 @@
+import os;
+
+tedui = null;
+
+fn tedui_shutdown()
+{
+	close_lib(tedui);
+};
+
+fn load_tedui()
+{
+	# registering a shutdown function for closing the dll
+	reg_shutdown(tedui_shutdown);
+
+	# loading the dll
+	tedui = open_lib("tedui.dll");
+
+	reg_startup(load_proc(tedui, "tedui_startup"));
+	reg_shutdown(load_proc(tedui, "tedui_shutdown"));
+};
+
+load_tedui();

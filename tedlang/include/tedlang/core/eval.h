@@ -14,6 +14,7 @@ TEDLANG_API void te_shutdown();
 
 TEDLANG_API bool  te_haserr();
 TEDLANG_API void* te_seterr(const char* err, ...);  // always returns NULL
+TEDLANG_API const char* te_geterr();
 
 TEDLANG_API te_obj_st** te_lval(te_scope_st* pscope, const te_ast_st* past);
 TEDLANG_API te_obj_st* te_eval(te_scope_st* pscope, te_ast_st* past);

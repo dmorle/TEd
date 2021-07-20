@@ -59,11 +59,11 @@ add_custom_command(
 # Copying test extensions
 file(MAKE_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/extensions")
 # merge_dir("${CMAKE_CURRENT_BINARY_DIR}/extensions" "${PROJECT_SOURCE_DIR}/tedcore/extensions")
-add_custom_command(
-	TARGET libtedc
-	COMMAND "${CMAKE_COMMAND}"
-	ARGS "-E" "copy_directory" "${CMAKE_CURRENT_SOURCE_DIR}/extensions" "${CMAKE_CURRENT_BINARY_DIR}/extensions"
-)
+#add_custom_command(
+#	TARGET libtedc
+#	COMMAND "${CMAKE_COMMAND}"
+#	ARGS "-E" "copy_directory" "${CMAKE_CURRENT_SOURCE_DIR}/extensions" "${CMAKE_CURRENT_BINARY_DIR}/extensions"
+#)
 
 # linking the backend function implementations
 if(WIN32)
@@ -76,6 +76,7 @@ if(WIN32)
 
 	target_link_libraries(ted libtedc)
 	target_link_libraries(libtedc D2d1)
+	add_dependencies(ted tedui)
 	
 	set_property(TARGET ted PROPERTY LINKER_LANGUAGE CXX)
 	set_property(TARGET ted PROPERTY CXX_STANDARD 20)

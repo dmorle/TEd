@@ -75,12 +75,14 @@ namespace ted
 					continue;
 				if (!pret)
 				{
-					messageBox("Error loading module: " + extstr);
+					const char* te_err = te_geterr();
+					messageBox("Error loading module: " + extstr + "\n" + te_err);
 					exit(1);
 				}
 				if (!module_import(pscope, &mod))
 				{
-					messageBox("Error importing module: " + extstr);
+					const char* te_err = te_geterr();
+					messageBox("Error importing module: " + extstr + "\n" + te_err);
 					exit(1);
 				}
 				module_close(&mod);

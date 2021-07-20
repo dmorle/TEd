@@ -1,5 +1,8 @@
 #include <os/cptr.h>
 
+#include <stdlib.h>
+#include <string.h>
+
 const te_type_st _te_cptr_ty = {
 	.name = "cptr",
 	.objsize = sizeof(te_cptr_st),

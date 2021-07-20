@@ -187,14 +187,14 @@ te_module_st* load_script(te_module_st* pmodule)
 	if (ret < 0)
 	{
 		_te_tarr_del(&tarr);
-		return te_seterr("Unable to lex: %s", imppth);
+		return NULL;
 	}
 	
 	te_ast_st* past;
 	ret = te_parse_module(&tarr, &past);
 	_te_tarr_del(&tarr);
 	if (ret < 0)
-		return te_seterr("Unable to parse: %s", imppth);
+		return NULL;
 	
 	pmodule->past = past;
 	return pmodule;

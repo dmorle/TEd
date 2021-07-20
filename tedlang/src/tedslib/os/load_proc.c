@@ -41,7 +41,10 @@ te_obj_st* te_load_proc_call(te_obj_st * pself, const te_fnargs_st * pargs)
 #ifdef _MSC_VER
 	FARPROC proc = GetProcAddress(pmod->ptr, pproc_name->val);
 	if (!proc)
-		return te_seterr("Unable to retrieve procedure %s from the given library", pproc_name->val);
+	{
+		te_decref(pproc);
+		return te_seterr("Unable to retrieve procedure '%s' from the given library", pproc_name->val);
+	}
 
 	pproc->ptr = proc;
 #else

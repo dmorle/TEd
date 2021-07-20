@@ -19,6 +19,7 @@ static bool inerror = false;
 static bool inbreak = false;
 static bool incontinue = false;
 static te_obj_st* plastret = NULL;
+static char errmsg[2048];
 
 #define RET_ON_ERR if (te_haserr()) return NULL
 #define JMP_ON_ERR(LBL) if (te_haserr()) goto LBL
@@ -68,9 +69,14 @@ void* te_seterr(const char* err, ...)
 	va_list args;
 	va_start(args, err);
 	sprintf(errfmt, "%s\n", err);
-	vprintf(errfmt, args);
+	vsprintf(errmsg, errfmt, args);
 	va_end(args);
 	return NULL;
+}
+
+const char* te_geterr()
+{
+	return errmsg;
 }
 
 te_obj_st** lval_var(te_scope_st* pscope, const te_ast_var_st* pvar)
@@ -365,19 +371,21 @@ te_obj_st* eval_call(te_scope_st* pscope, const te_ast_call_st* pcall)
 			return te_seterr("Out of memory");
 		}
 	}
-	for (size_t i = 0; i < fnargs.argc; i++)
+	for (int i = 0; i < fnargs.argc; i++)  // i can go negative on error handling
 	{
 		*(fnargs.ppargs + i) = te_eval(pscope, *(pcall->ppargv + i));
 		if (te_haserr())
 		{
 			while (--i > 0)
-				te_decref(fnargs.ppargs[i]);
+				te_decref_s(fnargs.ppargs[i]);
+			free(fnargs.ppargs);
 			return NULL;
 		}
 		if (!*(fnargs.ppargs + i))
 		{
 			while (--i > 0)
 				te_decref(fnargs.ppargs[i]);
+			free(fnargs.ppargs);
 			return te_seterr("Invalid function argument");
 		}
 	}
