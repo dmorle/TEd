@@ -18,7 +18,7 @@ namespace ted
 		struct rect
 		{
 			te_obj_st super;
-			ted::graphics::Rect rect;
+			ted::graphics::GRect rect;
 		};
 	}
 }

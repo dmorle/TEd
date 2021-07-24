@@ -18,7 +18,7 @@ namespace ted
 		struct line
 		{
 			te_obj_st super;
-			ted::graphics::Line line;
+			ted::graphics::GLine line;
 		};
 	}
 }

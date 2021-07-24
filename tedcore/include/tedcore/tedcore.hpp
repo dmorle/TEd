@@ -8,14 +8,30 @@
 
 namespace ted
 {
-	TEDCORE_API extern void(*messageBox)(const std::string& msg);
-	TEDCORE_API extern void(*repaint)();
-
 	struct Point
 	{
 		float x;
 		float y;
 	};
+
+	struct Rect
+	{
+		float left;
+		float top;
+		float right;
+		float bottom;
+	};
+
+	struct Size
+	{
+		float width;
+		float height;
+	};
+
+	TEDCORE_API extern void(*messageBox)(const std::string& msg);
+	TEDCORE_API extern void(*repaint)();
+	TEDCORE_API extern void(*getWinRect)(Rect&);
+	TEDCORE_API extern Size winSize;
 
 	namespace events
 	{
@@ -48,11 +64,11 @@ namespace ted
 
 		class TEDCORE_API Brush;
 
-		class TEDCORE_API Line;
-		class TEDCORE_API Rect;
+		class TEDCORE_API GLine;
+		class TEDCORE_API GRect;
 
-		TEDCORE_API ted::graphics::Line createLine(float depth, Brush* brush, Point p1, Point p2, float width);
-		TEDCORE_API ted::graphics::Rect createRect(float depth, Brush* brush, float left, float top, float right, float bottom);
+		TEDCORE_API ted::graphics::GLine createLine(float depth, Brush* brush, Point p1, Point p2, float width);
+		TEDCORE_API ted::graphics::GRect createRect(float depth, Brush* brush, Rect rc);
 
 		struct Color
 		{
@@ -63,7 +79,7 @@ namespace ted
 
 		class TEDCORE_API Typeface
 		{
-			friend class Bitmap;
+			friend class GBitmap;
 
 		public:
 			Typeface(const std::string& fname);
@@ -76,14 +92,13 @@ namespace ted
 
 		class TEDCORE_API Brush
 		{
-			friend TEDCORE_API ted::graphics::Line ted::graphics::createLine(float, Brush*, Point, Point, float);
-			friend TEDCORE_API ted::graphics::Rect ted::graphics::createRect(float, Brush*, float, float, float, float);
-
-			impl::render_buf::BrushDef* def;
-
 		public:
 			Brush(const Color& c);
 			void release();
+
+			void setColor(const Color& c);
+
+			impl::render_buf::BrushDef* def;
 		};
 
 		//
@@ -101,28 +116,32 @@ namespace ted
 			void release();
 		};
 
-		class TEDCORE_API Line :
+		class TEDCORE_API GLine :
 			public Renderable
 		{
-			friend ted::graphics::Line ted::graphics::createLine(float, Brush*, Point, Point, float);
-			Line(impl::render_buf::LineDef* pdef);
+			friend GLine createLine(float, Brush*, Point, Point, float);
+			GLine(impl::render_buf::LineDef* pdef);
+
+			inline impl::render_buf::LineDef* def();
 
 		public:
 			void release();
 
-			// TODO: create helper methods for transforming the line
+			void setBrush(Brush* pBrush);
 		};
 
-		class TEDCORE_API Rect :
+		class TEDCORE_API GRect :
 			public Renderable
 		{
-			friend ted::graphics::Rect ted::graphics::createRect(float, Brush*, float, float, float, float);
-			Rect(impl::render_buf::RectDef* pdef);
+			friend GRect createRect(float depth, Brush* brush, Rect rc);
+			GRect(impl::render_buf::RectDef* pdef);
+
+			inline impl::render_buf::RectDef* def();
 
 		public:
 			void release();
 
-			// TODO: create helper methods for transforming the rect
+			void setBrush(Brush* pBrush);
 		};
 	}
 }

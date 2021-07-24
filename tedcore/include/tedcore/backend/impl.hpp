@@ -159,14 +159,14 @@ namespace ted
 #ifdef TEDC_DIRECT2D
 			TEDCORE_API extern ID2D1HwndRenderTarget* pRenderTarget;
 
-			using BrushDef = ID2D1Brush;
+			using BrushDef = ID2D1SolidColorBrush;
 
 			struct LineDef
 			{
 				RBEHead head;
 				D2D1_POINT_2F p1;
 				D2D1_POINT_2F p2;
-				ID2D1Brush* brush;
+				BrushDef* brush;
 				FLOAT width;
 				ID2D1StrokeStyle* stroke;
 			};
@@ -175,7 +175,7 @@ namespace ted
 			{
 				RBEHead head;
 				D2D1_RECT_F rect;
-				ID2D1Brush* brush;
+				BrushDef* brush;
 			};
 #endif
 		}

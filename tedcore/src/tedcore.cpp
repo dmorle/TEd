@@ -17,6 +17,8 @@ namespace ted
 
 	TEDCORE_API void(*messageBox)(const std::string& msg) = NULL;
 	TEDCORE_API void(*repaint)() = NULL;
+	TEDCORE_API void(*getWinRect)(Rect&) = NULL;
+	TEDCORE_API Size winSize = { 0.0, 0.0 };
 
 	namespace graphics
 	{
@@ -37,6 +39,11 @@ namespace ted
 				this->def->Release();
 		}
 
+		void Brush::setColor(const Color& c)
+		{
+			this->def->SetColor(D2D1_COLOR_F{ c.r, c.g, c.b, 1.0f });
+		}
+
 		void Renderable::findDef()
 		{
 			this->pdef = (RBEHead*)rb_ptr();
@@ -44,30 +51,52 @@ namespace ted
 				pdef = (RBEHead*)(((uint8_t*)this->pdef) + this->pdef->elemsz);
 		}
 
-		Line::Line(LineDef* pdef)
+		GLine::GLine(LineDef* pdef)
 		{
 			this->pdef = (RBEHead*)pdef;
 			this->handle = pdef->head.handle;
 		}
 
-		void Line::release()
+		impl::render_buf::LineDef* GLine::def()
+		{
+			return (impl::render_buf::LineDef*)this->pdef;
+		}
+
+		void GLine::release()
 		{
 			rb_free(this->handle);
 		}
 
-		Rect::Rect(RectDef* pdef)
+		void GLine::setBrush(Brush* pBrush)
+		{
+			this->findDef();
+			this->def()->brush = pBrush->def;
+		}
+
+		GRect::GRect(RectDef* pdef)
 		{
 			this->pdef = (RBEHead*)pdef;
 			this->handle = pdef->head.handle;
 		}
 
-		void Rect::release()
+		impl::render_buf::RectDef* GRect::def()
+		{
+			return (impl::render_buf::RectDef*)this->pdef;
+		}
+
+		void GRect::release()
 		{
 			rb_free(this->handle);
+		}
+
+		void GRect::setBrush(Brush* pBrush)
+		{
+			this->findDef();
+			this->def()->brush = pBrush->def;
 		}
 
 #ifdef TEDC_DIRECT2D
-		TEDCORE_API Line createLine(float depth, Brush* brush, Point p1, Point p2, float width)
+		TEDCORE_API GLine createLine(float depth, Brush* brush, Point p1, Point p2, float width)
 		{
 			LineDef* pldef = (LineDef*)rb_malloc(depth, sizeof(LineDef));
 			pldef->head = RBEHead(pldef, depth);
@@ -81,11 +110,11 @@ namespace ted
 			return pldef;
 		}
 
-		TEDCORE_API Rect createRect(float depth, Brush* brush, float left, float top, float right, float bottom)
+		TEDCORE_API GRect createRect(float depth, Brush* brush, Rect rc)
 		{
 			RectDef* prdef = (RectDef*)rb_malloc(depth, sizeof(RectDef));
 			prdef->head = RBEHead(prdef, depth);
-			prdef->rect = { left, top, right, bottom };
+			prdef->rect = { rc.left, rc.top, rc.right, rc.bottom };
 			prdef->brush = brush->def;  // tmp
 			repaint();
 			

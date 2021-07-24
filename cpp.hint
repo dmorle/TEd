@@ -1,0 +1,3 @@
+#define TEDCORE_API
+#define TEDLANG_API
+#define bool

@@ -17,6 +17,7 @@ fn load_tedui()
 
 	reg_startup(load_proc(tedui, "tedui_startup"));
 	reg_shutdown(load_proc(tedui, "tedui_shutdown"));
+	reg_mmove(load_proc(tedui, "tedui_mmove"));
 };
 
 load_tedui();

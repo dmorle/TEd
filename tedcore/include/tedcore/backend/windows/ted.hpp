@@ -1,8 +1,9 @@
 #ifndef WINDOWS_TED_H
 #define WINDOWS_TED_H
 
-#include <windows.h>
+#include <tedcore/tedcore.hpp>
 
+#include <windows.h>
 #include <string>
 
 #if defined(TEDC_DIRECT2D)
@@ -21,6 +22,7 @@ namespace ted
 
 		void messageBox(const std::string& msg);
 		void repaint();
+		void getWinRect(ted::Rect& r);
 	}
 }
 

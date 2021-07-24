@@ -18,5 +18,15 @@ namespace ted
 		{
 			InvalidateRect(hwnd, NULL, FALSE);
 		}
+
+		void getWinRect(ted::Rect& r)
+		{
+			RECT rc;
+			GetWindowRect(hwnd, &rc);
+			r.left = rc.left;
+			r.top = rc.top;
+			r.right = rc.right;
+			r.bottom = rc.bottom;
+		}
 	}
 }

@@ -112,8 +112,8 @@ namespace ted
 				}
 
 				uint8_t* prb = rb_buf;
-				size_t idx = 0;
-				while (idx < rb_elemnum && depth > ((RBEHead*)prb)->depth)
+				size_t idx;
+				for (idx = 0; idx < rb_elemnum && depth >((RBEHead*)prb)->depth; idx++)
 					prb += ((RBEHead*)prb)->elemsz;
 
 				if (idx < rb_elemnum)

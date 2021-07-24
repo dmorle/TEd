@@ -19,18 +19,38 @@
 
 #ifndef TEDUI_API
 #	ifdef TEDUI_SRC
-#		define TEDUI_API extern "C" EXPORT
+#       define TEDUI_HANDLER extern "C" EXPORT
+#		define TEDUI_API EXPORT
 #	else
-#		define TEDUI_API extern "C" IMPORT
+#		define TEDUI_API IMPORT
 #	endif
 #endif
 
-TEDUI_API void tedui_startup();
-TEDUI_API void tedui_shutdown();
+#include <map>
+#include <string>
+
+#include <tedcore/tedcore.hpp>
 
 namespace tedui
 {
-	
+	constexpr float frame_size = 1.0f;
+	constexpr float panel_space = 1.0f;
+
+	namespace brushes
+	{
+		extern ted::graphics::Brush* pback;
+		extern ted::graphics::Brush* pbase;
+		extern ted::graphics::Brush* pselect;
+		extern ted::graphics::Brush* pactive;
+		extern ted::graphics::Brush* phighlight;
+		extern ted::graphics::Brush* pfocus;
+	}
+
+	using BrushMap = std::map<std::string, ted::graphics::Brush>;
+
+	const BrushMap& getBrushMap();
+
+	ted::graphics::Brush& createBrush(const std::string& name, const ted::graphics::Color& c);
 }
 
 #endif

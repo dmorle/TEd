@@ -9,11 +9,11 @@ namespace ted
 	namespace tedl
 	{
 		te_type_st line_ty = {
-		.name = "line",
-		.objsize = sizeof(line),
-		.ty_new = &line_new,
-		.ty_del = &line_del,
-		.ty_bool = &line_bool
+			.name = "line",
+			.objsize = sizeof(line),
+			.ty_new = &line_new,
+			.ty_del = &line_del,
+			.ty_bool = &line_bool
 		};
 
 		te_obj_st* line_new()

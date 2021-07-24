@@ -263,10 +263,12 @@ static te_obj_st* create_rect_call(te_obj_st* pself, const te_fnargs_st* pargs)
 	prect->rect = ted::graphics::createRect(
 		((te_float_st*)pargs->ppargs[0])->val,
 		&((ted::tedl::brush*)pargs->ppargs[1])->brush,
-		(float)((te_int_st*)pargs->ppargs[2])->val,
-		(float)((te_int_st*)pargs->ppargs[3])->val,
-		(float)((te_int_st*)pargs->ppargs[4])->val,
-		(float)((te_int_st*)pargs->ppargs[5])->val
+		{
+			(float)((te_int_st*)pargs->ppargs[2])->val,
+			(float)((te_int_st*)pargs->ppargs[3])->val,
+			(float)((te_int_st*)pargs->ppargs[4])->val,
+			(float)((te_int_st*)pargs->ppargs[5])->val
+		}
 	);
 
 	return (te_obj_st*)prect;

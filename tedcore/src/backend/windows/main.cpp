@@ -172,6 +172,9 @@ LRESULT on_init()
 
 	ted::messageBox = ted::windows::messageBox;
 	ted::repaint = ted::windows::repaint;
+	ted::getWinRect = ted::windows::getWinRect;
+	ted::winSize.width = 680;
+	ted::winSize.height = 420;
 
 	init();
 	for (auto& e : startupHandlers)
